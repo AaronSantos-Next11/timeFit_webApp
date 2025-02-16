@@ -1,0 +1,246 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&family=Monoton:wght@200;300;400;500;600;700;800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    list-style: none;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.sidebar {
+    color: #fff;
+    height: 100vh;
+    position: fixed;
+    background-color: #a64b2a;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Container Styles */
+.header-container {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: #a64b2a;
+    min-height: 70px;
+}
+
+.sidebar.ant-layout-sider-collapsed .header-container {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0;
+}
+
+.logo {
+    flex: 1;
+    min-height: unset;
+    padding-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-text {
+    opacity: 1;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+}
+
+.sidebar.ant-layout-sider-collapsed .logo-icon {
+    justify-content: center;
+}
+
+.logo-text span {
+    font-size: 0.9rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.logo-icon {
+  padding-top: 5px;
+    width: 40px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border-radius: 50%;
+    gap: 8px;
+}
+
+
+.menu-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    height: calc(100vh - 140px);
+}
+
+.menu-bar {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-top: 2rem;
+    padding-bottom: 16px;
+}
+
+/* Scrollbar Styles */
+.menu-bar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.menu-bar::-webkit-scrollbar-track {
+    background: #a64b2a;
+}
+
+.menu-bar::-webkit-scrollbar-thumb {
+    background-color: #f4511e;
+    border-radius: 3px;
+}
+
+/* Trigger button */
+.trigger {
+    padding: 0 24px;
+    font-size: 18px;
+    line-height: 64px;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+/* Menu Styles */
+.ant-menu {
+    background-color: #a64b2a !important;
+    border: none !important;
+    color: #fff !important;
+}
+
+.ant-menu-inline {
+    border-right: none !important;
+}
+
+.ant-menu-item {
+    height: 45px !important;
+    line-height: 45px !important;
+    background-color: #a64b2a !important;
+    color: #fff !important;
+}
+
+.ant-menu-item:hover,
+.ant-menu-item-active {
+    background-color: #f8820b !important;
+    color: #000000 !important;
+}
+
+.ant-menu-item-selected {
+    background-color: #f8820b !important;
+    color: #000000 !important;
+}
+
+/* Submenu Styles */
+.ant-menu-submenu-title {
+    height: 45px !important;
+    line-height: 45px !important;
+    background-color: #a64b2a !important;
+    color: #fff !important;
+}
+
+.ant-menu-submenu-title:hover,
+.ant-menu-submenu-active > .ant-menu-submenu-title {
+    background-color: #f8820b !important;
+    color: #000000 !important;
+}
+
+.ant-menu-submenu-open > .ant-menu-submenu-title {
+    background-color: #f8820b !important;
+    color: #000000 !important;
+}
+
+.ant-menu-sub.ant-menu-inline {
+    background-color: #a64b2a !important;
+}
+
+.ant-menu-sub.ant-menu-inline .ant-menu-item {
+    padding-left: 48px !important;
+}
+
+.ant-menu-submenu-arrow {
+    color: inherit !important;
+}
+
+.ant-menu-submenu-open > .ant-menu-submenu-title > .ant-menu-submenu-arrow {
+    transform: rotate(90deg) !important;
+}
+
+/* Logout Button Styles */
+.logout-button-container {
+    padding: 16px;
+    background-color: #a64b2a;
+}
+
+.logout-button {
+    width: 100%;
+    height: 45px;
+    background-color: #f8820b;
+    border: none !important;
+    border-radius: 6px !important;
+    color: #000000 !important;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #f4511e !important;
+    color: #fffcfc !important;
+}
+
+.logout-button.collapsed {
+    width: 45px;
+    padding: 0 !important;
+    margin: 0 auto;
+}
+
+.logout-button .button-text {
+    transition: opacity 0.2s;
+}
+
+.logout-button.collapsed .button-text {
+    display: none;
+}
+
+.logout-button .anticon {
+    font-size: 18px;
+}
+
+/* Collapse Button Styles */
+.collapse-button-container {
+    padding-top: 10px;
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+}
+
+.collapse-trigger {
+    background: transparent !important;
+    color: #fff !important;
+    font-size: 18px;
+    height: 32px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.collapse-trigger:hover {
+    background-color: #f8820b !important;
+    color: #000000 !important;
+}

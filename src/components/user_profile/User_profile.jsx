@@ -1,5 +1,4 @@
 import React from 'react'
-import "./User_profile.css"
 
 export default function User_profile () {
   return (
