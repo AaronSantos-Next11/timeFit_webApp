@@ -10,7 +10,7 @@ import Home from './components/home/Home';
 import Memberships from './components/membership_management/memberships_and_services/Memberships';
 import Users from './components/membership_management/users/Users';
 import Collaborators from './components/collaborators/Collaborators';
-import InventoryControl from './components/sales_management/inventory_control/Inventorycontrol';
+import Inventorycontrol from './components/sales_management/inventory_control/Inventorycontrol';
 import Revenue from './components/sales_management/revenue/Revenue';
 import Calendar from './components/calendar/Calendar';
 import Notes from './components/notes/Notes';
@@ -25,8 +25,6 @@ export default function App() {
     const [collapsed, setCollapsed] = useState(false);
     const [currentPage, setCurrentPage] = useState('home');
 
-    const { token: { colorBgContainer } } = theme.useToken();
-
     const renderContent = () => {
         switch(currentPage) {
             case 'home':
@@ -38,7 +36,7 @@ export default function App() {
             case 'collaborators':
                 return <Collaborators />;
             case 'inventoryControl':
-                return <InventoryControl />;
+                return <Inventorycontrol />;
             case 'revenue':
                 return <Revenue />;
             case 'calendar':

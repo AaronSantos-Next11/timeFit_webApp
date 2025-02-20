@@ -54,13 +54,13 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
 
                 <Menu.SubMenu 
                     key="sales" 
-                    icon={<IconWrapper icon={CashCoin} />} 
+                    icon={<IconWrapper icon={CashCoin} />}
                     title={!collapsed && "Gestión de Ventas"}
                 >
                     <Menu.Item key="revenue" icon={<IconWrapper icon={CurrencyExchange} />}>
                         {"Ingresos"}
                     </Menu.Item>
-                    <Menu.Item key="inventorycontrol" icon={<IconWrapper icon={ArchiveFill} />}>
+                    <Menu.Item key="inventoryControl" icon={<IconWrapper icon={ArchiveFill} />}>
                         {"Control de Inventario"}
                     </Menu.Item>
                 </Menu.SubMenu>
