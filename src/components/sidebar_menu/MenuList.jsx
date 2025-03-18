@@ -27,7 +27,7 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
     };
 
     const IconWrapper = ({ icon: Icon }) => (
-        <Icon size={16} style={{ marginRight: '12px' }} />
+        <Icon size={20} style={{ marginRight: '12px' }} />
     );
 
     return (
