@@ -1,9 +1,13 @@
 import { Button } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const LogoutButton = ({ collapsed, setCurrentPage }) => {
+  const navigate = useNavigate();
+
   const handleLogout = () => {
-    setCurrentPage('Logout');
+    setCurrentPage('logout');
+    navigate('/logout');
   };
 
   return (
