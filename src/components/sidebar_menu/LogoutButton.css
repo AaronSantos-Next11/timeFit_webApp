@@ -1,0 +1,23 @@
+.logout-button {
+    background-color: orange;
+    color: white;
+    padding: 10px;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+  }
+  
+  .logout-button:hover {
+    background-color: darkorange;
+  }
+  
+  .collapsed {
+    display: none;
+  }
+  
+  .button-text {
+    margin-left: 10px;
+  }
