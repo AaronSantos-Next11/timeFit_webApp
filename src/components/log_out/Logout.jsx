@@ -1,8 +1,7 @@
-// components/log_out/Logout.jsx
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Logout = () => {
+const Logout = ({ onLogout }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -10,11 +9,16 @@ const Logout = () => {
     localStorage.removeItem('token'); // Elimina el token de autenticación
     localStorage.removeItem('user'); // Elimina otros datos de usuario si es necesario
 
-    // 2. Redirigir al usuario a la página de inicio de sesión
-    navigate('/login', { replace: true }); // Usa { replace: true } para evitar que el usuario vuelva atrás
-  }, [navigate]);
+    // 2. Actualizar el estado de autenticación
+    if (onLogout) {
+      onLogout();
+    }
 
-  return null; // No renderiza nada, ya que es solo para lógica
+    // 3. Redirigir al usuario a la página de inicio de sesión
+    navigate('/login', { replace: true });
+  }, [navigate, onLogout]);
+
+  return null; 
 };
 
 export default Logout;
