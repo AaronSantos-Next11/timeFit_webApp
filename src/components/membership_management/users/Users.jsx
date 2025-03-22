@@ -137,7 +137,7 @@ export default function FullComponent() {
   return (
     <>
       {/* Primer nivel: Header */}
-      <Grid
+            <Grid
         container
         alignItems="center"
         justifyContent="space-between"
@@ -145,11 +145,11 @@ export default function FullComponent() {
       >
         {/* Título y descripción */}
         <Grid item>
-          <Typography variant="h4" sx={{ margin: 0, fontSize: "28px", fontWeight: "bold" }}>
+          <Typography variant="h4" sx={{ margin: 0, fontSize: "26px", fontWeight: "bold" }}>
             Usuarios
           </Typography>
-          <Typography variant="body2" sx={{ margin: 0, fontSize: "16px", color: "#ccc" }}>
-            Gestiona la información de tus usuarios.
+          <Typography variant="body2" sx={{ margin: 0, fontSize: "14px", color: "#ccc" }}>
+            Gestiona la informacion de tus usuarios
           </Typography>
         </Grid>
 
@@ -163,8 +163,8 @@ export default function FullComponent() {
               padding: "8px 20px",
               borderRadius: "30px",
               boxShadow: 3,
-              width: "720px",
-              height: "60px",
+              width: "455px",
+              height: "45px",
               marginTop: "-12px",
               backgroundColor: "#ffff",
               border: "1px solid #444",
@@ -184,12 +184,12 @@ export default function FullComponent() {
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
             <Badge badgeContent={messagesCount} color="error">
-              <MailIcon sx={{ fontSize: "28px" }} />
+              <MailIcon sx={{ fontSize: "24px" }} />
             </Badge>
           </IconButton>
           <IconButton size="large" aria-label="show new notifications" sx={{ color: "#fff" }}>
             <Badge badgeContent={notificationsCount} color="error">
-              <NotificationsIcon sx={{ fontSize: "28px" }} />
+              <NotificationsIcon sx={{ fontSize: "24px" }} />
             </Badge>
           </IconButton>
         </Grid>
@@ -197,7 +197,7 @@ export default function FullComponent() {
         {/* Perfil del usuario */}
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box sx={{ textAlign: "right" }}>
-            <Typography variant="h6" sx={{ margin: 0, fontSize: "18px", color: "#F8820B" }}>
+            <Typography variant="h6" sx={{ margin: 0, fontSize: "18x", color: "#F8820B" }}>
               Yair Guzman
             </Typography>
             <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>
@@ -215,25 +215,6 @@ export default function FullComponent() {
           </IconButton>
         </Grid>
       </Grid>
-
-      {/* Menú del perfil */}
-      <Menu
-        anchorEl={anchorEl}
-        open={isMenuOpen}
-        onClose={handleMenuClose}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "right",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
-      >
-        <MenuItem onClick={handleMenuClose}>Perfil</MenuItem>
-        <MenuItem onClick={handleMenuClose}>Mi cuenta</MenuItem>
-        <MenuItem onClick={handleMenuClose}>Cerrar sesión</MenuItem>
-      </Menu>
 
       {/* Texto y botón arriba de la tabla */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px" }}>
