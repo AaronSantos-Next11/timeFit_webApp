@@ -21,7 +21,6 @@ const LogoutButton = ({ collapsed }) => {
         width: '100%',
         textAlign: 'left',
         color: '#ffffff',
-        backgroundColor: 'transparent',
         border: 'none',
         padding: '10px 24px',
       }}

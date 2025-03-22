@@ -36,6 +36,8 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+import { Link } from "react-router-dom";
+
 // Estilos personalizados para la tabla
 const StyledTableCell = styled(TableCell)(() => ({
   backgroundColor: "transparent",
@@ -509,6 +511,8 @@ export default function Membership() {
         </Grid>
         <Grid item>
           <Button
+          component={Link}
+          to="/membership_management/crearmembresia"
             variant="contained"
             sx={{
               backgroundColor: "#e67e22",
@@ -522,7 +526,6 @@ export default function Membership() {
               height: "48px",
               fontSize: "16px",
             }}
-            onClick={handleAddMembership}
           >
             Crear membresía
           </Button>
@@ -688,6 +691,8 @@ export default function Membership() {
         </Grid>
         <Grid item>
           <Button
+          component={Link}
+          to="/membership_management/registrarservicio"
             variant="contained"
             sx={{
               backgroundColor: "#e67e22",
