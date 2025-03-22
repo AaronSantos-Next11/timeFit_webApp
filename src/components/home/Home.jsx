@@ -6,7 +6,7 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography'
 import { fontGrid } from '@mui/material/styles/cssUtils';
 // import { Row } from 'antd';
-import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Menu, MenuItem, IconButton } from '@mui/material';
+import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Menu, MenuItem, IconButton, Button } from '@mui/material';
 
 // Icons
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -16,6 +16,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import NotesIcon from '@mui/icons-material/Notes';
 
 // Para las graficas
 import { PieChart } from '@mui/x-charts/PieChart';
@@ -26,10 +27,21 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { Paper } from '@mui/material';
 
+// Para las notas
+import Checkbox from '@mui/material/Checkbox';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+
+// Para las ventas obtenidas
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
+import BarChartIcon from '@mui/icons-material/BarChart';
+
 
 fontGrid
 
 export default function Home() {
+
+  // Para las notas
+  const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -43,6 +55,7 @@ export default function Home() {
     setAnchorEl(null);
   };
 
+  // Para el inventario
   const data = [
     { id: 1, productos: 'Pesas rusas', stock: 10, precioTotal: '$500.00' },
     { id: 2, productos: 'Mancuernas', stock: 13, precioTotal: '$700.50' },
@@ -56,7 +69,7 @@ export default function Home() {
     { id: 10, productos: 'Suplementos/p', stock: 5, precioTotal: '$425.00' },
   ];
 
-
+  // Para las edades
   const edades = [
     { id: 0, value: 26.9, label: '14 - 17 años', color: '#FF6384' }, // Rojo
     { id: 1, value: 7.7, label: '18 - 25 años', color: '#36A2EB' }, // Azul
@@ -67,6 +80,15 @@ export default function Home() {
     { id: 6, value: 3.8, label: 'Más de 65 años', color: '#C9CBCF' }, // Gris
   ];
 
+  // Para la grafica de ventas
+  const chartData = [
+    { id: 0, value: 50, label: 'Membresía', color: '#3498db' },
+    { id: 1, value: 30, label: 'Entrenamiento', color: '#2ecc71' },
+    { id: 2, value: 20, label: 'Nutrición', color: '#e74c3c' },
+    { id: 3, value: 33, label: 'Equipamento', color: '#f39c12' },
+    { id: 4, value: 13, label: 'Taller/Clases', color: '#27ae60' },
+    { id: 5, value: 5, label: 'Evaluación Fitness', color: '#9b59b6' },
+  ];
 
 
   return (
@@ -74,7 +96,7 @@ export default function Home() {
       <h1> Menu de la aplicacion (inicio) </h1>
 
       {/* Contenedor 1: Todos los wingets de home */}
-      <Grid container marginTop={2} display='flex' flexDirection='row'>
+      <Grid container marginTop={2} display='flex' flexDirection='row' >
 
         {/* Sub-Contenedor 1: Lado izquierdo, columna Inventario y Notas */}
         <Grid container size={12} spacing={2} display='flex' flexDirection='column' justifyContent='center' >
@@ -772,6 +794,10 @@ export default function Home() {
                                 '&:hover': {
                                   backgroundColor: '#e64a19', // Fondo naranja oscuro
                                 },
+                                '&.Mui-focusVisible, &:focus': { // Sobrescribe los estilos de enfoque
+                                  backgroundColor: '#f8820b', // Fondo naranja
+                                  color: '#000', // Texto negro
+                                },
                               },
                               '& .Mui-selected': {
                                 backgroundColor: '#f8820b', // Fondo naranja para el día seleccionado
@@ -779,12 +805,9 @@ export default function Home() {
                                 '&:hover': {
                                   backgroundColor: '#e64a19', // Fondo naranja oscuro al pasar el mouse
                                 },
-                              },
-                              '& .Mui-selected:focus, & .Mui-selected.Mui-focusVisible': {
-                                backgroundColor: '#f8820b', // Fondo naranja para el día seleccionado
-                                color: '#000', // Texto negro para el día seleccionado
-                                '&:hover': {
-                                  backgroundColor: '#e64a19', // Fondo naranja oscuro al pasar el mouse
+                                '&.Mui-focusVisible, &:focus': { // Sobrescribe los estilos de enfoque
+                                  backgroundColor: '#f8820b', // Fondo naranja
+                                  color: '#000', // Texto negro
                                 },
                               },
                               '& .MuiPickersArrowSwitcher-button': {
@@ -884,10 +907,7 @@ export default function Home() {
                   </Card>
                 </Grid>
               </Grid>
-
-
             </Grid>
-
           </Grid>
 
 
@@ -898,26 +918,300 @@ export default function Home() {
 
               <Grid size={{ md: 'grow' }} sx={{ height: '16rem' }}> {/* Winget Notas */}
                 <Card style={{ background: '#45474B', borderRadius: 30 }} sx={{ height: '100%', width: '100%' }}>
-                  <CardContent sx={{ padding: 3 }} >
-                    <Typography variant="body1" color="#FFFFFF">Winget Notas</Typography>
-                    <Typography variant="p" color="initial">
-                      <p>
-                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                      </p>
-                    </Typography>
+                  <CardContent sx={{ padding: 3, overflow: 'auto', maxHeight: '100%' }}>
+                    <Box display="flex" alignItems="center">
+                      <NotesIcon sx={{ fontSize: 40, color: '#FFFFFF', marginRight: 1 }} />
+                      <Typography sx={{ fontWeight: 'bold' }} variant="body1" color="#FFFFFF">Notas</Typography>
+
+                      <div style={{ marginLeft: 'auto' }}>
+                        <IconButton
+                          aria-label="más opciones"
+                          aria-controls={open ? 'menu-opciones' : undefined}
+                          aria-haspopup="true"
+                          aria-expanded={open ? 'true' : undefined}
+                          onClick={handleClick}
+                          sx={{
+                            backgroundColor: '#FF8C00',
+                            borderRadius: '15px',
+                            width: '40px',
+                            height: '24px',
+                            padding: 0,
+                            minWidth: '40px',
+                            '&:hover': {
+                              backgroundColor: '#e67e00',
+                            }
+                          }}
+                        >
+                          <KeyboardArrowDownIcon sx={{ color: 'black', fontSize: '20px' }} />
+                        </IconButton>
+                        <Menu
+                          id="menu-opciones"
+                          anchorEl={anchorEl}
+                          open={open}
+                          onClose={handleClose}
+                          MenuListProps={{
+                            'aria-labelledby': 'boton-menu',
+                            sx: {
+                              padding: 0,
+                            }
+                          }}
+                          PaperProps={{
+                            sx: {
+                              backgroundColor: '#f8820b',
+                              color: 'Black',
+                              borderRadius: '20px',
+                            }
+                          }}
+                        >
+                          <MenuItem sx={{
+                            justifyContent: 'center',
+                            textAlign: 'center', '&:hover': {
+                              backgroundColor: '#272829',
+                              color: '#f8820b'
+                            },
+                          }} onClick={handleClose}>Hoy</MenuItem>
+                          <MenuItem sx={{
+                            justifyContent: 'center',
+                            textAlign: 'center', '&:hover': {
+                              backgroundColor: '#272829',
+                              color: '#f8820b'
+                            },
+                          }} onClick={handleClose}>Esta Semana</MenuItem>
+                          <MenuItem sx={{
+                            justifyContent: 'center',
+                            textAlign: 'center', '&:hover': {
+                              backgroundColor: '#272829',
+                              color: '#f8820b'
+                            },
+                          }} onClick={handleClose}>Este Mes</MenuItem>
+                          <MenuItem sx={{
+                            justifyContent: 'center',
+                            textAlign: 'center', '&:hover': {
+                              backgroundColor: '#272829',
+                              color: '#f8820b'
+                            },
+                          }} onClick={handleClose}>Este Año</MenuItem>
+                        </Menu>
+                      </div>
+                    </Box>
+                    <Grid container display='flex' direction='row' sx={{ marginTop: 1 }}>
+                      <Grid container direction="row" alignItems='center' size={{ xs: 12, }}>
+                        <Grid size={{ xs: 1 }}>
+                          <Checkbox {...label} sx={{
+                            borderRadius: '50%',
+                            color: '#f8820b',
+                            '&.Mui-checked': {
+                              color: '#f8820b',
+                            },
+                          }} />
+                        </Grid>
+                        <Grid size={{ xs: 6 }}>
+                          <Typography color='#f8820b' sx={{ fontSize: '14px', fontWeight: 'bold', ml: 1 }}>
+                            Actualización del sistema
+                          </Typography>
+                          <Typography color='white' sx={{ fontSize: '13px', fontWeight: 'bold', ml: 1 }}>Nueva versión instalada</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 5 }}>
+                          <Box display="flex" alignItems="center">
+                            <CalendarMonthIcon sx={{ marginRight: 1, color: '#fff', ml: 'auto' }}></CalendarMonthIcon>
+                            <Typography color='white' sx={{ fontWeight: 'bold' }}>01/04/2025</Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                      <Box sx={{ ml: 5, mt: 1, mb: 2 }}>
+                        <Button variant='contained' sx={{ borderRadius: 5, mr: 2, backgroundColor: '#c58f10', textTransform: 'capitalize' }}>Reporte</Button>
+                        <Button variant='contained' sx={{ borderRadius: 5, backgroundColor: '#ec2525', textTransform: 'capitalize' }}>Soporte</Button>
+                      </Box>
+                      <Grid container direction="row" alignItems='center' size={{ xs: 12 }}>
+                        <Grid size={{ xs: 1 }}>
+                          <Checkbox {...label} sx={{
+                            borderRadius: '50%',
+                            color: '#f8820b',
+                            '&.Mui-checked': {
+                              color: '#f8820b',
+                            },
+                          }} />
+                        </Grid>
+                        <Grid size={{ xs: 6 }}>
+                          <Typography color='#f8820b' sx={{ fontSize: '14px', fontWeight: 'bold', ml: 1 }}>
+                            Recordatorio del inventario
+                          </Typography>
+                          <Typography color='white' sx={{ fontSize: '13px', fontWeight: 'bold', ml: 1 }}>Revisar el stock</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 5 }}>
+                          <Box display="flex" alignItems="center">
+                            <CalendarMonthIcon sx={{ marginRight: 1, color: '#fff', ml: 'auto' }}></CalendarMonthIcon>
+                            <Typography color='white' sx={{ fontWeight: 'bold' }}>20/04/2025</Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                      <Box sx={{ ml: 5, mt: 1, mb: 2 }}>
+                        <Button variant='contained' sx={{ borderRadius: 5, mr: 2, backgroundColor: '#07aaa2', textTransform: 'capitalize' }}>Recordatorio</Button>
+                        <Button variant='contained' sx={{ borderRadius: 5, backgroundColor: '#499a0b', textTransform: 'capitalize' }}>Productos</Button>
+                      </Box>
+
+                      <Grid container direction="row" alignItems='center' size={{ xs: 12 }}>
+                        <Grid size={{ xs: 1 }}>
+                          <Checkbox {...label} sx={{
+                            borderRadius: '50%',
+                            color: '#f8820b',
+                            '&.Mui-checked': {
+                              color: '#f8820b',
+                            },
+                          }} />
+                        </Grid>
+                        <Grid size={{ xs: 6 }}>
+                          <Typography color='#f8820b' sx={{ fontSize: '14px', fontWeight: 'bold', ml: 1 }}>
+                            Capacitación personal
+                          </Typography>
+                          <Typography color='white' sx={{ fontSize: '13px', fontWeight: 'bold', ml: 1 }}>Curso de productos nuevos</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 5 }}>
+                          <Box display="flex" alignItems="center">
+                            <CalendarMonthIcon sx={{ marginRight: 1, color: '#fff', ml: 'auto' }}></CalendarMonthIcon>
+                            <Typography color='white' sx={{ fontWeight: 'bold' }}>12/03/2025</Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                      <Box sx={{ ml: 5, mt: 1 }}>
+                        <Button variant='contained' sx={{ borderRadius: 5, mr: 2, backgroundColor: '#c02279', textTransform: 'capitalize' }}>Curso</Button>
+                        <Button variant='contained' sx={{ borderRadius: 5, backgroundColor: '#1b72af', textTransform: 'capitalize' }}>Instalación</Button>
+                      </Box>
+
+                    </Grid>
                   </CardContent>
                 </Card>
               </Grid>
 
               <Grid size={{ md: 'grow' }} sx={{ height: '16rem' }}> {/* Winget Ventas obtenidas */}
                 <Card style={{ background: '#45474B', borderRadius: 30 }} sx={{ height: '100%' }} >
-                  <CardContent sx={{ padding: 3 }} >
-                    <Typography variant="body1" color="#FFFFFF">Ventas obtenidas</Typography>
-                    <Typography variant="p" color="initial">
-                      <p>
-                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-                      </p>
+                  <CardContent sx={{ overflow: 'auto', maxHeight: '100%', padding: 3 }} >
+                    <Box display="flex" alignItems="center">
+                      <BarChartIcon sx={{ fontSize: 40, color: '#FFFFFF', marginRight: 1 }} />
+                      <Typography sx={{ fontWeight: 'bold' }} variant="body1" color="#FFFFFF">Ventas Obtenidas</Typography>
+
+                      <div style={{ marginLeft: 'auto' }}>
+                        <IconButton
+                          aria-label="más opciones"
+                          aria-controls={open ? 'menu-opciones' : undefined}
+                          aria-haspopup="true"
+                          aria-expanded={open ? 'true' : undefined}
+                          onClick={handleClick}
+                          sx={{
+                            backgroundColor: '#FF8C00',
+                            borderRadius: '15px',
+                            width: '40px',
+                            height: '24px',
+                            padding: 0,
+                            minWidth: '40px',
+                            '&:hover': {
+                              backgroundColor: '#e67e00',
+                            }
+                          }}
+                        >
+                          <KeyboardArrowDownIcon sx={{ color: 'black', fontSize: '20px' }} />
+                        </IconButton>
+                        <Menu
+                          id="menu-opciones"
+                          anchorEl={anchorEl}
+                          open={open}
+                          onClose={handleClose}
+                          MenuListProps={{
+                            'aria-labelledby': 'boton-menu',
+                            sx: {
+                              padding: 0,
+                            }
+                          }}
+                          PaperProps={{
+                            sx: {
+                              backgroundColor: '#f8820b',
+                              color: 'Black',
+                              borderRadius: '20px',
+                            }
+                          }}
+                        >
+                          <MenuItem sx={{
+                            justifyContent: 'center',
+                            textAlign: 'center', '&:hover': {
+                              backgroundColor: '#272829',
+                              color: '#f8820b'
+                            },
+                          }} onClick={handleClose}>Hoy</MenuItem>
+                          <MenuItem sx={{
+                            justifyContent: 'center',
+                            textAlign: 'center', '&:hover': {
+                              backgroundColor: '#272829',
+                              color: '#f8820b'
+                            },
+                          }} onClick={handleClose}>Esta Semana</MenuItem>
+                          <MenuItem sx={{
+                            justifyContent: 'center',
+                            textAlign: 'center', '&:hover': {
+                              backgroundColor: '#272829',
+                              color: '#f8820b'
+                            },
+                          }} onClick={handleClose}>Este Mes</MenuItem>
+                          <MenuItem sx={{
+                            justifyContent: 'center',
+                            textAlign: 'center', '&:hover': {
+                              backgroundColor: '#272829',
+                              color: '#f8820b'
+                            },
+                          }} onClick={handleClose}>Este Año</MenuItem>
+                        </Menu>
+                      </div>
+                    </Box>
+
+                    <Typography
+                      variant="h5"
+                      align="center"
+                      sx={{
+                        fontWeight: 'bold',
+                        color: '#FF8C00',
+                        my: 1
+                      }}
+                    >
+                      Diciembre
                     </Typography>
+
+                    <BarChart
+                      width={350} // Ancho del gráfico
+                      height={200} // Alto del gráfico
+                      data={chartData} // Datos a mostrar
+                      margin={{
+                        top: 5, right: 0, left: 0, bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" /> {/* Líneas de la cuadrícula */}
+                      <XAxis dataKey="label" /> {/* Eje X: Nombres de las categorías */}
+                      <YAxis /> {/* Eje Y: Valores numéricos */}
+                      <Tooltip /> {/* Muestra información al pasar el mouse */}
+
+                      <Bar dataKey="value">
+                        {
+                          chartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))
+                        }
+                      </Bar>
+                    </BarChart>
+
+                    <Box sx={{ mt: 2, textAlign: 'center' }}>
+                      <Typography
+                        variant="h4"
+                        color="#FFFFFF"
+                        sx={{ fontWeight: 'bold' }}
+                      >
+                        $ 25,000.08
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="#FFFFFF"
+                      >
+                        En este mes.
+                      </Typography>
+                    </Box>
+
                   </CardContent>
                 </Card>
               </Grid>
