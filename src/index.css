@@ -78,7 +78,7 @@
     flex-direction: column;
     overflow: hidden;
     position: relative;
-    height: calc(100vh - 140px);
+    height: calc(100vh - 120px);
 }
 
 .menu-bar {
@@ -86,7 +86,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     margin-top: 2rem;
-    padding-bottom: 16px;
+    padding-bottom: 34px;
 }
 
 /* Scrollbar Styles */
@@ -178,6 +178,7 @@
 
 /* Logout Button Styles */
 .logout-button-container {
+    padding-top: 23px;
     padding: 16px;
     background-color: #a64b2a;
 }
@@ -193,7 +194,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 3px;
     transition: all 0.3s ease;
 }
 
