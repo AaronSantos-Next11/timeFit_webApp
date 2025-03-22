@@ -5,7 +5,7 @@ import Logo from "./components/sidebar_menu/Logo";
 import { MenuList } from './components/sidebar_menu/MenuList';
 import LogoutButton from './components/sidebar_menu/LogoutButton';
 import CollapseButton from './components/sidebar_menu/CollapseButton';
-import AppRoutes from './AppRoutes'; // Importa el componente AppRoutes
+import AppRoutes from './AppRoutes'; 
 
 const { Sider, Content } = Layout;
 
@@ -27,7 +27,7 @@ const App = () => {
       {/* Renderiza el Layout solo si el usuario está autenticado */}
       {isAuthenticated ? (
         <Layout>
-          {/* Barra lateral (Sider) */}
+          
           <Sider
             collapsible
             trigger={null}

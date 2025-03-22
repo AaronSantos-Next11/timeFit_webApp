@@ -19,7 +19,7 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
       {/* Ruta raíz: redirige a /login si no está autenticado */}
       <Route path="/" element={<Navigate to="/login" replace />} />
 
-      {/* Ruta de login (fuera del layout de la aplicación) */}
+      
       <Route
         path="/login"
         element={
