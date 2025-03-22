@@ -14,6 +14,7 @@ import UserProfile from './components/user_profile/User_profile';
 import Logout from './components/log_out/Logout';
 import Login from './components/log_in/Login';
 import CrearMembresia from './components/membership_management/memberships_and_services/CrearMembresia';
+import RegistrarServicio from './components/membership_management/memberships_and_services/RegistrarServicio';
 
 const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
   return (
@@ -55,6 +56,7 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
           <Route index element={<Navigate to="memberships" replace />} />
           <Route path="memberships" element={<Memberships />} />
           <Route path="crearmembresia" element={<CrearMembresia />} />
+          <Route path="registrarservicio" element={<RegistrarServicio />} />
           <Route path="users" element={<Users />} />
         </Route>
         <Route path="sales_management">

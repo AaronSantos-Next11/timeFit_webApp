@@ -691,6 +691,8 @@ export default function Membership() {
         </Grid>
         <Grid item>
           <Button
+          component={Link}
+          to="/membership_management/registrarservicio"
             variant="contained"
             sx={{
               backgroundColor: "#e67e22",
