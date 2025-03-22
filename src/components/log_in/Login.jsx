@@ -1,10 +1,10 @@
 import React from "react";
-import "./Login.css"; // Importamos los estilos
+import "./Login.css"; 
 
 const Login = ({ onLogin }) => {
   const [error, setError] = React.useState("");
 
-  // Credenciales hardcodeadas
+  // Credenciales hardcodeadas (solo para pruebas)
   const validCredentials = [
     { email: "usuario1@example.com", password: "contraseña1" },
     { email: "usuario2@example.com", password: "contraseña2" },
@@ -18,12 +18,19 @@ const Login = ({ onLogin }) => {
     const email = e.target.email.value;
     const password = e.target.password.value;
 
+    // Validación básica de campos vacíos
+    if (!email || !password) {
+      setError("Por favor, complete todos los campos.");
+      return;
+    }
+
     // Verifica si las credenciales coinciden con alguna de las hardcodeadas
     const isValidUser = validCredentials.some(
       (cred) => cred.email === email && cred.password === password
     );
 
     if (isValidUser) {
+      setError(""); // Limpia el mensaje de error
       onLogin(); // Llama a onLogin para actualizar el estado de autenticación
     } else {
       setError("Correo o contraseña incorrectos");
@@ -55,6 +62,7 @@ const Login = ({ onLogin }) => {
             type="email"
             name="email"
             placeholder="Escriba aquí su correo electrónico"
+            required 
           />
 
           <label>Contraseña</label>
@@ -62,9 +70,10 @@ const Login = ({ onLogin }) => {
             type="password"
             name="password"
             placeholder="Escriba aquí su contraseña"
+            required // Campo obligatorio
           />
 
-          
+          {/* Opciones adicionales */}
           <div className="login-options">
             <label>
               <input type="checkbox" /> Recordarme la contraseña
@@ -72,13 +81,16 @@ const Login = ({ onLogin }) => {
             <a href="#">¿Olvidó su contraseña?</a>
           </div>
 
+          {/* Mensaje de error */}
           {error && <p className="error-message">{error}</p>}
 
+          {/* Botón de inicio de sesión */}
           <button type="submit" className="login-button">
             Iniciar sesión
           </button>
         </form>
 
+        {/* Separador */}
         <div className="separator">o iniciar sesión con</div>
 
         {/* Botones de redes sociales */}
