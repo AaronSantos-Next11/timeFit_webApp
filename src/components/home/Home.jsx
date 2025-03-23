@@ -26,6 +26,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { Paper } from '@mui/material';
+import './style.scroll.css'
 
 // Para las notas
 import Checkbox from '@mui/material/Checkbox';
@@ -690,7 +691,7 @@ export default function Home() {
 
                 <Grid size={{ md: 5.3 }} height={2} zIndex={1}> {/* Winget Calendario */}
                   <Card style={{ background: '#45474B', height: '30.5rem', borderRadius: 30 }}>
-                    <CardContent sx={{ overflow: 'auto', maxHeight: '28rem', padding: 2, }}>
+                    <CardContent sx={{ overflow: 'auto', maxHeight: '28rem', padding: 2, }} className="scroll-content" >
                       <Box display="flex" alignItems="center">
                         <CalendarTodayIcon sx={{ fontSize: 40, color: '#FFFFFF', marginRight: 1 }} />
                         <Typography sx={{ fontWeight: 'bold' }} variant="body1" color="#FFFFFF">Calendario</Typography>
@@ -918,7 +919,7 @@ export default function Home() {
 
               <Grid size={{ md: 'grow' }} sx={{ height: '16rem' }}> {/* Winget Notas */}
                 <Card style={{ background: '#45474B', borderRadius: 30 }} sx={{ height: '100%', width: '100%' }}>
-                  <CardContent sx={{ padding: 3, overflow: 'auto', maxHeight: '100%' }}>
+                  <CardContent sx={{ padding: 3, overflow: 'auto', maxHeight: '100%' }} className="scroll-content">
                     <Box display="flex" alignItems="center">
                       <NotesIcon sx={{ fontSize: 40, color: '#FFFFFF', marginRight: 1 }} />
                       <Typography sx={{ fontWeight: 'bold' }} variant="body1" color="#FFFFFF">Notas</Typography>
@@ -1085,7 +1086,7 @@ export default function Home() {
 
               <Grid size={{ md: 'grow' }} sx={{ height: '16rem' }}> {/* Winget Ventas obtenidas */}
                 <Card style={{ background: '#45474B', borderRadius: 30 }} sx={{ height: '100%' }} >
-                  <CardContent sx={{ overflow: 'auto', maxHeight: '100%', padding: 3 }} >
+                  <CardContent sx={{ overflow: 'auto', maxHeight: '100%', padding: 3 }} className="scroll-content">
                     <Box display="flex" alignItems="center">
                       <BarChartIcon sx={{ fontSize: 40, color: '#FFFFFF', marginRight: 1 }} />
                       <Typography sx={{ fontWeight: 'bold' }} variant="body1" color="#FFFFFF">Ventas Obtenidas</Typography>
@@ -1224,9 +1225,6 @@ export default function Home() {
         {/* /*
             ! SIGUE USANDO EL GRID ANIDADO, UNA COLUMNA DENTRO DE OTRA Y TODO DENTRO DE UN CONTENEDOR PRINCIPAL
           */}
-
-
-
 
       </Grid>
 

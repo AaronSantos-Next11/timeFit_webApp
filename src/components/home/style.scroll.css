@@ -1,0 +1,41 @@
+/* 
+! IMPORTANTE:
+* Es posible convertir este código en un tema global para Time Fit web app.
+* Solamente seria mover este archivo fuera de toda carpeta, hasta estar en el scope de "src".
+* Y agregar el nombre de la clase: 
+   "scroll-content" 
+* en donde queramos
+*/
+
+
+.scroll-content {
+   --scrollbar-color-thumb: #e67e00;
+   --scrollbar-color-track: #45474b;
+   --scrollbar-width: thin;
+   --scrollbar-width-legacy: 10px;
+}
+
+/* Navegadores modernos que soporten `scrollbar-*`*/
+@supports (scrollbar-width: auto) {
+   .scroll-content {
+      scrollbar-color: var(--scrollbar-color-thumb) var(--scrollbar-color-track);
+      scrollbar-width: var(--scrollbar-width);
+   }
+}
+
+/* Navegadores antiguos o que no sigan el estandar pero que soporten`::-webkit-scrollbar-*` */
+@supports selector(::-webkit-scrollbar) {
+
+   .scroll-content::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-color-thumb);
+   }
+
+   .scroll-content::-webkit-scrollbar-track {
+      background: var(--scrollbar-color-track);
+   }
+
+   .scroll-content::-webkit-scrollbar {
+      max-width: var(--scrollbar-width-legacy);
+      max-height: var(--scrollbar-width-legacy);
+   }
+}
