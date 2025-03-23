@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types'; // Importar PropTypes
+import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Home from './components/home/Home';
 import Memberships from './components/membership_management/memberships_and_services/Memberships';
@@ -13,6 +13,7 @@ import SupportAndHelp from './components/support_and_help/Support_and_help';
 import UserProfile from './components/user_profile/User_profile';
 import Logout from './components/log_out/Logout';
 import Login from './components/log_in/Login';
+import Signup from './components/sign_up/Signup'; 
 import CrearMembresia from './components/membership_management/memberships_and_services/CrearMembresia';
 import RegistrarServicio from './components/membership_management/memberships_and_services/RegistrarServicio';
 
@@ -22,14 +23,26 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
       {/* Ruta raíz: redirige a /login si no está autenticado */}
       <Route path="/" element={<Navigate to="/login" replace />} />
 
-      {/* Ruta de login (fuera del layout de la aplicación) */}
+      {/* Ruta de login */}
       <Route
         path="/login"
         element={
           isAuthenticated ? (
-            <Navigate to="/home" replace /> // Redirige a /home si ya está autenticado
+            <Navigate to="/home" replace />
           ) : (
-            <Login onLogin={onLogin} /> // Muestra el Login si no está autenticado
+            <Login onLogin={onLogin} />
+          )
+        }
+      />
+      
+      {/*ruta de signup */}
+      <Route
+        path="/sign_up"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/home" replace />
+          ) : (
+            <Signup />
           )
         }
       />
@@ -45,7 +58,7 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
         path="/*"
         element={
           isAuthenticated ? (
-            <Outlet /> // Se renderizarán las rutas protegidas
+            <Outlet />
           ) : (
             <Navigate to="/login" replace />
           )
@@ -78,9 +91,9 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
 
 // Validación de PropTypes
 AppRoutes.propTypes = {
-  isAuthenticated: PropTypes.bool.isRequired, // isAuthenticated es un booleano requerido
-  onLogin: PropTypes.func.isRequired, // onLogin es una función requerida
-  onLogout: PropTypes.func.isRequired, // onLogout es una función requerida
+  isAuthenticated: PropTypes.bool.isRequired,
+  onLogin: PropTypes.func.isRequired,
+  onLogout: PropTypes.func.isRequired,
 };
 
 export default AppRoutes;
