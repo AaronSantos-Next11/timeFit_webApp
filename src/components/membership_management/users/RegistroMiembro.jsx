@@ -1,8 +1,8 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Grid, TextField, Typography, Box, Grow } from "@mui/material";
 import { Divider } from "antd";
-import NorthIcon from "@mui/icons-material/North"; // Importa el ícono de flecha
+import NorthIcon from "@mui/icons-material/North";
 import * as React from "react";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -12,19 +12,8 @@ import Snackbar from "@mui/material/Snackbar";
 
 export default function RegistroMiembro({ isOpen, onClose, addUser }) {
   const [isClosing, setIsClosing] = useState(false);
-
   const [openRegistradoExito, setOpenRegistradoExito] = React.useState(false);
-
-  // Función para abrir el Snackbar
-  const RegistradoExito = () => {
-    setOpenRegistradoExito(true); // Abre el Snackbar al presionar el botón
-  };
-
-  // Función para cerrar el Snackbar
-  const cerrarSnack = (event, reason) => {
-    if (reason === "clickaway") return;
-    setOpenRegistradoExito(false); // Cierra el Snackbar
-  };
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Variables de datos generales
   const [name, setName] = useState("");
@@ -53,7 +42,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
   const [endDate, setEndDate] = useState("");
   const [tryner, setTryner] = React.useState("");
 
-  // variables de pago
+  // Variables de pago
   const [paymentMethod, setPaymentMethod] = React.useState("");
   const [cardName, setCardName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
@@ -72,29 +61,185 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
     "& .MuiInputLabel-root.Mui-focused": { color: "white" },
   };
 
+  // Función para validar nombres
+  const handleNameChange = (e, setState) => {
+    const value = e.target.value;
+    const regex = /^[A-Za-z\s]*$/;
+    if (regex.test(value)) {
+      const formattedValue = value
+        .toLowerCase()
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+      setState(formattedValue);
+    }
+  };
+
+  // Función para validar teléfono
+  const handlePhoneChange = (e, setState) => {
+    const value = e.target.value;
+    const regex = /^\d{0,10}$/;
+    if (regex.test(value)) {
+      setState(value);
+    }
+  };
+
+  // Función para validar número de tarjeta
+  const handleCardNumberChange = (e, setState) => {
+    const value = e.target.value;
+    const regex = /^\d{0,16}$/;
+    if (regex.test(value)) {
+      setState(value);
+    }
+  };
+
+  // Función para validar CVV
+  const handleCVVChange = (e, setState) => {
+    const value = e.target.value;
+    const regex = /^\d{0,3}$/;
+    if (regex.test(value)) {
+      setState(value);
+    }
+  };
+
+  // Función para validar si todos los campos están llenos
+  const validateForm = () => {
+    return (
+      name &&
+      lastName &&
+      motherLastName &&
+      birthDate &&
+      rfc &&
+      email &&
+      phone &&
+      emergencyContact &&
+      emergencyContactName &&
+      country &&
+      state &&
+      city &&
+      colonia &&
+      street &&
+      zipCode &&
+      numExt &&
+      membershipType &&
+      startDate &&
+      endDate &&
+      tryner &&
+      paymentMethod &&
+      cardName &&
+      cardNumber &&
+      expirationDate &&
+      cvv
+    );
+  };
+
+  // Función para abrir el Snackbar
+  const RegistradoExito = () => {
+    setOpenRegistradoExito(true);
+  };
+
+  // Función para cerrar el Snackbar
+  const cerrarSnack = (event, reason) => {
+    if (reason === "clickaway") return;
+    setOpenRegistradoExito(false);
+  };
+
+  // Función para manejar el envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      alert("Por favor, completa todos los campos obligatorios.");
+      return;
+    }
+
     const newUser = {
       miembro: `${name} ${lastName} ${motherLastName}`,
-      id: `#${Math.floor(Math.random() * 1000)}`, // Genera un ID aleatorio
+      id: `#${Math.floor(Math.random() * 1000)}`,
       correo: email,
       telefono: phone,
-      fecha: new Date().toLocaleDateString(), // Fecha actual
+      fecha: new Date().toLocaleDateString(),
       estatus: "Activo",
     };
 
-    addUser(newUser); // Agrega el nuevo usuario
-    RegistradoExito(); // Muestra el mensaje de éxito
-    onClose(); // Cierra el modal
+    addUser(newUser);
+    RegistradoExito();
+    onClose();
   };
 
+  // Función para manejar el cierre del modal con advertencia
   const handleClose = () => {
+    if (hasUnsavedChanges) {
+      const confirmClose = window.confirm(
+        "¿Estás seguro de que quieres cerrar? Los datos no guardados se perderán."
+      );
+      if (!confirmClose) return;
+    }
     setIsClosing(true);
     setTimeout(() => {
       onClose();
       setIsClosing(false);
-    }, 500); // Ajusta el tiempo para que coincida con la duración de la animación
+    }, 500);
   };
+
+  // Efecto para detectar cambios no guardados
+  useEffect(() => {
+    const formData = {
+      name,
+      lastName,
+      motherLastName,
+      birthDate,
+      rfc,
+      email,
+      phone,
+      emergencyContact,
+      emergencyContactName,
+      country,
+      state,
+      city,
+      colonia,
+      street,
+      zipCode,
+      numExt,
+      membershipType,
+      startDate,
+      endDate,
+      tryner,
+      paymentMethod,
+      cardName,
+      cardNumber,
+      expirationDate,
+      cvv,
+    };
+
+    const hasData = Object.values(formData).some((value) => value !== "");
+    setHasUnsavedChanges(hasData);
+  }, [
+    name,
+    lastName,
+    motherLastName,
+    birthDate,
+    rfc,
+    email,
+    phone,
+    emergencyContact,
+    emergencyContactName,
+    country,
+    state,
+    city,
+    colonia,
+    street,
+    zipCode,
+    numExt,
+    membershipType,
+    startDate,
+    endDate,
+    tryner,
+    paymentMethod,
+    cardName,
+    cardNumber,
+    expirationDate,
+    cvv,
+  ]);
 
   return (
     <>
@@ -110,7 +255,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            zIndex: 1200, // Asegura que esté por encima de todo
+            zIndex: 1200,
           }}
         >
           {/* Modal con animación */}
@@ -119,8 +264,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
               sx={{
                 width: "70%",
                 maxWidth: "1200px",
-                maxHeight: "90vh", // Altura máxima del modal
-
+                maxHeight: "90vh",
                 backgroundColor: "#363636",
                 padding: "20px",
                 borderRadius: "30px 30px 8px 8px",
@@ -138,19 +282,19 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                   padding: "10px",
                   textAlign: "left",
                   marginBottom: "20px",
-                  display: "flex", // Para alinear la flecha y el texto horizontalmente
-                  alignItems: "center", // Centra verticalmente la flecha y el texto
+                  display: "flex",
+                  alignItems: "center",
                 }}
               >
                 {/* Flecha */}
                 <NorthIcon
                   sx={{
-                    color: "black", // Color de la flecha
-                    marginRight: "10px", // Espacio entre la flecha y el texto
-                    cursor: "pointer", // Cambia el cursor a "pointer" para indicar que es clickeable
-                    transform: "rotate(-90deg)", // Rota el ícono 90 grados hacia la izquierda
+                    color: "black",
+                    marginRight: "10px",
+                    cursor: "pointer",
+                    transform: "rotate(-90deg)",
                   }}
-                  onClick={handleClose} // Llama a la función handleClose al hacer clic
+                  onClick={handleClose}
                 />
                 <Typography variant="h6" color="black">
                   Registro de nuevo miembro:
@@ -158,9 +302,9 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
               </Box>
               <Box
                 sx={{
-                  maxHeight: "calc(90vh - 100px)", // Altura máxima del contenido
+                  maxHeight: "calc(90vh - 100px)",
                   padding: "20px",
-                  overflowY: "auto", // Permite el desplazamiento vertical
+                  overflowY: "auto",
                 }}
               >
                 <form onSubmit={handleSubmit}>
@@ -175,9 +319,10 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         fullWidth
                         label="Nombre"
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={(e) => handleNameChange(e, setName)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -186,9 +331,10 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         fullWidth
                         label="Apellido Paterno"
                         value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
+                        onChange={(e) => handleNameChange(e, setLastName)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -197,9 +343,10 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         fullWidth
                         label="Apellido Materno"
                         value={motherLastName}
-                        onChange={(e) => setMotherLastName(e.target.value)}
+                        onChange={(e) => handleNameChange(e, setMotherLastName)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -213,6 +360,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setBirthDate(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -224,6 +372,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setRfc(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -236,6 +385,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setEmail(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -245,9 +395,10 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         label="Teléfono"
                         type="tel"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => handlePhoneChange(e, setPhone)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -257,9 +408,10 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         label="Contacto de Emergencia"
                         type="tel"
                         value={emergencyContact}
-                        onChange={(e) => setEmergencyContact(e.target.value)}
+                        onChange={(e) => handlePhoneChange(e, setEmergencyContact)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -268,16 +420,15 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         fullWidth
                         label="Nombre del Contacto de Emergencia"
                         value={emergencyContactName}
-                        onChange={(e) =>
-                          setEmergencyContactName(e.target.value)
-                        }
+                        onChange={(e) => handleNameChange(e, setEmergencyContactName)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                   </Grid>
 
-                  {/* Datos de direccion */}
+                  {/* Datos de dirección */}
                   <Divider
                     style={{ backgroundColor: "white", margin: "20px 0" }}
                   />
@@ -294,6 +445,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setCountry(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -305,6 +457,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setState(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -316,6 +469,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setCity(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -327,6 +481,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setColonia(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -338,6 +493,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setStreet(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -349,6 +505,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setZipCode(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -360,6 +517,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         onChange={(e) => setNumExt(e.target.value)}
                         sx={textFieldStyle}
                         color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -374,11 +532,11 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                       />
                     </Grid>
                   </Grid>
+
+                  {/* Membresía */}
                   <Divider
                     style={{ backgroundColor: "white", margin: "20px 0" }}
                   />
-
-                  {/* CUESTIONARIO DE MEMBRESIAS */}
                   <Typography variant="h4" gutterBottom color="white">
                     Membresía
                   </Typography>
@@ -401,6 +559,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                           onChange={(e) => setMembershipType(e.target.value)}
                           sx={textFieldStyle}
                           color="warning"
+                          required
                         >
                           <MenuItem value={"1"} color="warning">
                             Gym Rookie
@@ -421,6 +580,8 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                         sx={textFieldStyle}
+                        color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -433,13 +594,17 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         sx={textFieldStyle}
+                        color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
                       <FormControl
                         variant="standard"
                         fullWidth
+                        color="warning"
                         sx={{ ...textFieldStyle }}
+                        
                       >
                         <InputLabel id="demo-simple-select-label">
                           Entrenador
@@ -451,6 +616,7 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                           label="Entrenador"
                           onChange={(e) => setTryner(e.target.value)}
                           sx={textFieldStyle}
+                          required
                         >
                           <MenuItem value={"Entrenador 1"}>
                             Entrenador 1
@@ -463,12 +629,12 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                     </Grid>
                   </Grid>
 
-                  {/* INFORMACION DE PAGO */}
+                  {/* Información de pago */}
                   <Divider
                     style={{ backgroundColor: "white", margin: "20px 0" }}
                   />
                   <Typography variant="h4" gutterBottom color="white">
-                    Informacion de pago
+                    Información de pago
                   </Typography>
                   <Grid container spacing={4}>
                     <Grid item xs={4}>
@@ -476,6 +642,8 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         variant="standard"
                         fullWidth
                         sx={{ ...textFieldStyle }}
+                        color="warning"
+
                       >
                         <InputLabel id="demo-simple-select-label">
                           Método de Pago
@@ -487,6 +655,8 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                           label="Método de Pago"
                           onChange={(e) => setPaymentMethod(e.target.value)}
                           sx={textFieldStyle}
+                          
+                          required
                         >
                           <MenuItem value={"Tarjeta de Crédito"}>
                             Tarjeta de Crédito
@@ -503,8 +673,10 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         fullWidth
                         label="Nombre de la tarjeta"
                         value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
+                        onChange={(e) => handleNameChange(e, setCardName)}
                         sx={textFieldStyle}
+                        color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -513,8 +685,10 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         fullWidth
                         label="Número de tarjeta"
                         value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
+                        onChange={(e) => handleCardNumberChange(e, setCardNumber)}
                         sx={textFieldStyle}
+                        color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -527,6 +701,8 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         value={expirationDate}
                         onChange={(e) => setExpirationDate(e.target.value)}
                         sx={textFieldStyle}
+                        color="warning"
+                        required
                       />
                     </Grid>
                     <Grid item xs={4}>
@@ -535,14 +711,15 @@ export default function RegistroMiembro({ isOpen, onClose, addUser }) {
                         fullWidth
                         label="CVV"
                         value={cvv}
-                        onChange={(e) => setCvv(e.target.value)}
+                        onChange={(e) => handleCVVChange(e, setCvv)}
                         sx={textFieldStyle}
+                        color="warning"
+                        required
                       />
                     </Grid>
                   </Grid>
 
-                  {/* BOTONES */}
-
+                  {/* Botones */}
                   <Box sx={{ marginTop: "20px" }}>
                     <Button
                       variant="contained"
