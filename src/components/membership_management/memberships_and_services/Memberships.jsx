@@ -28,6 +28,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import GroupIcon from "@mui/icons-material/Group";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import { Avatar } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import "./Memberships.css"
 
@@ -83,6 +84,9 @@ export default function Membership() {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const displayName = localStorage.getItem("displayName") || "Usuario";
+  const photoURL = localStorage.getItem("photoURL") || "";
 
   const isMenuOpen = Boolean(anchorEl);
   const isFilterMenuOpen = Boolean(filterAnchorEl);
@@ -399,8 +403,8 @@ export default function Membership() {
 
   return (
     <>
-      {/* Primer nivel: Header */}
-      <Grid
+            {/* Primer nivel: Header */}
+            <Grid
         container
         alignItems="center"
         justifyContent="space-between"
@@ -408,11 +412,11 @@ export default function Membership() {
       >
         {/* Título y descripción */}
         <Grid item>
-          <Typography variant="h4" sx={{ margin: 0, fontSize: "26px", fontWeight: "bold" }}>
+          <Typography variant="h4" sx={{ margin: 0, fontSize: "24px", fontWeight: "bold" }}>
             Membresías y Servicios
           </Typography>
           <Typography variant="body2" sx={{ margin: 0, fontSize: "14px", color: "#ccc" }}>
-            Administra fácilmente las membresías y <hr /> servicios  de tu gimnasio
+            Administra fácilmente las membresías y <hr /> servicios de tu gimnasio
           </Typography>
         </Grid>
 
@@ -460,10 +464,10 @@ export default function Membership() {
         {/* Perfil del usuario */}
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box sx={{ textAlign: "right" }}>
-            <Typography variant="h6" sx={{ margin: 0, fontSize: "18x", color: "#F8820B" }}>
-              Yair Guzman
+            <Typography sx={{ margin: 0, fontSize: "18px", color: "#F8820B" }}>
+              {displayName}
             </Typography>
-            <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>
+            <Typography variant="body2" sx={{ margin: 0, fontSize: "13px", color: "#ccc" }}>
               Administrador
             </Typography>
           </Box>
@@ -474,7 +478,11 @@ export default function Membership() {
             onClick={handleProfileMenuOpen}
             sx={{ color: "#fff" }}
           >
-            <AccountCircle sx={{ fontSize: "60px" }} />
+            {photoURL ? (
+              <Avatar alt={displayName} src={photoURL} sx={{ width: 40, height: 40 }} />
+            ) : (
+              <AccountCircle sx={{ fontSize: "60px" }} />
+            )}
           </IconButton>
         </Grid>
       </Grid>

@@ -85,7 +85,20 @@ const Login = ({ onLogin }) => {
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
       const token = await userCredential.user.getIdToken();
-      localStorage.setItem("authToken", token); // Guardar en localStorage
+
+      // Extraer y formatear el displayName: obtener solo el nombre y apellido (dos primeras palabras)
+      const fullName = userCredential.user.displayName || "";
+      const nameParts = fullName.trim().split(" ");
+      const formattedName = nameParts.slice(0, 2).join(" ");
+      // Guardar el nombre formateado en localStorage para usarlo en otros componentes (ej. Home)
+      localStorage.setItem("displayName", formattedName);
+
+      // Extraer la foto de perfil
+      const photoURL = userCredential.user.photoURL || "";
+      // Guardar la foto de perfil en localStorage, si existe. Si no, se guarda una cadena vacía o se omite
+      localStorage.setItem("photoURL", photoURL);
+
+      localStorage.setItem("authToken", token);
       onLogin();
     } catch (error) {
       console.error("Error en autenticación con Google:", error);
