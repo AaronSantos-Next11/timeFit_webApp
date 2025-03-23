@@ -1,16 +1,19 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 const Logout = ({ onLogout }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Ejecutar acciones de logout en el efecto
+    
     // 1. Limpiar datos de sesión
-    localStorage.removeItem('authToken'); // Elimina el token de autenticación de localStorage
-    sessionStorage.removeItem('authToken'); // Elimina el token de autenticación de sessionStorage
-    localStorage.removeItem('user'); // Elimina otros datos de usuario si es necesario
+    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('authToken');
+    localStorage.removeItem('user');
 
-    // 2. Actualizar el estado de autenticación
+    // 2. Actualizar el estado de autenticación en la aplicación
     if (onLogout) {
       onLogout();
     }
@@ -19,7 +22,12 @@ const Logout = ({ onLogout }) => {
     navigate('/login', { replace: true });
   }, [navigate, onLogout]);
 
-  return null; 
+  // Este componente no renderiza nada visible
+  return null;
+};
+
+Logout.propTypes = {
+  onLogout: PropTypes.func,
 };
 
 export default Logout;

@@ -16,6 +16,7 @@ import Login from './components/log_in/Login';
 import Signup from './components/sign_up/Signup'; 
 import CrearMembresia from './components/membership_management/memberships_and_services/CrearMembresia';
 import RegistrarServicio from './components/membership_management/memberships_and_services/RegistrarServicio';
+import LogoutModal from './components/log_out/LogoutModal';
 
 const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
   return (
@@ -44,6 +45,14 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
           ) : (
             <Signup />
           )
+        }
+      />
+
+      {/* Ruta de confirmación de logout */}
+      <Route
+        path="/logout-confirm"
+        element={
+          isAuthenticated ? <LogoutModal /> : <Navigate to="/login" replace />
         }
       />
 

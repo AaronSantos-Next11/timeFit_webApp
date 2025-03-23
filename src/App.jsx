@@ -5,7 +5,9 @@ import Logo from "./components/sidebar_menu/Logo";
 import { MenuList } from './components/sidebar_menu/MenuList';
 import LogoutButton from './components/sidebar_menu/LogoutButton';
 import CollapseButton from './components/sidebar_menu/CollapseButton';
-import AppRoutes from './AppRoutes'; 
+import AppRoutes from './AppRoutes';
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebase/firebase-config"; // Ajusta la ruta según tu estructura
 
 const { Sider, Content } = Layout;
 
@@ -14,28 +16,40 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Verificar la sesión al cargar la aplicación
+  // Escucha el estado de autenticación real en Firebase
   useEffect(() => {
-    const token = localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
-    if (token) {
-      setIsAuthenticated(true); // Si hay un token, el usuario está autenticado
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+        // Guarda el token en localStorage (opcional)
+        user.getIdToken().then((token) => {
+          localStorage.setItem("authToken", token);
+        });
+      } else {
+        setIsAuthenticated(false);
+        // Limpia los tokens en caso de no haber usuario autenticado
+        localStorage.removeItem("authToken");
+        sessionStorage.removeItem("authToken");
+      }
+    });
+
+    // Limpieza del listener al desmontar el componente
+    return () => unsubscribe();
   }, []);
 
   const handleLogin = () => {
-    setIsAuthenticated(true); // Actualiza el estado a "autenticado"
+    setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
-    // Elimina el token de localStorage y sessionStorage al cerrar sesión
+    // Elimina los tokens de autenticación al cerrar sesión
     localStorage.removeItem("authToken");
     sessionStorage.removeItem("authToken");
-    setIsAuthenticated(false); // Actualiza el estado a "no autenticado"
+    setIsAuthenticated(false);
   };
 
   return (
     <Router>
-      {/* Renderiza el Layout solo si el usuario está autenticado */}
       {isAuthenticated ? (
         <Layout>
           <Sider
@@ -63,7 +77,6 @@ const App = () => {
                 <LogoutButton 
                   collapsed={collapsed} 
                   setCurrentPage={setCurrentPage}
-                  onLogout={handleLogout} // Pasa handleLogout al botón de cerrar sesión
                 />
               </div>
             </div>
@@ -86,7 +99,7 @@ const App = () => {
                 backgroundColor: '#272829' 
               }}
             >
-              {/* Renderizan las rutas protegidas */}
+              {/* Rutas protegidas */}
               <AppRoutes 
                 isAuthenticated={isAuthenticated}
                 onLogin={handleLogin}
@@ -96,7 +109,7 @@ const App = () => {
           </Layout>
         </Layout>
       ) : (
-        // Si el usuario no está autenticado, renderiza solo las rutas públicas (login)
+        // Si el usuario no está autenticado, muestra únicamente las rutas públicas (como Login)
         <AppRoutes 
           isAuthenticated={isAuthenticated}
           onLogin={handleLogin}

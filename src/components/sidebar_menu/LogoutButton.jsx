@@ -2,21 +2,24 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Button } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './LogoutButton.css';
 
 const LogoutButton = ({ collapsed }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleLogout = () => {
-    navigate('/logout');
+  const handleLogoutClick = () => {
+    // Navegar a la ruta de confirmación de logout, 
+    // pasando la ubicación actual como state para poder volver
+    navigate('/logout-confirm', { state: { from: location.pathname } });
   };
 
   return (
     <Button
       icon={<LogoutOutlined />}
       className={`logout-button ${collapsed ? 'collapsed' : ''}`}
-      onClick={handleLogout}
+      onClick={handleLogoutClick}
       style={{
         width: '100%',
         textAlign: 'left',

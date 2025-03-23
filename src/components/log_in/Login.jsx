@@ -1,12 +1,17 @@
 import React from "react";
 import "./Login.css";
-import ForgotPasswordModal from "./ForgotPasswordModal"; 
+import ForgotPasswordModal from "./ForgotPasswordModal";
 import { Link } from "react-router-dom";
-import timefitLogo from '../../assets/timefit.svg';
-import MicrosoftIcon from '@mui/icons-material/Microsoft';
-import GoogleIcon from '@mui/icons-material/Google';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import timefitLogo from "../../assets/timefit.svg";
+import MicrosoftIcon from "@mui/icons-material/Microsoft";
+
+// Importaciones de firebases
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../../firebase/firebase-config"; // Ajusta la ruta según tu estructura
+
+import GoogleIcon from "@mui/icons-material/Google";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 const Login = ({ onLogin }) => {
   const [error, setError] = React.useState("");
@@ -22,45 +27,55 @@ const Login = ({ onLogin }) => {
   ];
 
   // Función para manejar el envío del formulario
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    // Validación básica de campos vacíos
     if (!email || !password) {
       setError("Por favor, complete todos los campos.");
       return;
     }
 
-    // Verifica si las credenciales coinciden con alguna de las hardcodeadas
-    const isValidUser = validCredentials.some(
-      (cred) => cred.email === email && cred.password === password
-    );
-
-    if (isValidUser) {
+    try {
+      // Intenta iniciar sesión con Firebase Authentication
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       setError("");
 
-      // Simulación de un token de autenticación (en un caso real, esto lo genera el backend)
-      const fakeToken = "fake-jwt-token";
+      // Obtén el token de identificación del usuario
+      const token = await userCredential.user.getIdToken();
 
-      // Si el usuario marcó "Mantener la sesión iniciada", guarda el token en localStorage
+      // Almacena el token según la preferencia del usuario
       if (rememberMe) {
-        localStorage.setItem("authToken", fakeToken);
+        localStorage.setItem("authToken", token);
       } else {
-        // Si no, usa sessionStorage (se borra al cerrar la pestaña)
-        sessionStorage.setItem("authToken", fakeToken);
+        sessionStorage.setItem("authToken", token);
       }
 
-      onLogin(); // Llama a onLogin para actualizar el estado de autenticación
-    } else {
-      setError("Correo o contraseña incorrectos");
+      // Actualiza el estado de autenticación en la aplicación
+      onLogin();
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      setError("Correo o contraseña incorrectos.");
+    }
+  };
+
+  // Autenticacion con google
+  const handleGoogleSignIn = async () => {
+    try {
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const token = await userCredential.user.getIdToken();
+      localStorage.setItem("authToken", token); // Puedes ajustar si prefieres sessionStorage
+      onLogin();
+    } catch (error) {
+      console.error("Error en autenticación con Google:", error);
+      setError("Error al iniciar sesión con Google.");
     }
   };
 
   // Función para abrir el modal de recuperación de contraseña
   const openForgotPasswordModal = (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     setIsForgotPasswordOpen(true);
   };
 
@@ -78,9 +93,9 @@ const Login = ({ onLogin }) => {
     <div className="login-container">
       <div className="login-image">
         <img src="https://escueladfitness.com/wp-content/uploads/2022/09/entrenador.jpg" alt="Entrenador en gimnasio" />
-        <button 
-          className="back-button" 
-          onClick={() => window.location.href = "https://landing-page-time-fit.vercel.app/"}
+        <button
+          className="back-button"
+          onClick={() => (window.location.href = "https://landing-page-time-fit.vercel.app/")}
         >
           ← Regresar a la página web
         </button>
@@ -101,12 +116,12 @@ const Login = ({ onLogin }) => {
 
         <form onSubmit={handleSubmit}>
           <label>Correo electrónico</label>
-          <input 
-            type="email" 
-            name="email" 
-            placeholder="Escriba aquí su correo electrónico" 
-            required 
-            autocomplete="username" 
+          <input
+            type="email"
+            name="email"
+            placeholder="Escriba aquí su correo electrónico"
+            required
+            autocomplete="username"
           />
 
           <label>Contraseña</label>
@@ -118,25 +133,19 @@ const Login = ({ onLogin }) => {
               required
               autocomplete="current-password"
             />
-            <button 
-              type="button" 
-              className="toggle-password-button"
-              onClick={togglePasswordVisibility}
-            >
+            <button type="button" className="toggle-password-button" onClick={togglePasswordVisibility}>
               {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
             </button>
           </div>
 
           <div className="login-options">
             <label>
-              <input 
-                type="checkbox" 
-                checked={rememberMe} 
-                onChange={(e) => setRememberMe(e.target.checked)} 
-              />
+              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
               Mantener la sesión iniciada
             </label>
-            <a href="#" onClick={openForgotPasswordModal}>¿Olvidó su contraseña?</a>
+            <a href="#" onClick={openForgotPasswordModal}>
+              ¿Olvidó su contraseña?
+            </a>
           </div>
 
           {error && <p className="error-message">{error}</p>}
@@ -149,19 +158,22 @@ const Login = ({ onLogin }) => {
         <div className="separator">o iniciar sesión con</div>
 
         <div className="social-buttons">
-          <button className="google-button">
-            <span><GoogleIcon /></span> Iniciar sesión con Google
+          <button className="google-button" onClick={handleGoogleSignIn}>
+            <span>
+              <GoogleIcon />
+            </span>
+            Iniciar sesión con Google
           </button>
           <button className="microsoft-button">
-            <span><MicrosoftIcon /></span> Iniciar sesión con Microsoft
+            <span>
+              <MicrosoftIcon />
+            </span>
+            Iniciar sesión con Microsoft
           </button>
         </div>
       </div>
 
-      <ForgotPasswordModal 
-        isOpen={isForgotPasswordOpen} 
-        onClose={closeForgotPasswordModal} 
-      />
+      <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={closeForgotPasswordModal} />
     </div>
   );
 };
