@@ -36,6 +36,8 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+import { Link } from "react-router-dom";
+
 // Estilos personalizados para la tabla
 const StyledTableCell = styled(TableCell)(() => ({
   backgroundColor: "transparent",
@@ -406,11 +408,11 @@ export default function Membership() {
       >
         {/* Título y descripción */}
         <Grid item>
-          <Typography variant="h4" sx={{ margin: 0, fontSize: "28px", fontWeight: "bold" }}>
+          <Typography variant="h4" sx={{ margin: 0, fontSize: "26px", fontWeight: "bold" }}>
             Membresías y Servicios
           </Typography>
-          <Typography variant="body2" sx={{ margin: 0, fontSize: "16px", color: "#ccc" }}>
-            Administra fácilmente las membresías y servicios <hr /> de tu gimnasio
+          <Typography variant="body2" sx={{ margin: 0, fontSize: "14px", color: "#ccc" }}>
+            Administra fácilmente las membresías y <hr /> servicios  de tu gimnasio
           </Typography>
         </Grid>
 
@@ -424,8 +426,8 @@ export default function Membership() {
               padding: "8px 20px",
               borderRadius: "30px",
               boxShadow: 3,
-              width: "720px",
-              height: "60px",
+              width: "455px",
+              height: "45px",
               marginTop: "-12px",
               backgroundColor: "#ffff",
               border: "1px solid #444",
@@ -445,12 +447,12 @@ export default function Membership() {
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
             <Badge badgeContent={messagesCount} color="error">
-              <MailIcon sx={{ fontSize: "28px" }} />
+              <MailIcon sx={{ fontSize: "24px" }} />
             </Badge>
           </IconButton>
           <IconButton size="large" aria-label="show new notifications" sx={{ color: "#fff" }}>
             <Badge badgeContent={notificationsCount} color="error">
-              <NotificationsIcon sx={{ fontSize: "28px" }} />
+              <NotificationsIcon sx={{ fontSize: "24px" }} />
             </Badge>
           </IconButton>
         </Grid>
@@ -509,6 +511,8 @@ export default function Membership() {
         </Grid>
         <Grid item>
           <Button
+          component={Link}
+          to="/membership_management/crearmembresia"
             variant="contained"
             sx={{
               backgroundColor: "#e67e22",
@@ -522,7 +526,6 @@ export default function Membership() {
               height: "48px",
               fontSize: "16px",
             }}
-            onClick={handleAddMembership}
           >
             Crear membresía
           </Button>
@@ -530,20 +533,23 @@ export default function Membership() {
       </Grid>
 
       {/* Tercer nivel: Carrusel de Membresías */}
-      <Box sx={{ padding: "20px 29px 30px 20px" }}>
+      <Box sx={{ padding: "20px 40px 30px 40px" ,
+
+        }}>
         <Slider {...settings}>
           {memberships.map((membership, index) => (
-            <Box key={index} sx={{ padding: "0 60px" }}>
+            <Box key={index} sx={{ padding: "0 35px 0 35px" }}>
               <Card
                 sx={{
                   backgroundColor: "#333333",
                   color: "white",
                   borderRadius: "8px",
                   height: "400px",
-                  width: "380px",
+                  width: "300px",
+                  
                 }}
               >
-                <CardContent sx={{ padding: "20px" }}>
+                <CardContent sx={{ padding: "16px" }}>
                   {/* Header */}
                   <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -579,7 +585,7 @@ export default function Membership() {
                         <Typography
                           variant="h5"
                           component="h2"
-                          sx={{ color: membership.color, fontWeight: "bold", fontSize: "26px" }}
+                          sx={{ color: membership.color, fontWeight: "bold", fontSize: "18px" }}
                         >
                           {membership.name}
                         </Typography>
@@ -600,48 +606,48 @@ export default function Membership() {
                           </Typography>
                         </Box>
                       </Box>
-                      <IconButton sx={{ color: membership.color, padding: "4px", marginLeft: "80px" }}>
+                      <IconButton sx={{ color: membership.color, padding: "4px", marginLeft: "35px" }}>
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Box>
                   </Box>
 
                   {/* Description */}
-                  <Typography variant="body2" sx={{ color: "#ddd", fontSize: "16px", marginBottom: 2 }}>
+                  <Typography variant="body2" sx={{ color: "#ddd", fontSize: "14px", marginBottom: 4.0, marginTop: 3.0 }}>
                     {membership.description}
                   </Typography>
 
                   {/* Pricing Information */}
-                  <Box sx={{ marginBottom: 2, marginTop: "18px" }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: 1.25 }}>
-                      <Typography variant="body2" sx={{ color: membership.color, fontSize: "16px" }}>
+                  <Box sx={{ marginBottom: 2, marginTop: "20px" }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: 2.0 }}>
+                      <Typography variant="body2" sx={{ color: membership.color, fontSize: "14px" }}>
                         Usuarios:
                       </Typography>
-                      <Typography variant="body2" sx={{ color: "#fff", fontSize: "16px" }}>
+                      <Typography variant="body2" sx={{ color: "#fff", fontSize: "14px" }}>
                         {membership.users}
                       </Typography>
                     </Box>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: 1.25 }}>
-                      <Typography variant="body2" sx={{ color: membership.color, fontSize: "16px" }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: 2.0 }}>
+                      <Typography variant="body2" sx={{ color: membership.color, fontSize: "14px" }}>
                         Mensual:
                       </Typography>
-                      <Typography variant="body2" sx={{ color: "#fff", fontSize: "16px" }}>
+                      <Typography variant="body2" sx={{ color: "#fff", fontSize: "14px" }}>
                         {membership.monthly}
                       </Typography>
                     </Box>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: 1.25 }}>
-                      <Typography variant="body2" sx={{ color: membership.color, fontSize: "16px" }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: 2.0 }}>
+                      <Typography variant="body2" sx={{ color: membership.color, fontSize: "14px" }}>
                         Trimestral:
                       </Typography>
-                      <Typography variant="body2" sx={{ color: "#fff", fontSize: "16px" }}>
+                      <Typography variant="body2" sx={{ color: "#fff", fontSize: "14px" }}>
                         {membership.quarterly}
                       </Typography>
                     </Box>
                     <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                      <Typography variant="body2" sx={{ color: membership.color, fontSize: "16px" }}>
+                      <Typography variant="body2" sx={{ color: membership.color, fontSize: "14px" }}>
                         Anual:
                       </Typography>
-                      <Typography variant="body2" sx={{ color: "#fff", fontSize: "16px" }}>
+                      <Typography variant="body2" sx={{ color: "#fff", fontSize: "14px" }}>
                         {membership.yearly}
                       </Typography>
                     </Box>
@@ -685,6 +691,8 @@ export default function Membership() {
         </Grid>
         <Grid item>
           <Button
+          component={Link}
+          to="/membership_management/registrarservicio"
             variant="contained"
             sx={{
               backgroundColor: "#e67e22",
