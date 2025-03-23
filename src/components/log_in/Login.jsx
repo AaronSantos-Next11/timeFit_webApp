@@ -8,11 +8,11 @@ import GoogleIcon from '@mui/icons-material/Google';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
-
 const Login = ({ onLogin }) => {
   const [error, setError] = React.useState("");
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [rememberMe, setRememberMe] = React.useState(false);
 
   // Credenciales hardcodeadas (solo para pruebas)
   const validCredentials = [
@@ -39,8 +39,20 @@ const Login = ({ onLogin }) => {
     );
 
     if (isValidUser) {
-      setError(""); 
-      onLogin(); 
+      setError("");
+
+      // Simulación de un token de autenticación (en un caso real, esto lo genera el backend)
+      const fakeToken = "fake-jwt-token";
+
+      // Si el usuario marcó "Mantener la sesión iniciada", guarda el token en localStorage
+      if (rememberMe) {
+        localStorage.setItem("authToken", fakeToken);
+      } else {
+        // Si no, usa sessionStorage (se borra al cerrar la pestaña)
+        sessionStorage.setItem("authToken", fakeToken);
+      }
+
+      onLogin(); // Llama a onLogin para actualizar el estado de autenticación
     } else {
       setError("Correo o contraseña incorrectos");
     }
@@ -75,7 +87,6 @@ const Login = ({ onLogin }) => {
       </div>
 
       <div className="login-form">
-        {/* Logo en la esquina superior derecha */}
         <div className="logo-container">
           <img src={timefitLogo} alt="Time Fit Logo" />
           <span>Time Fit / Admin</span>
@@ -86,13 +97,17 @@ const Login = ({ onLogin }) => {
           Si aún no tienes cuenta, <Link to="/sign_up">registrate aqui</Link>
         </p>
 
-        <h4>
-        Por favor, inicie sesión con su cuenta.
-        </h4>
+        <h4>Por favor, inicie sesión con su cuenta.</h4>
 
         <form onSubmit={handleSubmit}>
           <label>Correo electrónico</label>
-          <input type="email" name="email" placeholder="Escriba aquí su correo electrónico" required />
+          <input 
+            type="email" 
+            name="email" 
+            placeholder="Escriba aquí su correo electrónico" 
+            required 
+            autocomplete="username" 
+          />
 
           <label>Contraseña</label>
           <div className="password-input-container">
@@ -101,6 +116,7 @@ const Login = ({ onLogin }) => {
               name="password"
               placeholder="Escriba aquí su contraseña"
               required
+              autocomplete="current-password"
             />
             <button 
               type="button" 
@@ -113,7 +129,12 @@ const Login = ({ onLogin }) => {
 
           <div className="login-options">
             <label>
-              <input type="checkbox" /> Recordarme la contraseña
+              <input 
+                type="checkbox" 
+                checked={rememberMe} 
+                onChange={(e) => setRememberMe(e.target.checked)} 
+              />
+              Mantener la sesión iniciada
             </label>
             <a href="#" onClick={openForgotPasswordModal}>¿Olvidó su contraseña?</a>
           </div>
@@ -129,10 +150,10 @@ const Login = ({ onLogin }) => {
 
         <div className="social-buttons">
           <button className="google-button">
-            <span>< GoogleIcon/></span> Iniciar sesión con Google
+            <span><GoogleIcon /></span> Iniciar sesión con Google
           </button>
           <button className="microsoft-button">
-            <span><MicrosoftIcon/></span> Iniciar sesión con Microsoft
+            <span><MicrosoftIcon /></span> Iniciar sesión con Microsoft
           </button>
         </div>
       </div>

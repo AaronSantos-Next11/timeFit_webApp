@@ -6,7 +6,8 @@ const Logout = ({ onLogout }) => {
 
   useEffect(() => {
     // 1. Limpiar datos de sesión
-    localStorage.removeItem('token'); // Elimina el token de autenticación
+    localStorage.removeItem('authToken'); // Elimina el token de autenticación de localStorage
+    sessionStorage.removeItem('authToken'); // Elimina el token de autenticación de sessionStorage
     localStorage.removeItem('user'); // Elimina otros datos de usuario si es necesario
 
     // 2. Actualizar el estado de autenticación

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Layout } from 'antd';
 import Logo from "./components/sidebar_menu/Logo";
@@ -14,11 +14,22 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Verificar la sesión al cargar la aplicación
+  useEffect(() => {
+    const token = localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
+    if (token) {
+      setIsAuthenticated(true); // Si hay un token, el usuario está autenticado
+    }
+  }, []);
+
   const handleLogin = () => {
     setIsAuthenticated(true); // Actualiza el estado a "autenticado"
   };
 
   const handleLogout = () => {
+    // Elimina el token de localStorage y sessionStorage al cerrar sesión
+    localStorage.removeItem("authToken");
+    sessionStorage.removeItem("authToken");
     setIsAuthenticated(false); // Actualiza el estado a "no autenticado"
   };
 
@@ -27,7 +38,6 @@ const App = () => {
       {/* Renderiza el Layout solo si el usuario está autenticado */}
       {isAuthenticated ? (
         <Layout>
-          
           <Sider
             collapsible
             trigger={null}
@@ -53,12 +63,12 @@ const App = () => {
                 <LogoutButton 
                   collapsed={collapsed} 
                   setCurrentPage={setCurrentPage}
+                  onLogout={handleLogout} // Pasa handleLogout al botón de cerrar sesión
                 />
               </div>
             </div>
           </Sider>
 
-          
           <Layout 
             style={{ 
               marginLeft: collapsed ? 80 : 260, 
@@ -76,7 +86,7 @@ const App = () => {
                 backgroundColor: '#272829' 
               }}
             >
-              {/* renderizan las rutas protegidas */}
+              {/* Renderizan las rutas protegidas */}
               <AppRoutes 
                 isAuthenticated={isAuthenticated}
                 onLogin={handleLogin}
