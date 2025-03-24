@@ -1,0 +1,92 @@
+/* Modal styles */
+.logout-modal-exact .ant-modal-content {
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+  }
+  
+  .logout-modal-exact .ant-modal-body {
+    padding: 0;
+    width: 100%;
+  }
+  
+  /* Content container */
+  .logout-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100%;
+  }
+  
+  /* Heading styles */
+  .logout-heading {
+    font-size: 48px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 50px;
+    text-align: center;
+  }
+  
+  /* Buttons container */
+  .logout-buttons-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+  }
+  
+  /* Exit button (left button) */
+  .exit-button {
+    background-color: transparent;
+    color: #FF6D00;
+    border: 2px solid #FF6D00;
+    border-radius: 50px;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .exit-button:hover {
+    background-color: #E65100;
+    color: white;
+  }
+  
+  /* Return button (right button) */
+  .return-button {
+    background-color: #F8820B;
+    color: black;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .return-button:hover {
+    background-color: #E65100;
+    color: white;
+  }
+  
+  /* Full screen modal styles */
+  .logout-modal-exact {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 0;
+    top: 0;
+    padding: 0;
+    height: 100vh;
+  }

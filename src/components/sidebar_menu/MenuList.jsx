@@ -1,4 +1,5 @@
 import { Menu } from 'antd'
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
     HouseFill,
     PersonVcardFill,
@@ -16,19 +17,25 @@ import {
 } from 'react-bootstrap-icons';
 
 export const MenuList = ({ setCurrentPage, collapsed }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const currentPath = location.pathname.substring(1) || 'home';
+
     const handleMenuClick = (key) => {
         setCurrentPage(key);
+        navigate(`/${key}`);
     };
 
     const IconWrapper = ({ icon: Icon }) => (
-        <Icon size={16} style={{ marginRight: '12px' }} />  // Fixed margin-right regardless of collapsed state
+        <Icon size={20} style={{ marginRight: '12px' }} />
     );
 
     return (
         <div className="menu-bar">
             <Menu 
                 mode="inline" 
-                defaultSelectedKeys={['home']}
+                defaultSelectedKeys={[currentPath]}
+                selectedKeys={[currentPath]}
                 onClick={({ key }) => handleMenuClick(key)}
             >
                 <Menu.Item key="home" icon={<IconWrapper icon={HouseFill} />}>
@@ -36,14 +43,14 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
                 </Menu.Item>
                 
                 <Menu.SubMenu 
-                    key="membership" 
+                    key="membership_management" 
                     icon={<IconWrapper icon={PersonVcardFill} />} 
                     title={!collapsed && "Gestión de Membresías"}
                 >
-                    <Menu.Item key="users" icon={<IconWrapper icon={PeopleFill} />}>
+                    <Menu.Item key="membership_management/users" icon={<IconWrapper icon={PeopleFill} />}>
                         {"Usuarios"}
                     </Menu.Item>
-                    <Menu.Item key="memberships" icon={<IconWrapper icon={LayoutTextSidebar} />}>
+                    <Menu.Item key="membership_management/memberships" icon={<IconWrapper icon={LayoutTextSidebar} />}>
                         {"Membresías y Servicios"}
                     </Menu.Item>
                 </Menu.SubMenu>
@@ -53,14 +60,14 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
                 </Menu.Item>
 
                 <Menu.SubMenu 
-                    key="sales" 
-                    icon={<IconWrapper icon={CashCoin} />} 
+                    key="sales_management" 
+                    icon={<IconWrapper icon={CashCoin} />}
                     title={!collapsed && "Gestión de Ventas"}
                 >
-                    <Menu.Item key="revenue" icon={<IconWrapper icon={CurrencyExchange} />}>
+                    <Menu.Item key="sales_management/revenue" icon={<IconWrapper icon={CurrencyExchange} />}>
                         {"Ingresos"}
                     </Menu.Item>
-                    <Menu.Item key="inventorycontrol" icon={<IconWrapper icon={ArchiveFill} />}>
+                    <Menu.Item key="sales_management/inventorycontrol" icon={<IconWrapper icon={ArchiveFill} />}>
                         {"Control de Inventario"}
                     </Menu.Item>
                 </Menu.SubMenu>
@@ -77,11 +84,11 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
                     {!collapsed && "Configuración"}
                 </Menu.Item>
 
-                <Menu.Item key="Support_and_help" icon={<IconWrapper icon={Tools} />}>
+                <Menu.Item key="support_and_help" icon={<IconWrapper icon={Tools} />}>
                     {!collapsed && "Soporte y Ayuda"}
                 </Menu.Item>
 
-                <Menu.Item key="User_profile" icon={<IconWrapper icon={PersonCircle} />}>
+                <Menu.Item key="user_profile" icon={<IconWrapper icon={PersonCircle} />}>
                     {!collapsed && "Perfil de Usuario"}
                 </Menu.Item>
             </Menu>
