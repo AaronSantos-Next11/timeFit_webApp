@@ -1,3 +1,5 @@
+import React from 'react';
+import PropTypes from 'prop-types';
 import timefitLogo from '../../assets/timefit.svg';
 
 const Logo = ({ collapsed }) => {
@@ -14,4 +16,10 @@ const Logo = ({ collapsed }) => {
       </div>
   )
 }
-export default Logo
+
+// PropTypes validation
+Logo.propTypes = {
+    collapsed: PropTypes.bool.isRequired
+};
+
+export default Logo;

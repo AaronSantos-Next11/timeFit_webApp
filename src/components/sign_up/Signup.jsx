@@ -1,12 +1,11 @@
 import React, { useState } from "react";
+import PropTypes from "prop-types";
 import "./SignUp.css";
 import { Link } from "react-router-dom";
 import timefitLogo from "../../assets/timefit.svg";
 import GoogleIcon from "@mui/icons-material/Google";
-import MicrosoftIcon from "@mui/icons-material/Microsoft";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import imagensign from '../../assets/TipoSonrieLogin.svg';
 
 // Importaciones de Firebase (ajustar según configuración)
 import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
@@ -182,7 +181,7 @@ const SignUp = ({ onSignUp }) => {
 
       onSignUp();
     } catch (error) {
-      console.error("Error en registro con Google:", error);
+      console.error("Error en registro con Google (Ya existe la cuenta): ", error);
       setError("Error al registrarse con Google");
     }
   };
@@ -325,18 +324,17 @@ const SignUp = ({ onSignUp }) => {
                 </span>
                 Registrarse con Google
               </button>
-              <button type="button" className="microsoft-button">
-                <span>
-                  <MicrosoftIcon />
-                </span>
-                Registrarse con Microsoft
-              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
   );
+};
+
+// PropTypes validation
+SignUp.propTypes = {
+  onSignUp: PropTypes.func.isRequired
 };
 
 export default SignUp;

@@ -1,3 +1,5 @@
+import React from 'react';
+import PropTypes from 'prop-types';
 import { Menu } from 'antd'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -29,6 +31,11 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
     const IconWrapper = ({ icon: Icon }) => (
         <Icon size={20} style={{ marginRight: '12px' }} />
     );
+
+    // PropTypes validation for IconWrapper
+    IconWrapper.propTypes = {
+        icon: PropTypes.elementType.isRequired
+    };
 
     return (
         <div className="menu-bar">
@@ -95,3 +102,11 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
         </div>
     )
 }
+
+// PropTypes validation for MenuList
+MenuList.propTypes = {
+    setCurrentPage: PropTypes.func.isRequired,
+    collapsed: PropTypes.bool.isRequired
+};
+
+export default MenuList;

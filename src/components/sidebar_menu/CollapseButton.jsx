@@ -1,3 +1,5 @@
+import React from 'react';
+import PropTypes from 'prop-types';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 
@@ -12,6 +14,12 @@ const CollapseButton = ({ collapsed, setCollapsed }) => {
             />
         </div>
     );
+};
+
+// PropTypes validation
+CollapseButton.propTypes = {
+    collapsed: PropTypes.bool.isRequired,
+    setCollapsed: PropTypes.func.isRequired
 };
 
 export default CollapseButton;

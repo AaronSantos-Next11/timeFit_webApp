@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../firebase/firebase-config"; // Adjust the import path
 import './ForgotPassword.css';
 
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [step, setStep] = useState(1); 
-  const [error, setError] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Evitar que los clics dentro del modal cierren el modal
@@ -18,24 +21,37 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
     
     // Validar el correo electrónico
     if (!email) {
-      setError('Por favor, ingrese su correo electrónico');
+      setErrorMessage('Por favor, ingrese su correo electrónico');
       return;
     }
     
-    // Simulación de envío de correo de recuperación
     try {
       setIsLoading(true);
-      setError('');
+      setErrorMessage('');
       
+      // Enviar correo de restablecimiento de contraseña con Firebase
+      await sendPasswordResetEmail(auth, email);
       
-      setTimeout(() => {
-        setIsLoading(false);
-        setStep(2); 
-      }, 1500);
+      setIsLoading(false);
+      setStep(2); 
       
     } catch (error) {
       setIsLoading(false);
-      setError('Ocurrió un error al enviar el correo. Inténtelo nuevamente.');
+      
+      // Manejo de errores específicos de Firebase
+      switch (error.code) {
+        case 'auth/invalid-email':
+          setErrorMessage('El correo electrónico no es válido.');
+          break;
+        case 'auth/user-not-found':
+          setErrorMessage('No se encontró una cuenta con este correo electrónico.');
+          break;
+        case 'auth/too-many-requests':
+          setErrorMessage('Demasiados intentos. Por favor, intente más tarde.');
+          break;
+        default:
+          setErrorMessage(`Ocurrió un error al enviar el correo. Inténtelo nuevamente.`);
+      }
     }
   };
 
@@ -66,7 +82,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
                 />
               </div>
               
-              {error && <p className="error-message">{error}</p>}
+              {errorMessage && <p className="error-message">{errorMessage}</p>}
               
               <div className="modal-buttons">
                 <button 
@@ -109,6 +125,11 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
+};
+
+ForgotPasswordModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired
 };
 
 export default ForgotPasswordModal;

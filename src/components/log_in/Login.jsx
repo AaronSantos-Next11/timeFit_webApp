@@ -1,9 +1,9 @@
 import React from "react";
+import PropTypes from "prop-types";
 import "./Login.css";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import { Link } from "react-router-dom";
 import timefitLogo from "../../assets/timefit.svg";
-import MicrosoftIcon from "@mui/icons-material/Microsoft";
 
 // Importaciones de Firebase
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
@@ -200,18 +200,17 @@ const Login = ({ onLogin }) => {
             </span>
             Iniciar sesión con Google
           </button>
-          <button className="microsoft-button">
-            <span>
-              <MicrosoftIcon />
-            </span>
-            Iniciar sesión con Microsoft
-          </button>
         </div>
       </div>
 
       <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={closeForgotPasswordModal} />
     </div>
   );
+};
+
+// Añadir validación de PropTypes
+Login.propTypes = {
+  onLogin: PropTypes.func.isRequired
 };
 
 export default Login;

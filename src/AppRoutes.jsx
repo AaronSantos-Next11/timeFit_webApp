@@ -1,3 +1,4 @@
+import React from 'react';
 import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Home from './components/home/Home';
@@ -101,5 +102,11 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
     </Routes>
   );
 };
-// 
+
+AppRoutes.propTypes = {
+  isAuthenticated: PropTypes.bool.isRequired,
+  onLogin: PropTypes.func.isRequired,
+  onLogout: PropTypes.func.isRequired
+};
+
 export default AppRoutes;
