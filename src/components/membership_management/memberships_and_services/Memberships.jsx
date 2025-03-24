@@ -82,6 +82,11 @@ export default function Membership() {
   const [selectedService, setSelectedService] = useState(null);
   const isServiceMenuOpen = Boolean(serviceMenuAnchorEl);
 
+  // Estados para el menú de opciones de cada membresía
+  const [membershipMenuAnchorEl, setMembershipMenuAnchorEl] = useState(null);
+  const [selectedMembership, setSelectedMembership] = useState(null);
+  const isMembershipMenuOpen = Boolean(membershipMenuAnchorEl);
+
   const handleProfileMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
   const isMenuOpen = Boolean(anchorEl);
@@ -111,6 +116,25 @@ export default function Membership() {
       requestSort("category");
     }
     handleFilterMenuClose();
+  };
+
+  // Manejo del menú de membresías
+  const handleMembershipMenuOpen = (event, membership) => {
+    setMembershipMenuAnchorEl(event.currentTarget);
+    setSelectedMembership(membership);
+  };
+
+  const handleMembershipMenuClose = () => {
+    setMembershipMenuAnchorEl(null);
+    setSelectedMembership(null);
+  };
+
+  const handleDeleteMembership = () => {
+    if (selectedMembership) {
+      const updated = memberships.filter((m) => m.id !== selectedMembership.id);
+      setMemberships(updated);
+    }
+    handleMembershipMenuClose();
   };
 
   // Datos de membresías (sin cambios)
@@ -349,11 +373,11 @@ export default function Membership() {
     <>
       <Grid container alignItems="center" justifyContent="space-between" sx={{ padding: "10px 20px", marginTop: "-12px" }}>
         <Grid item>
-          <Typography variant="h4" sx={{ margin: 0, fontSize: "28px", fontWeight: "bold" }}>
-            Usuarios
+          <Typography variant="h4" sx={{ margin: 0, fontSize: "24px", fontWeight: "bold" }}>
+          Membresías y Servicios.
           </Typography>
-          <Typography variant="body2" sx={{ margin: 0, fontSize: "14px", color: "#ccc" }}>
-            Gestiona la información de tus usuarios.
+          <Typography variant="body2" sx={{ margin: 0, fontSize: "12px", color: "#ccc" }}>
+            Administra fácilmente las membresías y <hr /> servicios de tu gimnasio
           </Typography>
         </Grid>
 
@@ -393,9 +417,12 @@ export default function Membership() {
           </IconButton>
         </Grid>
 
+        {/* Perfil del usuario */}
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box sx={{ textAlign: "right" }}>
-            <Typography sx={{ margin: 0, fontSize: "18px", color: "#F8820B" }}>{displayName}</Typography>
+            <Typography sx={{ margin: 0, fontSize: "18px", color: "#F8820B" }}>
+              {displayName}
+            </Typography>
             <Typography variant="body2" sx={{ margin: 0, fontSize: "13px", color: "#ccc" }}>
               Administrador
             </Typography>
@@ -407,7 +434,11 @@ export default function Membership() {
             onClick={handleProfileMenuOpen}
             sx={{ color: "#fff" }}
           >
-            {photoURL ? <Avatar alt={displayName} src={photoURL} sx={{ width: 40, height: 40 }} /> : <AccountCircle sx={{ fontSize: "60px" }} />}
+            {photoURL ? (
+              <Avatar alt={displayName} src={photoURL} sx={{ width: 40, height: 40 }} />
+            ) : (
+              <AccountCircle sx={{ fontSize: "60px" }} />
+            )}
           </IconButton>
         </Grid>
       </Grid>
@@ -512,11 +543,10 @@ export default function Membership() {
                           </Typography>
                         </Box>
                       </Box>
+                      {/* ICONO DE MENÚ (Modificar / Eliminar) */}
                       <IconButton
-                        component={Link}
-                        to="/membership_management/editarmembresia"
-                        state={{ membership }}
                         sx={{ color: membership.color, padding: "4px", marginLeft: "35px" }}
+                        onClick={(event) => handleMembershipMenuOpen(event, membership)}
                       >
                         <EditIcon fontSize="small" />
                       </IconButton>
@@ -638,9 +668,9 @@ export default function Membership() {
             <TableBody>
               {getSortedServices().map((service) => (
                 <TableRow key={service.id}>
-                  <StyledTableCell sx={{ borderBottom: "none" }} >{service.id}</StyledTableCell>
+                  <StyledTableCell sx={{ borderBottom: "none" }}>{service.id}</StyledTableCell>
                   <StyledTableCell sx={{ borderBottom: "none" }}>{service.name}</StyledTableCell>
-                  <StyledTableHeaderCell sx={{ borderBottom: "none" }} >{service.category}</StyledTableHeaderCell>
+                  <StyledTableHeaderCell sx={{ borderBottom: "none" }}>{service.category}</StyledTableHeaderCell>
                   <StyledTableCell sx={{ borderBottom: "none" }}>{service.cost}</StyledTableCell>
                   <StyledTableHeaderCell sx={{ borderBottom: "none" }}>{service.duration}</StyledTableHeaderCell>
                   <StyledTableHeaderCell sx={{ borderBottom: "none" }}>{service.capacity}</StyledTableHeaderCell>
@@ -683,6 +713,25 @@ export default function Membership() {
           Modificar
         </MenuItem>
         <MenuItem onClick={handleDeleteService}>Eliminar</MenuItem>
+      </Menu>
+
+      {/* Menú de opciones para la membresía seleccionada */}
+      <Menu
+        anchorEl={membershipMenuAnchorEl}
+        open={isMembershipMenuOpen}
+        onClose={handleMembershipMenuClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <MenuItem
+          component={Link}
+          to="/membership_management/editarmembresia"
+          state={{ membership: selectedMembership }}
+          onClick={handleMembershipMenuClose}
+        >
+          Modificar
+        </MenuItem>
+        <MenuItem onClick={handleDeleteMembership}>Eliminar</MenuItem>
       </Menu>
 
       {renderMenu}

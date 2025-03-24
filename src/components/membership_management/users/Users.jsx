@@ -181,30 +181,27 @@ export default function Users() {
           </Grid>
 
           <Grid item>
-            <Paper
-              component="form"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                padding: "8px 20px",
-                borderRadius: "30px",
-                boxShadow: 3,
-                width: "720px",
-                height: "60px",
-                marginTop: "-12px",
-                backgroundColor: "#ffff",
-                border: "1px solid #444",
-              }}
-            >
-              <IconButton type="submit" sx={{ p: "8px" }} color="primary">
-                <SearchIcon sx={{ fontSize: "26px", color: "#aaa" }} />
-              </IconButton>
-              <InputBase
-                sx={{ ml: 2, flex: 1, fontSize: "18px", color: "#000" }}
-                placeholder="Buscar un servicio, membresía..."
-              />
-            </Paper>
-          </Grid>
+          <Paper
+            component="form"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              padding: "8px 20px",
+              borderRadius: "30px",
+              boxShadow: 3,
+              width: "455px",
+              height: "45px",
+              marginTop: "-12px",
+              backgroundColor: "#ffff",
+              border: "1px solid #444",
+            }}
+          >
+            <IconButton type="submit" sx={{ p: "8px" }} color="primary">
+              <SearchIcon sx={{ fontSize: "26px", color: "#aaa" }} />
+            </IconButton>
+            <InputBase sx={{ ml: 2, flex: 1, fontSize: "18px", color: "#000" }} placeholder="Buscar un usuarios" />
+          </Paper>
+        </Grid>
 
           <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
