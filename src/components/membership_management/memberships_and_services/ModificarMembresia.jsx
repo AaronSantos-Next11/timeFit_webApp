@@ -28,39 +28,42 @@ import ImageIcon from '@mui/icons-material/Image';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-const CrearMembresia = () => {
+const ModificarMembresia = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  
-  const [membershipName, setMembershipName] = useState('');
-  const [membershipDescription, setMembershipDescription] = useState('');
-  // Nuevo estado para capturar la cantidad de usuarios (por ejemplo, "grupal (dos usuarios)")
-  const [membershipUsers, setMembershipUsers] = useState('');
-  
+  const membershipData = location.state?.membership || {};
+
+  const [membershipName, setMembershipName] = useState(membershipData.name || '');
+  const [membershipDescription, setMembershipDescription] = useState(membershipData.description || '');
+  const [colorMembresia, setColorMembresia] = useState(membershipData.color || '#FF8C00');
+  const [hexInput, setHexInput] = useState(membershipData.color || '#FF8C00');
+
+  const extractPrice = (priceStr) => {
+    if (!priceStr) return '0';
+    return priceStr.replace('$', '').replace('MXN', '').trim();
+  };
+
+  const initialOpcionesPrecio = [
+    { id: 1, tipo: 'Mensual', precio: extractPrice(membershipData.monthly), periodo: '1', unidadTiempo: 'mes', expandido: false },
+    { id: 2, tipo: 'Trimestral', precio: extractPrice(membershipData.quarterly), periodo: '3', unidadTiempo: 'mes', expandido: false },
+    { id: 3, tipo: 'Anual', precio: extractPrice(membershipData.yearly), periodo: '12', unidadTiempo: 'mes', expandido: false },
+  ];
+  const [opcionesPrecio, setOpcionesPrecio] = useState(initialOpcionesPrecio);
+
+  const [imagenURL, setImagenURL] = useState(membershipData.imagenURL || '');
+  const [mostrarPastePrompt, setMostrarPastePrompt] = useState(false);
+  const fileInputRef = useRef(null);
+  const dropAreaRef = useRef(null);
+
   const [servicios] = useState([
     { id: 1, nombre: 'Asesoría Nutricional', categoria: 'Nutrición', duracion: '1 sesión', seleccionado: true },
   ]);
 
-  const [imagenURL, setImagenURL] = useState('');
-  const [mostrarPastePrompt, setMostrarPastePrompt] = useState(false);
-  const [colorMembresia, setColorMembresia] = useState('#FF8C00');
-  const [hexInput, setHexInput] = useState('#FF8C00');
-  const fileInputRef = useRef(null);
-  const dropAreaRef = useRef(null);
-
-  // Inicializar opciones de precio con tres campos fijos: Mensual, Trimestral y Anual
-  const [opcionesPrecio, setOpcionesPrecio] = useState([
-    { id: 1, tipo: 'Mensual', precio: '0', periodo: '1', unidadTiempo: 'mes', expandido: false },
-    { id: 2, tipo: 'Trimestral', precio: '0', periodo: '3', unidadTiempo: 'mes', expandido: false },
-    { id: 3, tipo: 'Anual', precio: '0', periodo: '12', unidadTiempo: 'mes', expandido: false },
-  ]);
-
-  // Manejador para copiar/pegar imagen
   useEffect(() => {
     const handlePaste = (e) => {
       if (!mostrarPastePrompt) return;
-      
       const items = (e.clipboardData || e.originalEvent.clipboardData).items;
       for (const item of items) {
         if (item.type.indexOf('image') === 0) {
@@ -86,13 +89,11 @@ const CrearMembresia = () => {
     if (mostrarPastePrompt) {
       document.addEventListener('paste', handlePaste);
     }
-
     return () => {
       document.removeEventListener('paste', handlePaste);
     };
   }, [mostrarPastePrompt]);
 
-  // Validación simple de URL de imagen
   const isValidImageUrl = (url) => {
     return url.match(/\.(jpeg|jpg|gif|png)$/) != null || url.startsWith('data:image/');
   };
@@ -108,67 +109,52 @@ const CrearMembresia = () => {
     }
   };
 
-  // Validar y formatear entrada de color hexadecimal
   const handleHexInputChange = (e) => {
     let value = e.target.value;
     setHexInput(value);
-    
     if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value)) {
       setColorMembresia(value);
     }
   };
 
-  // Actualizar input hex cuando cambia el color picker
   const handleColorPickerChange = (e) => {
     const value = e.target.value;
     setColorMembresia(value);
     setHexInput(value);
   };
 
-  // Manejar expansión de opción de precio
   const toggleExpandOption = (optionId) => {
-    setOpcionesPrecio(prevOptions => 
-      prevOptions.map(option => 
-        option.id === optionId 
-          ? {...option, expandido: !option.expandido} 
-          : option
+    setOpcionesPrecio(prevOptions =>
+      prevOptions.map(option =>
+        option.id === optionId ? { ...option, expandido: !option.expandido } : option
       )
     );
   };
 
-  // Manejar cambios en los inputs de las opciones de precio
   const handleOpcionChange = (optionId, field, value) => {
-    setOpcionesPrecio(prevOptions => 
-      prevOptions.map(option => 
-        option.id === optionId 
-          ? {...option, [field]: value} 
-          : option
+    setOpcionesPrecio(prevOptions =>
+      prevOptions.map(option =>
+        option.id === optionId ? { ...option, [field]: value } : option
       )
     );
   };
 
-  // Añadir nueva opción de precio (adicional)
   const addNuevaOpcion = () => {
-    const newId = opcionesPrecio.length > 0 
-      ? Math.max(...opcionesPrecio.map(o => o.id)) + 1 
-      : 1;
-    
+    const newId = opcionesPrecio.length > 0 ? Math.max(...opcionesPrecio.map(o => o.id)) + 1 : 1;
     const nuevaOpcion = {
       id: newId,
       tipo: '',
       precio: '',
       periodo: '',
       unidadTiempo: 'mes',
-      expandido: true
+      expandido: true,
     };
-    
     setOpcionesPrecio([...opcionesPrecio, nuevaOpcion]);
   };
 
-  // Eliminar opción de precio (solo para opciones adicionales)
   const deleteOpcion = (optionId) => {
     if (optionId <= 3) return;
-    setOpcionesPrecio(prevOptions => 
+    setOpcionesPrecio(prevOptions =>
       prevOptions.filter(option => option.id !== optionId)
     );
   };
@@ -179,7 +165,11 @@ const CrearMembresia = () => {
     const [temporalPeriodo, setTemporalPeriodo] = useState(option.periodo);
 
     const handleBlur = (field) => {
-      handleOpcionChange(option.id, field, field === 'tipo' ? temporalTipo : field === 'precio' ? temporalPrecio : temporalPeriodo);
+      handleOpcionChange(
+        option.id,
+        field,
+        field === 'tipo' ? temporalTipo : field === 'precio' ? temporalPrecio : temporalPeriodo
+      );
     };
 
     return (
@@ -195,10 +185,7 @@ const CrearMembresia = () => {
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton 
-              onClick={() => toggleExpandOption(option.id)}
-              sx={{ color: '#FFF', p: 0, mr: 1 }}
-            >
+            <IconButton onClick={() => toggleExpandOption(option.id)} sx={{ color: '#FFF', p: 0, mr: 1 }}>
               {option.expandido ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </IconButton>
             <Typography sx={{ color: 'white' }}>
@@ -210,17 +197,12 @@ const CrearMembresia = () => {
               {option.precio ? `$${option.precio} MXN por ${option.periodo} ${option.unidadTiempo}` : "Configurar precio"}
             </Typography>
             {option.id > 3 && (
-              <IconButton 
-                onClick={() => deleteOpcion(option.id)}
-                sx={{ color: '#FFF', ml: 1 }}
-                size="small"
-              >
+              <IconButton onClick={() => deleteOpcion(option.id)} sx={{ color: '#FFF', ml: 1 }} size="small">
                 <DeleteIcon fontSize="small" />
               </IconButton>
             )}
           </Box>
         </Box>
-        
         <Collapse in={option.expandido}>
           <Box sx={{ 
             p: 2, 
@@ -242,12 +224,7 @@ const CrearMembresia = () => {
                   onChange={(e) => setTemporalTipo(e.target.value)}
                   onBlur={() => handleBlur('tipo')}
                   variant="outlined"
-                  InputProps={{
-                    sx: { 
-                      bgcolor: 'white',
-                      borderRadius: 1
-                    }
-                  }}
+                  InputProps={{ sx: { bgcolor: 'white', borderRadius: 1 } }}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -261,12 +238,7 @@ const CrearMembresia = () => {
                   onChange={(e) => setTemporalPrecio(e.target.value)}
                   onBlur={() => handleBlur('precio')}
                   variant="outlined"
-                  InputProps={{
-                    sx: { 
-                      bgcolor: 'white',
-                      borderRadius: 1
-                    }
-                  }}
+                  InputProps={{ sx: { bgcolor: 'white', borderRadius: 1 } }}
                 />
               </Grid>
               <Grid item xs={3}>
@@ -280,12 +252,7 @@ const CrearMembresia = () => {
                   onChange={(e) => setTemporalPeriodo(e.target.value)}
                   onBlur={() => handleBlur('periodo')}
                   variant="outlined"
-                  InputProps={{
-                    sx: { 
-                      bgcolor: 'white',
-                      borderRadius: 1,
-                    }
-                  }}
+                  InputProps={{ sx: { bgcolor: 'white', borderRadius: 1 } }}
                 />
               </Grid>
               <Grid item xs={3}>
@@ -297,15 +264,8 @@ const CrearMembresia = () => {
                   fullWidth
                   value={option.unidadTiempo}
                   onChange={(e) => handleOpcionChange(option.id, 'unidadTiempo', e.target.value)}
-                  SelectProps={{
-                    native: true,
-                  }}
-                  InputProps={{
-                    sx: { 
-                      bgcolor: 'white',
-                      borderRadius: 1
-                    }
-                  }}
+                  SelectProps={{ native: true }}
+                  InputProps={{ sx: { bgcolor: 'white', borderRadius: 1 } }}
                 >
                   <option value="mes">mes</option>
                   <option value="día">día</option>
@@ -332,30 +292,24 @@ const CrearMembresia = () => {
     }).isRequired,
   };
 
-  // Función para enviar el formulario y crear la membresía
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     const mensual = opcionesPrecio.find(opt => opt.tipo.toLowerCase() === 'mensual')?.precio || '0';
     const trimestral = opcionesPrecio.find(opt => opt.tipo.toLowerCase() === 'trimestral')?.precio || '0';
     const anual = opcionesPrecio.find(opt => opt.tipo.toLowerCase() === 'anual')?.precio || '0';
 
-    const nuevaMembresia = {
+    const membresiaModificada = {
+      ...membershipData,
       name: membershipName || "Asignar nombre",
       color: colorMembresia,
       description: membershipDescription || "Añadir descripcion",
-      clients: 0,
-      // Se agrega el campo users usando el valor capturado en membershipUsers
-      users: membershipUsers || "0",
-      userType: "individual",
       monthly: `$${mensual} MXN`,
       quarterly: `$${trimestral} MXN`,
       yearly: `$${anual} MXN`,
       imagenURL,
     };
 
-    // Navegar al componente de Membership enviando la nueva membresía en el objeto state
-    navigate('/membership_management/memberships', { state: { nuevaMembresia } });
+    navigate('/membership_management/memberships', { state: { modifiedMembership: membresiaModificada } });
   };
 
   return (
@@ -383,7 +337,7 @@ const CrearMembresia = () => {
             <ArrowBackIcon/>
           </IconButton>
           <Typography variant="h6" sx={{ color: 'black', fontWeight: 'bold' }}>
-            Registra una nueva membresía para tus usuarios.
+            Modificar esta membresía para tus usuarios
           </Typography>
         </Box>
 
@@ -399,12 +353,7 @@ const CrearMembresia = () => {
                 variant="outlined"
                 value={membershipName}
                 onChange={(e) => setMembershipName(e.target.value)}
-                InputProps={{
-                  sx: { 
-                    bgcolor: 'white',
-                    borderRadius: 1
-                  }
-                }}
+                InputProps={{ sx: { bgcolor: 'white', borderRadius: 1 } }}
               />
             </Box>
 
@@ -420,12 +369,7 @@ const CrearMembresia = () => {
                 variant="outlined"
                 value={membershipDescription}
                 onChange={(e) => setMembershipDescription(e.target.value)}
-                InputProps={{
-                  sx: { 
-                    bgcolor: 'white',
-                    borderRadius: 1
-                  }
-                }}
+                InputProps={{ sx: { bgcolor: 'white', borderRadius: 1 } }}
               />
             </Box>
 
@@ -439,46 +383,29 @@ const CrearMembresia = () => {
                   type="color"
                   value={colorMembresia}
                   onChange={handleColorPickerChange}
-                  sx={{ 
-                    width: 40, 
-                    height: 40, 
-                    border: 'none',
-                    borderRadius: 1,
-                    cursor: 'pointer',
-                    p: 0
-                  }}
+                  sx={{ width: 40, height: 40, border: 'none', borderRadius: 1, cursor: 'pointer', p: 0 }}
                 />
                 <TextField
                   placeholder="Código hexadecimal"
                   value={hexInput}
                   onChange={handleHexInputChange}
                   sx={{ width: 150 }}
-                  InputProps={{
-                    sx: { 
-                      bgcolor: 'white',
-                      borderRadius: 1
-                    }
-                  }}
+                  InputProps={{ sx: { bgcolor: 'white', borderRadius: 1 } }}
                 />
               </Box>
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <Typography sx={{ mb: 1, color: "#F8820B", fontWeight: 'bold'  }}>
+              <Typography sx={{ mb: 1, color: "#F8820B", fontWeight: 'bold' }}>
                 Precios y duraciones
               </Typography>
-              
               {opcionesPrecio.map(option => (
                 <OpcionPrecio key={option.id} option={option} />
               ))}
-              
               <Button 
                 startIcon={<AddCircleOutlineIcon />} 
                 onClick={addNuevaOpcion}
-                sx={{ 
-                  color: "#F8820B",
-                  mb: 2
-                }}
+                sx={{ color: "#F8820B", mb: 2 }}
               >
                 Añadir otra opción
               </Button>
@@ -490,32 +417,18 @@ const CrearMembresia = () => {
               </Typography>
               <TextField
                 fullWidth
-                placeholder="Ejemplo: grupal (dos usuarios)"
+                placeholder="Ingresa la cantidad de usuarios (individual, grupal, etc.)"
                 variant="outlined"
-                value={membershipUsers}
-                onChange={(e) => setMembershipUsers(e.target.value)}
-                InputProps={{
-                  sx: { 
-                    bgcolor: 'white',
-                    borderRadius: 1
-                  }
-                }}
+                InputProps={{ sx: { bgcolor: 'white', borderRadius: 1 } }}
               />
             </Box>
 
             <Button 
               variant="contained" 
               type="submit"
-              sx={{ 
-                bgcolor: "#F8820B", 
-                color: 'black', 
-                fontWeight: 'bold',
-                borderRadius: 2,
-                px: 3,
-                py: 1
-              }}
+              sx={{ bgcolor: "#F8820B", color: 'black', fontWeight: 'bold', borderRadius: 2, px: 3, py: 1 }}
             >
-              Registrar membresía
+              Actualizar membresía
             </Button>
           </Grid>
 
@@ -524,14 +437,9 @@ const CrearMembresia = () => {
               <Typography sx={{ mb: 1, color: "#F8820B", fontWeight: 'bold' }}>
                 Imagen representativa de la membresía
               </Typography>
-              
               <Box
                 ref={dropAreaRef}
-                onClick={() => {
-                  if (!imagenURL) {
-                    setMostrarPastePrompt(true);
-                  }
-                }}
+                onClick={() => { if (!imagenURL) { setMostrarPastePrompt(true); } }}
                 sx={{ 
                   width: '100%', 
                   height: 250,
@@ -553,11 +461,7 @@ const CrearMembresia = () => {
                     component="img"
                     src={imagenURL}
                     alt="Imagen de la membresía"
-                    sx={{ 
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
+                    sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : mostrarPastePrompt ? (
                   <Box sx={{ textAlign: 'center', p: 2 }}>
@@ -578,18 +482,12 @@ const CrearMembresia = () => {
                   </Box>
                 )}
               </Box>
-              
               <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                 <Button 
                   variant="contained"
                   component="label"
                   startIcon={<FileUploadIcon />}
-                  sx={{ 
-                    bgcolor: '#444',
-                    '&:hover': {
-                      bgcolor: '#555'
-                    }
-                  }}
+                  sx={{ bgcolor: '#444', '&:hover': { bgcolor: '#555' } }}
                 >
                   SUBIR ARCHIVO
                   <input 
@@ -602,7 +500,6 @@ const CrearMembresia = () => {
                 </Button>
               </Box>
             </Box>
-
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography sx={{ color: "#F8820B", fontWeight: 'bold' }}>
@@ -610,7 +507,6 @@ const CrearMembresia = () => {
                 </Typography>
                 <ExpandMoreIcon />
               </Box>
-              
               <TextField
                 fullWidth
                 placeholder="Buscar un servicio, membresía..."
@@ -621,14 +517,9 @@ const CrearMembresia = () => {
                       <SearchIcon />
                     </InputAdornment>
                   ),
-                  sx: { 
-                    bgcolor: 'white',
-                    borderRadius: 2,
-                    mb: 2
-                  }
+                  sx: { bgcolor: 'white', borderRadius: 2, mb: 2 }
                 }}
               />
-
               <TableContainer component={Paper} sx={{ bgcolor: '#444', mb: 2 }}>
                 <Table>
                   <TableHead>
@@ -648,9 +539,7 @@ const CrearMembresia = () => {
                               checked={servicio.seleccionado} 
                               sx={{ 
                                 color: "#F8820B",
-                                '&.Mui-checked': {
-                                  color: "#F8820B",
-                                }
+                                '&.Mui-checked': { color: "#F8820B" }
                               }}
                             />
                             {servicio.nombre}
@@ -668,12 +557,9 @@ const CrearMembresia = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
-              
               <Button 
                 startIcon={<AddCircleOutlineIcon />} 
-                sx={{ 
-                  color: "#F8820B",
-                }}
+                sx={{ color: "#F8820B" }}
               >
                 Añadir más servicios
               </Button>
@@ -685,4 +571,4 @@ const CrearMembresia = () => {
   );
 };
 
-export default CrearMembresia;
+export default ModificarMembresia;

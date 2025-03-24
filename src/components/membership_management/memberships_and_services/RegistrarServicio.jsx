@@ -22,9 +22,14 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ImageIcon from "@mui/icons-material/Image";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import ContentPasteIcon from "@mui/icons-material/ContentPaste";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
+// Se elimina el uso de localStorage y se utiliza el id recibido por state, o se inicia en 2.
 const RegistrarServicio = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const nextID = location.state?.nextID || 2;
+
   // Estados para los campos del formulario
   const [nombreServicio, setNombreServicio] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -35,7 +40,7 @@ const RegistrarServicio = () => {
   const [capacidad, setCapacidad] = useState("");
   const [estado, setEstado] = useState("Activo");
 
-  // Nuevos estados para campos adicionales
+  // Estados para campos adicionales
   const [descuento, setDescuento] = useState("");
   const [cargosAdicionales, setCargosAdicionales] = useState("");
 
@@ -45,18 +50,13 @@ const RegistrarServicio = () => {
   const fileInputRef = useRef(null);
   const dropAreaRef = useRef(null);
 
-  // Calcular valores para el resumen - LÓGICA MODIFICADA SIN IVA
+  // Datos de resumen
   const calcularResumen = () => {
     const costoNumerico = parseFloat(costo) || 0;
     const descuentoNumerico = parseFloat(descuento) || 0;
     const cargosAdicionalesNumerico = parseFloat(cargosAdicionales) || 0;
-
-    // Subtotal 
-    const subtotal = Math.max(costoNumerico - descuentoNumerico, 0); // Evitar valores negativos
-    
-    // Total final con cargos adicionales
+    const subtotal = Math.max(costoNumerico - descuentoNumerico, 0);
     const total = subtotal + cargosAdicionalesNumerico;
-
     return [
       { descripcion: "Costo del Servicio:", cantidad: `$${costoNumerico.toFixed(2)} MXN` },
       { descripcion: "Descuento Aplicado:", cantidad: `$${descuentoNumerico.toFixed(2)} MXN` },
@@ -66,14 +66,11 @@ const RegistrarServicio = () => {
     ];
   };
 
-  // Datos de resumen para mostrar en la tabla
   const resumenData = calcularResumen();
 
-  // Efecto para manejar el pegado de imágenes (ctrl+v)
   useEffect(() => {
     const handlePaste = (e) => {
       if (!mostrarPastePrompt) return;
-
       const items = (e.clipboardData || e.originalEvent.clipboardData).items;
       for (const item of items) {
         if (item.type.indexOf("image") === 0) {
@@ -99,13 +96,11 @@ const RegistrarServicio = () => {
     if (mostrarPastePrompt) {
       document.addEventListener("paste", handlePaste);
     }
-
     return () => {
       document.removeEventListener("paste", handlePaste);
     };
   }, [mostrarPastePrompt]);
 
-  // Validación simple de URL de imagen
   const isValidImageUrl = (url) => {
     return url.match(/\.(jpeg|jpg|gif|png)$/) != null || url.startsWith("data:image/");
   };
@@ -121,33 +116,50 @@ const RegistrarServicio = () => {
     }
   };
 
-  // Función para determinar el color de fondo según el estado seleccionado
   const getBackgroundColor = (estado) => {
     switch (estado) {
       case "Activo":
-        return "#BCEB9F"; // Verde claro
+        return "#BCEB9F";
       case "Inactivo":
-        return "#FF9B9B"; // Rojo claro
+        return "#FF9B9B";
       case "Pendiente":
-        return "#FFD699"; // Amarillo claro
+        return "#FFD699";
       default:
-        return "#BCEB9F"; // Color por defecto
+        return "#BCEB9F";
     }
   };
 
-  // Manejar clic en cualquier lugar para cerrar el prompt de pegar
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropAreaRef.current && !dropAreaRef.current.contains(event.target) && mostrarPastePrompt) {
         setMostrarPastePrompt(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [mostrarPastePrompt]);
+
+  // Al enviar el formulario se utiliza el id recibido (nextID) sin usar localStorage
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const nuevoServicio = {
+      id: nextID,
+      name: nombreServicio || "Nuevo Servicio",
+      description: descripcion || "Descripción del servicio",
+      category: categoria || "General",
+      cost: `$${costo} MXN`,
+      duration: `${duracionValor} ${duracionUnidad}`,
+      capacity: capacidad,
+      status: estado,
+      discount: descuento,
+      additionalCharges: cargosAdicionales,
+      imagenURL,
+    };
+    // Se redirige a Membership pasando el nuevo servicio en el state
+    navigate("/membership_management/memberships", { state: { nuevoServicio } });
+  };
 
   return (
     <Paper
@@ -180,19 +192,14 @@ const RegistrarServicio = () => {
       <Grid container spacing={4}>
         <Grid item xs={12} md={6}>
           <Box sx={{ mb: 4 }}>
-            <Typography sx={{ mb: 1, color: "#F8820B", fontWeight: "bold" }}>Nombre de la Membresía</Typography>
+            <Typography sx={{ mb: 1, color: "#F8820B", fontWeight: "bold" }}>Nombre del Servicio</Typography>
             <TextField
               fullWidth
               value={nombreServicio}
               onChange={(e) => setNombreServicio(e.target.value)}
               variant="outlined"
               placeholder="Ingresa el nombre del servicio"
-              InputProps={{
-                sx: {
-                  bgcolor: "white",
-                  borderRadius: 1,
-                },
-              }}
+              InputProps={{ sx: { bgcolor: "white", borderRadius: 1 } }}
             />
           </Box>
 
@@ -205,13 +212,8 @@ const RegistrarServicio = () => {
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
               variant="outlined"
-              placeholder="Ingresa la descripcion del servicio"
-              InputProps={{
-                sx: {
-                  bgcolor: "white",
-                  borderRadius: 1,
-                },
-              }}
+              placeholder="Ingresa la descripción del servicio"
+              InputProps={{ sx: { bgcolor: "white", borderRadius: 1 } }}
             />
           </Box>
 
@@ -222,13 +224,8 @@ const RegistrarServicio = () => {
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
               variant="outlined"
-              placeholder="Ingresa una categoria del servicio"
-              InputProps={{
-                sx: {
-                  bgcolor: "white",
-                  borderRadius: 1,
-                },
-              }}
+              placeholder="Ingresa una categoría del servicio"
+              InputProps={{ sx: { bgcolor: "white", borderRadius: 1 } }}
             />
           </Box>
 
@@ -239,20 +236,16 @@ const RegistrarServicio = () => {
                 value={costo}
                 onChange={(e) => setCosto(e.target.value)}
                 variant="outlined"
-                placeholder="Ingresar el precio del servicio (MXM)"
+                placeholder="Ingresar el precio del servicio (MXN)"
                 sx={{ width: "70%" }}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                  sx: {
-                    bgcolor: "white",
-                    borderRadius: 1,
-                  },
+                  sx: { bgcolor: "white", borderRadius: 1 },
                 }}
               />
             </Box>
           </Box>
 
-          {/* Nuevo campo para Descuento */}
           <Box sx={{ mb: 4 }}>
             <Typography sx={{ mb: 1, color: "#F8820B", fontWeight: "bold" }}>Descuento Aplicado (MXN)</Typography>
             <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
@@ -264,16 +257,12 @@ const RegistrarServicio = () => {
                 sx={{ width: "70%" }}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                  sx: {
-                    bgcolor: "white",
-                    borderRadius: 1,
-                  },
+                  sx: { bgcolor: "white", borderRadius: 1 },
                 }}
               />
             </Box>
           </Box>
 
-          {/* Nuevo campo para Cargos Adicionales */}
           <Box sx={{ mb: 4 }}>
             <Typography sx={{ mb: 1, color: "#F8820B", fontWeight: "bold" }}>Cargos Adicionales (MXN)</Typography>
             <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
@@ -285,10 +274,7 @@ const RegistrarServicio = () => {
                 sx={{ width: "70%" }}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                  sx: {
-                    bgcolor: "white",
-                    borderRadius: 1,
-                  },
+                  sx: { bgcolor: "white", borderRadius: 1 },
                 }}
               />
             </Box>
@@ -303,21 +289,13 @@ const RegistrarServicio = () => {
                 variant="outlined"
                 placeholder="1"
                 sx={{ width: "30%", mr: 1 }}
-                InputProps={{
-                  sx: {
-                    bgcolor: "white",
-                    borderRadius: 1,
-                  },
-                }}
+                InputProps={{ sx: { bgcolor: "white", borderRadius: 1 } }}
               />
               <FormControl variant="outlined" sx={{ width: "40%" }}>
                 <Select
                   value={duracionUnidad}
                   onChange={(e) => setDuracionUnidad(e.target.value)}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 1,
-                  }}
+                  sx={{ bgcolor: "white", borderRadius: 1 }}
                 >
                   <MenuItem value="Sesion">Sesion</MenuItem>
                   <MenuItem value="Hora">Hora</MenuItem>
@@ -335,13 +313,8 @@ const RegistrarServicio = () => {
               value={capacidad}
               onChange={(e) => setCapacidad(e.target.value)}
               variant="outlined"
-              placeholder="Ingresa la capacidad que tendra el servicio"
-              InputProps={{
-                sx: {
-                  bgcolor: "white",
-                  borderRadius: 1,
-                },
-              }}
+              placeholder="Ingresa la capacidad que tendrá el servicio"
+              InputProps={{ sx: { bgcolor: "white", borderRadius: 1 } }}
             />
           </Box>
 
@@ -351,13 +324,7 @@ const RegistrarServicio = () => {
               <Select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
-                sx={{
-                  bgcolor: getBackgroundColor(estado), // Color dinámico según el estado
-                  borderRadius: 2,
-                  color: "black",
-                  fontWeight: "bold",
-                  ".MuiOutlinedInput-notchedOutline": { border: 0 },
-                }}
+                sx={{ bgcolor: getBackgroundColor(estado), borderRadius: 2, color: "black", fontWeight: "bold", ".MuiOutlinedInput-notchedOutline": { border: 0 } }}
               >
                 <MenuItem value="Activo">Activo</MenuItem>
                 <MenuItem value="Inactivo">Inactivo</MenuItem>
@@ -369,18 +336,10 @@ const RegistrarServicio = () => {
 
         <Grid item xs={12} md={6}>
           <Box sx={{ mb: 4 }}>
-            <Typography sx={{ mb: 1, color: "#F8820B", fontWeight: "bold" }}>
-              Imagen representativa del servicio
-            </Typography>
-
-            {/* Área de imagen mejorada para poder usar Ctrl+V */}
+            <Typography sx={{ mb: 1, color: "#F8820B", fontWeight: "bold" }}>Imagen representativa del servicio</Typography>
             <Box
               ref={dropAreaRef}
-              onClick={() => {
-                if (!imagenURL) {
-                  setMostrarPastePrompt(true);
-                }
-              }}
+              onClick={() => { if (!imagenURL) setMostrarPastePrompt(true); }}
               sx={{
                 width: "100%",
                 height: 340,
@@ -398,26 +357,12 @@ const RegistrarServicio = () => {
               }}
             >
               {imagenURL ? (
-                <Box
-                  component="img"
-                  src={imagenURL}
-                  alt="Imagen del servicio"
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    borderRadius: 2,
-                  }}
-                />
+                <Box component="img" src={imagenURL} alt="Imagen del servicio" sx={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 2 }} />
               ) : mostrarPastePrompt ? (
                 <Box sx={{ textAlign: "center", p: 2 }}>
                   <ContentPasteIcon sx={{ fontSize: 50, color: "#aaa", mb: 1 }} />
-                  <Typography color="#ddd" sx={{ fontWeight: "bold" }}>
-                    Pega la imagen o URL (Ctrl+V)
-                  </Typography>
-                  <Typography color="#999" sx={{ fontSize: 14 }}>
-                    Haz clic en cualquier otro lugar para cancelar
-                  </Typography>
+                  <Typography color="#ddd" sx={{ fontWeight: "bold" }}>Pega la imagen o URL (Ctrl+V)</Typography>
+                  <Typography color="#999" sx={{ fontSize: 14 }}>Haz clic en cualquier otro lugar para cancelar</Typography>
                 </Box>
               ) : (
                 <Box sx={{ textAlign: "center", p: 2 }}>
@@ -426,20 +371,8 @@ const RegistrarServicio = () => {
                 </Box>
               )}
             </Box>
-
-            {/* Opciones de carga de imagen */}
             <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
-              <Button
-                variant="contained"
-                component="label"
-                startIcon={<FileUploadIcon />}
-                sx={{
-                  bgcolor: "#444",
-                  "&:hover": {
-                    bgcolor: "#555",
-                  },
-                }}
-              >
+              <Button variant="contained" component={Link} startIcon={<FileUploadIcon />} sx={{ bgcolor: "#444", "&:hover": { bgcolor: "#555" } }}>
                 SUBIR ARCHIVO
                 <input ref={fileInputRef} type="file" hidden accept="image/*" onChange={handleFileUpload} />
               </Button>
@@ -448,30 +381,14 @@ const RegistrarServicio = () => {
 
           <Box>
             <Typography sx={{ mb: 2, color: "#F8820B", fontWeight: "bold" }}>Resumen del pago</Typography>
-
             <TableContainer component={Paper} sx={{ bgcolor: "#444", borderRadius: 2 }}>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #555",
-                        color: "#F8820B",
-                        fontWeight: "bold",
-                        borderTopLeftRadius: 8,
-                      }}
-                    >
+                    <TableCell sx={{ borderBottom: "1px solid #555", color: "#F8820B", fontWeight: "bold", borderTopLeftRadius: 8 }}>
                       Descripciones
                     </TableCell>
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #555",
-                        color: "#F8820B",
-                        fontWeight: "bold",
-                        textAlign: "right",
-                        borderTopRightRadius: 8,
-                      }}
-                    >
+                    <TableCell sx={{ borderBottom: "1px solid #555", color: "#F8820B", fontWeight: "bold", textAlign: "right", borderTopRightRadius: 8 }}>
                       Cantidades
                     </TableCell>
                   </TableRow>
@@ -479,24 +396,10 @@ const RegistrarServicio = () => {
                 <TableBody>
                   {resumenData.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell
-                        sx={{
-                          borderBottom: index === resumenData.length - 1 ? "none" : "1px solid #555",
-                          color: "white",
-                          py: 1,
-                        }}
-                      >
+                      <TableCell sx={{ borderBottom: index === resumenData.length - 1 ? "none" : "1px solid #555", color: "white", py: 1 }}>
                         {item.descripcion}
                       </TableCell>
-                      <TableCell
-                        sx={{
-                          borderBottom: index === resumenData.length - 1 ? "none" : "1px solid #555",
-                          color: item.destacado ? "#F8820B" : "white",
-                          fontWeight: item.destacado ? "bold" : "normal",
-                          textAlign: "right",
-                          py: 1,
-                        }}
-                      >
+                      <TableCell sx={{ borderBottom: index === resumenData.length - 1 ? "none" : "1px solid #555", color: item.destacado ? "#F8820B" : "white", fontWeight: item.destacado ? "bold" : "normal", textAlign: "right", py: 1 }}>
                         {item.cantidad}
                       </TableCell>
                     </TableRow>
@@ -506,17 +409,7 @@ const RegistrarServicio = () => {
             </TableContainer>
 
             <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4 }}>
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#F8820B",
-                  color: "black",
-                  fontWeight: "bold",
-                  borderRadius: 2,
-                  px: 4,
-                  py: 1,
-                }}
-              >
+              <Button variant="contained" onClick={handleSubmit} sx={{ bgcolor: "#F8820B", color: "black", fontWeight: "bold", borderRadius: 2, px: 4, py: 1 }}>
                 Registrar servicio
               </Button>
             </Box>

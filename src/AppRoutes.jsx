@@ -17,6 +17,8 @@ import Signup from './components/sign_up/Signup';
 import CrearMembresia from './components/membership_management/memberships_and_services/CrearMembresia';
 import RegistrarServicio from './components/membership_management/memberships_and_services/RegistrarServicio';
 import LogoutModal from './components/log_out/LogoutModal';
+import ModificarMembresia from './components/membership_management/memberships_and_services/ModificarMembresia';
+import ModificarServicio from './components/membership_management/memberships_and_services/ModificarServicio';
 
 const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
   return (
@@ -78,7 +80,9 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
           <Route index element={<Navigate to="memberships" replace />} />
           <Route path="memberships" element={<Memberships />} />
           <Route path="crearmembresia" element={<CrearMembresia />} />
+          <Route path="editarmembresia" element={<ModificarMembresia />} />
           <Route path="registrarservicio" element={<RegistrarServicio />} />
+          <Route path="editarservicio" element={<ModificarServicio />} />
           <Route path="users" element={<Users />} />
         </Route>
         <Route path="sales_management">
