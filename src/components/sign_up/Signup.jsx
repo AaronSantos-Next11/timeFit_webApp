@@ -6,6 +6,7 @@ import GoogleIcon from "@mui/icons-material/Google";
 import MicrosoftIcon from "@mui/icons-material/Microsoft";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import imagensign from '../../assets/TipoSonrieLogin.svg';
 
 // Importaciones de Firebase (ajustar según configuración)
 import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
@@ -198,7 +199,7 @@ const SignUp = ({ onSignUp }) => {
     <div className="signup-container">
       <div className="signup-image">
         <img
-          src="https://escueladfitness.com/wp-content/uploads/2022/09/entrenador.jpg"
+          src="https://st2.depositphotos.com/1017228/8310/i/450/depositphotos_83109326-stock-photo-fitness-man-standing-with-arms.jpg"
           alt="Entrenador en gimnasio"
         />
         <button
