@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { HashRouter  as Router } from 'react-router-dom';
 import { Layout } from 'antd';
 import Logo from "./components/sidebar_menu/Logo";
 import { MenuList } from './components/sidebar_menu/MenuList';
