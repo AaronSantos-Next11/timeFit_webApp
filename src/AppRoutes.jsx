@@ -46,7 +46,7 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
           isAuthenticated ? (
             <Navigate to="/home" replace />
           ) : (
-            <Signup />
+            <Signup onSignUp={onLogin} /> // Pass onLogin as onSignUp
           )
         }
       />

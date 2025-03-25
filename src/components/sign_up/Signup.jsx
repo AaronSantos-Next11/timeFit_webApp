@@ -1,47 +1,33 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import "./SignUp.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import timefitLogo from "../../assets/timefit.svg";
 import GoogleIcon from "@mui/icons-material/Google";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
-// Importaciones de Firebase (ajustar según configuración)
+// Firebase imports
 import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../firebase/firebase-config";
-import { getFirestore, doc, setDoc, query, collection, where, getDocs } from "firebase/firestore";
+import { getFirestore, doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 
 const SignUp = ({ onSignUp }) => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const navigate = useNavigate();
 
-  // Enhanced validation functions
+  // Validation functions
   const validateUsername = (username) => {
-    const usernameRegex = /^[a-zA-Z][a-zA-Z0-9]*(\*?[a-zA-Z0-9]+)*$/;
-    
-    return username && 
-           username.length >= 6 && 
-           usernameRegex.test(username) && 
-           username.charAt(0) !== '0';
+    const usernameRegex = /^[a-zA-Z0-9_]{6,}$/;
+    return usernameRegex.test(username);
   };
 
   const validateName = (name) => {
-    const nameRegex = /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/;
-    
-    return name && 
-           nameRegex.test(name) && 
-           name.length >= 2;
-  };
-
-  const validateSurname = (surname) => {
-    const surnameRegex = /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/;
-    
-    return surname && 
-           surnameRegex.test(surname) && 
-           surname.length >= 2;
+    const nameRegex = /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?$/;
+    return name && nameRegex.test(name) && name.length >= 2;
   };
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -49,94 +35,99 @@ const SignUp = ({ onSignUp }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Get form values
     const username = e.target.username.value.trim();
-    const fullFirstName = e.target.firstName.value.trim();
+    const fullName = e.target.firstName.value.trim();
     const fullLastName = e.target.lastName.value.trim();
-    
-    // Take only the first word for first name and last name
-    const firstName = fullFirstName.split(' ')[0];
-    const lastName = fullLastName.split(' ')[0];
-    
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
     const confirmPassword = e.target.confirmPassword.value;
 
-    // Check if email already exists
-    const db = getFirestore();
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("email", "==", email));
-    const querySnapshot = await getDocs(q);
-    
-    if (!querySnapshot.empty) {
-      setError("El correo electrónico ya está registrado");
-      return;
-    }
-
-    // Validate Username
+    // Validate inputs
     if (!validateUsername(username)) {
-      setError("Nombre de usuario inválido. Debe comenzar con una letra, tener al menos 6 caracteres y contener solo letras y números.");
+      setError("Nombre de usuario inválido. Debe tener al menos 6 caracteres y contener letras, números o guiones bajos.");
       return;
     }
 
-    // Validate First Name
-    if (!validateName(firstName)) {
-      setError("Nombre inválido. Debe contener solo letras, comenzar con mayúscula y tener al menos 2 caracteres.");
+    if (!validateName(fullName)) {
+      setError("Nombre inválido. Debe comenzar con mayúscula y tener al menos 2 caracteres.");
       return;
     }
 
-    // Validate Last Name
-    if (!validateSurname(lastName)) {
-      setError("Apellidos inválidos. Deben contener solo letras, comenzar con mayúscula y tener al menos 2 caracteres.");
+    if (!validateName(fullLastName)) {
+      setError("Apellidos inválidos. Deben comenzar con mayúscula y tener al menos 2 caracteres.");
       return;
     }
 
-    // Validate Email
     if (!emailRegex.test(email)) {
       setError("Ingrese un correo electrónico válido");
       return;
     }
 
-    // Validate Password
     if (!passwordRegex.test(password)) {
       setError("La contraseña debe tener al menos 8 caracteres, incluir letras, números y un símbolo especial");
       return;
     }
 
-    // Check Password Match
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden");
       return;
     }
 
-    // Terms Acceptance
     if (!termsAccepted) {
       setError("Debe aceptar los Términos y Condiciones");
       return;
     }
 
     try {
-      // Registro con Firebase Authentication
+      const db = getFirestore();
+      const usersRef = collection(db, "users");
+      
+      // Check if email already exists
+      const emailQuery = query(usersRef, where("email", "==", email));
+      const emailSnapshot = await getDocs(emailQuery);
+      
+      if (!emailSnapshot.empty) {
+        setError("El correo electrónico ya está registrado");
+        return;
+      }
+
+      // Check if username already exists
+      const usernameQuery = query(usersRef, where("username", "==", username));
+      const usernameSnapshot = await getDocs(usernameQuery);
+      
+      if (!usernameSnapshot.empty) {
+        setError("El nombre de usuario ya está en uso");
+        return;
+      }
+
+      // Create user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Add additional user information to Firestore
+      // Save additional information in Firestore
       await setDoc(doc(db, "users", user.uid), {
         username: username,
-        firstName: firstName,
-        lastName: lastName,
-        fullFirstName: fullFirstName,
+        fullName: fullName,
         fullLastName: fullLastName,
-        email: email
+        email: email,
+        role: "admin",
+        createdAt: new Date()
       });
 
-      // Store user details in localStorage
-      localStorage.setItem("displayName", `${firstName} ${lastName}`);
-      localStorage.setItem("firstName", firstName);
-      localStorage.setItem("lastName", lastName);
+      // Store information in localStorage
+      localStorage.setItem("displayName", `${fullName} ${fullLastName}`);
       localStorage.setItem("username", username);
+      localStorage.setItem("email", email);
 
+      // Clear errors
       setError("");
+      
+      // Call login function and navigate
       onSignUp();
+      navigate("/home");
+
     } catch (error) {
       console.error("Error al registrarse:", error);
       switch (error.code) {
@@ -156,33 +147,49 @@ const SignUp = ({ onSignUp }) => {
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
       const user = userCredential.user;
-      const token = await user.getIdToken();
 
-      // Split display name into first name and last name
-      const nameParts = user.displayName ? user.displayName.split(' ') : ['Usuario', ''];
-      const firstName = nameParts[0];
-      const lastName = nameParts.length > 1 ? nameParts[1] : '';
-
-      // Store Google user details in localStorage
-      localStorage.setItem("displayName", `${firstName} ${lastName}`.trim());
-      localStorage.setItem("firstName", firstName);
-      localStorage.setItem("lastName", lastName);
-      localStorage.setItem("photoURL", user.photoURL || "");
-      localStorage.setItem("authToken", token);
-
-      // Optional: Add Google user to Firestore
       const db = getFirestore();
-      await setDoc(doc(db, "users", user.uid), {
-        firstName: firstName,
-        lastName: lastName,
-        email: user.email,
-        photoURL: user.photoURL
-      }, { merge: true });
+      
+      // Check if the user already exists
+      const userQuery = query(collection(db, "users"), where("email", "==", user.email));
+      const userSnapshot = await getDocs(userQuery);
+
+      // Default names if not available
+      const fullName = user.displayName?.split(' ')[0] || 'Usuario';
+      const fullLastName = user.displayName?.split(' ')[1] || 'Google';
+      const username = user.email.split('@')[0];
+
+      if (userSnapshot.empty) {
+        // Create document if it doesn't exist
+        await setDoc(doc(db, "users", user.uid), {
+          username: username,
+          fullName: fullName,
+          fullLastName: fullLastName,
+          email: user.email,
+          role: "admin",
+          createdAt: new Date(),
+          photoURL: user.photoURL
+        });
+      }
+
+      // Store information in localStorage
+      localStorage.setItem("displayName", `${fullName} ${fullLastName}`);
+      localStorage.setItem("username", username);
+      localStorage.setItem("email", user.email);
+      localStorage.setItem("photoURL", user.photoURL || "");
 
       onSignUp();
+      navigate("/home");
+
     } catch (error) {
-      console.error("Error en registro con Google (Ya existe la cuenta): ", error);
-      setError("Error al registrarse con Google");
+      console.error("Error en registro con Google:", error);
+      
+      // More descriptive error handling
+      if (error.code === 'auth/popup-closed-by-user') {
+        setError("Registro con Google cancelado");
+      } else {
+        setError("Error al registrarse con Google");
+      }
     }
   };
 
@@ -332,7 +339,6 @@ const SignUp = ({ onSignUp }) => {
   );
 };
 
-// PropTypes validation
 SignUp.propTypes = {
   onSignUp: PropTypes.func.isRequired
 };
