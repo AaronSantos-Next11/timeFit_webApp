@@ -7,20 +7,28 @@ const LogoutModal = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Obtener la ruta anterior para regresar si el usuario cancela
+  // Obtain the previous route to return if the user cancels
   const from = location.state?.from || '/home';
 
-  // Función para manejar el cierre de sesión confirmado
+  // Function to handle confirmed logout
   const handleLogout = () => {
-    navigate('/logout');
+    // Ensure logout actions are performed
+    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+
+    // Navigate to logout route
+    navigate('/logout', { 
+      state: { from: location.pathname } 
+    });
   };
 
-  // Función para cancelar y volver a la página anterior
+  // Function to cancel and return to the previous page
   const handleCancel = () => {
     navigate(from);
   };
 
-  // Si se accede a esta ruta directamente (recargando página), redirigir a home
+  // If accessed directly (reloading page), redirect to home
   useEffect(() => {
     if (!location.state) {
       navigate('/home');

@@ -1,28 +1,30 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 const Logout = ({ onLogout }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Ejecutar acciones de logout en el efecto
-    
-    // 1. Limpiar datos de sesión
+    // Clear session data
     localStorage.removeItem('authToken');
     sessionStorage.removeItem('authToken');
     localStorage.removeItem('user');
 
-    // 2. Actualizar el estado de autenticación en la aplicación
+    // Update authentication state in the application
     if (onLogout) {
       onLogout();
     }
 
-    // 3. Redirigir al usuario a la página de inicio de sesión
-    navigate('/login', { replace: true });
-  }, [navigate, onLogout]);
+    // Determine where to redirect
+    const from = location.state?.from || '/login';
+    
+    // Redirect user to login page
+    navigate(from, { replace: true });
+  }, [navigate, onLogout, location.state]);
 
-  // Este componente no renderiza nada visible
+  // This component does not render anything visible
   return null;
 };
 
