@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Layout } from 'antd';
 import Logo from "./components/sidebar_menu/Logo";
@@ -6,8 +6,6 @@ import { MenuList } from './components/sidebar_menu/MenuList';
 import LogoutButton from './components/sidebar_menu/LogoutButton';
 import CollapseButton from './components/sidebar_menu/CollapseButton';
 import AppRoutes from './AppRoutes';
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebase/firebase-config"; // Ajusta la ruta según tu estructura
 
 const { Sider, Content } = Layout;
 
@@ -16,35 +14,11 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Escucha el estado de autenticación real en Firebase
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsAuthenticated(true);
-        // Guarda el token en localStorage (opcional)
-        user.getIdToken().then((token) => {
-          localStorage.setItem("authToken", token);
-        });
-      } else {
-        setIsAuthenticated(false);
-        // Limpia los tokens en caso de no haber usuario autenticado
-        localStorage.removeItem("authToken");
-        sessionStorage.removeItem("authToken");
-      }
-    });
-
-    // Limpieza del listener al desmontar el componente
-    return () => unsubscribe();
-  }, []);
-
   const handleLogin = () => {
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
-    // Elimina los tokens de autenticación al cerrar sesión
-    localStorage.removeItem("authToken");
-    sessionStorage.removeItem("authToken");
     setIsAuthenticated(false);
   };
 
@@ -99,7 +73,6 @@ const App = () => {
                 backgroundColor: '#272829' 
               }}
             >
-              {/* Rutas protegidas */}
               <AppRoutes 
                 isAuthenticated={isAuthenticated}
                 onLogin={handleLogin}
@@ -109,7 +82,6 @@ const App = () => {
           </Layout>
         </Layout>
       ) : (
-        // Si el usuario no está autenticado, muestra únicamente las rutas públicas (como Login)
         <AppRoutes 
           isAuthenticated={isAuthenticated}
           onLogin={handleLogin}

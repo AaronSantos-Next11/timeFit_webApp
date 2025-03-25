@@ -24,7 +24,7 @@ import ModificarServicio from './components/membership_management/memberships_an
 const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
   return (
     <Routes>
-      {/* Ruta raíz: redirige a /login si no está autenticado */}
+      {/* Ruta raíz: redirige a /login por defecto */}
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       {/* Ruta de login */}
@@ -97,7 +97,7 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
         <Route path="settings" element={<Settings />} />
         <Route path="support_and_help" element={<SupportAndHelp />} />
         <Route path="user_profile" element={<UserProfile />} />
-        <Route path="*" element={<Navigate to="/home" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Route>
     </Routes>
   );

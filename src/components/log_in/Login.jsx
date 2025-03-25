@@ -42,18 +42,8 @@ const Login = ({ onLogin }) => {
 
     try {
       // Iniciar sesión con Firebase Authentication
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       setError(""); // Limpiar error si la autenticación es exitosa
-
-      // Obtener el token de autenticación del usuario
-      const token = await userCredential.user.getIdToken();
-
-      // Almacenar el token en localStorage o sessionStorage según la preferencia del usuario
-      if (rememberMe) {
-        localStorage.setItem("authToken", token);
-      } else {
-        sessionStorage.setItem("authToken", token);
-      }
 
       // Actualizar el estado de autenticación en la aplicación
       onLogin();
@@ -83,22 +73,7 @@ const Login = ({ onLogin }) => {
   // Autenticación con Google
   const handleGoogleSignIn = async () => {
     try {
-      const userCredential = await signInWithPopup(auth, googleProvider);
-      const token = await userCredential.user.getIdToken();
-
-      // Extraer y formatear el displayName: obtener solo el nombre y apellido (dos primeras palabras)
-      const fullName = userCredential.user.displayName || "";
-      const nameParts = fullName.trim().split(" ");
-      const formattedName = nameParts.slice(0, 2).join(" ");
-      // Guardar el nombre formateado en localStorage para usarlo en otros componentes (ej. Home)
-      localStorage.setItem("displayName", formattedName);
-
-      // Extraer la foto de perfil
-      const photoURL = userCredential.user.photoURL || "";
-      // Guardar la foto de perfil en localStorage, si existe. Si no, se guarda una cadena vacía o se omite
-      localStorage.setItem("photoURL", photoURL);
-
-      localStorage.setItem("authToken", token);
+      await signInWithPopup(auth, googleProvider);
       onLogin();
     } catch (error) {
       console.error("Error en autenticación con Google:", error);
