@@ -104,12 +104,6 @@ const Login = ({ onLogin }) => {
           src="https://escueladfitness.com/wp-content/uploads/2022/09/entrenador.jpg"
           alt="Entrenador en gimnasio"
         />
-        <button
-          className="back-button"
-          onClick={() => (window.location.href = "https://landing-page-time-fit.vercel.app/")}
-        >
-          ← Regresar a la página web
-        </button>
       </div>
 
       <div className="login-form">

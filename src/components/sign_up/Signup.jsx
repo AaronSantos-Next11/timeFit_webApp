@@ -1,191 +1,149 @@
+// SignUp.jsx
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import "./SignUp.css";
 import { Link, useNavigate } from "react-router-dom";
-import timefitLogo from "../../assets/timefit.svg";
 import GoogleIcon from "@mui/icons-material/Google";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import timefitLogo from "../../assets/timefit.svg";
 
-// Firebase imports
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { auth, googleProvider } from "../../firebase/firebase-config";
-import { getFirestore, doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 
-const SignUp = ({ onSignUp }) => {
+import "./SignUp.css";
+
+export default function SignUp({ onSignUp }) {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
 
-  // Validation functions
-  const validateUsername = (username) => {
-    const usernameRegex = /^[a-zA-Z0-9_]{6,}$/;
-    return usernameRegex.test(username);
-  };
-
-  const validateName = (name) => {
-    const nameRegex = /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?$/;
-    return name && nameRegex.test(name) && name.length >= 2;
-  };
-
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+  const validateUsername = (u) => u.length >= 3;
+  const validateName = (n) => n.length >= 2;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Get form values
     const username = e.target.username.value.trim();
-    const fullName = e.target.firstName.value.trim();
-    const fullLastName = e.target.lastName.value.trim();
+    const firstName = e.target.firstName.value.trim();
+    const lastName = e.target.lastName.value.trim();
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
-    const confirmPassword = e.target.confirmPassword.value;
+    const confirm = e.target.confirmPassword.value;
 
-    // Validate inputs
     if (!validateUsername(username)) {
-      setError("Nombre de usuario inválido. Debe tener al menos 6 caracteres y contener letras, números o guiones bajos.");
+      setError("Nombre de usuario debe tener al menos 3 caracteres.");
       return;
     }
-
-    if (!validateName(fullName)) {
-      setError("Nombre inválido. Debe comenzar con mayúscula y tener al menos 2 caracteres.");
+    if (!validateName(firstName)) {
+      setError("Nombre debe tener al menos 2 caracteres.");
       return;
     }
-
-    if (!validateName(fullLastName)) {
-      setError("Apellidos inválidos. Deben comenzar con mayúscula y tener al menos 2 caracteres.");
+    if (!validateName(lastName)) {
+      setError("Apellidos deben tener al menos 2 caracteres.");
       return;
     }
-
     if (!emailRegex.test(email)) {
       setError("Ingrese un correo electrónico válido");
       return;
     }
-
     if (!passwordRegex.test(password)) {
-      setError("La contraseña debe tener al menos 8 caracteres, incluir letras, números y un símbolo especial");
+      setError(
+        "La contraseña debe tener al menos 8 caracteres, incluir una mayúscula, una minúscula y un número"
+      );
       return;
     }
-
-    if (password !== confirmPassword) {
+    if (password !== confirm) {
       setError("Las contraseñas no coinciden");
       return;
     }
-
     if (!termsAccepted) {
-      setError("Debe aceptar los Términos y Condiciones");
+      setError("Debes aceptar los Términos y Condiciones");
       return;
     }
 
     try {
       const db = getFirestore();
-      const usersRef = collection(db, "users");
-      
-      // Check if email already exists
-      const emailQuery = query(usersRef, where("email", "==", email));
-      const emailSnapshot = await getDocs(emailQuery);
-      
-      if (!emailSnapshot.empty) {
-        setError("El correo electrónico ya está registrado");
-        return;
-      }
-
-      // Check if username already exists
-      const usernameQuery = query(usersRef, where("username", "==", username));
-      const usernameSnapshot = await getDocs(usernameQuery);
-      
-      if (!usernameSnapshot.empty) {
-        setError("El nombre de usuario ya está en uso");
-        return;
-      }
-
-      // Create user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Save additional information in Firestore
+      const uc = await createUserWithEmailAndPassword(auth, email, password);
+      const user = uc.user;
       await setDoc(doc(db, "users", user.uid), {
-        username: username,
-        fullName: fullName,
-        fullLastName: fullLastName,
-        email: email,
+        username,
+        fullName: firstName,
+        fullLastName: lastName,
+        email,
         role: "admin",
-        createdAt: new Date()
+        createdAt: new Date(),
       });
-
-      // Store information in localStorage
-      localStorage.setItem("displayName", `${fullName} ${fullLastName}`);
+      localStorage.setItem("displayName", `${firstName} ${lastName}`);
       localStorage.setItem("username", username);
       localStorage.setItem("email", email);
 
-      // Clear errors
       setError("");
-      
-      // Call login function and navigate
       onSignUp();
       navigate("/home");
-
-    } catch (error) {
-      console.error("Error al registrarse:", error);
-      switch (error.code) {
-        case "auth/email-already-in-use":
-          setError("El correo electrónico ya está registrado");
-          break;
-        case "auth/invalid-email":
-          setError("El correo electrónico no es válido");
-          break;
-        default:
-          setError("Error al registrarse. Intente nuevamente.");
+    } catch (err) {
+      console.error(err);
+      if (err.code === "auth/email-already-in-use") {
+        setError("El correo electrónico ya está registrado");
+      } else if (err.code === "auth/weak-password") {
+        setError("La contraseña es demasiado débil");
+      } else {
+        setError("Error al registrarse. Intente nuevamente.");
       }
     }
   };
 
   const handleGoogleSignUp = async () => {
     try {
-      const userCredential = await signInWithPopup(auth, googleProvider);
-      const user = userCredential.user;
-
+      const uc = await signInWithPopup(auth, googleProvider);
+      const user = uc.user;
       const db = getFirestore();
-      
-      // Check if the user already exists
-      const userQuery = query(collection(db, "users"), where("email", "==", user.email));
-      const userSnapshot = await getDocs(userQuery);
+      const q = query(
+        collection(db, "users"),
+        where("email", "==", user.email)
+      );
+      const snap = await getDocs(q);
+      const [first = "Usuario", last = "Google"] = user.displayName
+        ? user.displayName.split(" ")
+        : [];
+      const username = user.email.split("@")[0];
 
-      // Default names if not available
-      const fullName = user.displayName?.split(' ')[0] || 'Usuario';
-      const fullLastName = user.displayName?.split(' ')[1] || 'Google';
-      const username = user.email.split('@')[0];
-
-      if (userSnapshot.empty) {
-        // Create document if it doesn't exist
+      if (snap.empty) {
         await setDoc(doc(db, "users", user.uid), {
-          username: username,
-          fullName: fullName,
-          fullLastName: fullLastName,
+          username,
+          fullName: first,
+          fullLastName: last,
           email: user.email,
           role: "admin",
           createdAt: new Date(),
-          photoURL: user.photoURL
+          photoURL: user.photoURL,
         });
       }
 
-      // Store information in localStorage
-      localStorage.setItem("displayName", `${fullName} ${fullLastName}`);
+      localStorage.setItem("displayName", `${first} ${last}`);
       localStorage.setItem("username", username);
       localStorage.setItem("email", user.email);
       localStorage.setItem("photoURL", user.photoURL || "");
 
       onSignUp();
       navigate("/home");
-
-    } catch (error) {
-      console.error("Error en registro con Google:", error);
-      
-      // More descriptive error handling
-      if (error.code === 'auth/popup-closed-by-user') {
+    } catch (err) {
+      console.error(err);
+      if (err.code === "auth/popup-closed-by-user") {
         setError("Registro con Google cancelado");
       } else {
         setError("Error al registrarse con Google");
@@ -193,29 +151,13 @@ const SignUp = ({ onSignUp }) => {
     }
   };
 
-  const togglePasswordVisibility = (type) => {
-    if (type === 'password') {
-      setShowPassword(!showPassword);
-    } else {
-      setShowConfirmPassword(!showConfirmPassword);
-    }
+  const togglePasswordVisibility = (field) => {
+    if (field === "password") setShowPassword((v) => !v);
+    else setShowConfirmPassword((v) => !v);
   };
 
   return (
     <div className="signup-container">
-      <div className="signup-image">
-        <img
-          src="https://st2.depositphotos.com/1017228/8310/i/450/depositphotos_83109326-stock-photo-fitness-man-standing-with-arms.jpg"
-          alt="Entrenador en gimnasio"
-        />
-        <button
-          className="back-button"
-          onClick={() => (window.location.href = "https://landing-page-time-fit.vercel.app/")}
-        >
-          ← Regresar a la página web
-        </button>
-      </div>
-
       <div className="signup-form">
         <div className="signup-form-content">
           <div className="logo-container">
@@ -225,11 +167,11 @@ const SignUp = ({ onSignUp }) => {
 
           <h1>Regístrate</h1>
           <p>
-            ¿Ya tienes una cuenta? <Link to="/login">Inicie sesión aquí</Link>
+            ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión aquí</Link>
           </p>
 
           <form onSubmit={handleSubmit}>
-            <label>Elija un nombre de usuario</label>
+            <label>Elige un nombre de usuario</label>
             <input
               type="text"
               name="username"
@@ -243,7 +185,7 @@ const SignUp = ({ onSignUp }) => {
                 <input
                   type="text"
                   name="firstName"
-                  placeholder="Escriba aquí su nombre"
+                  placeholder="Escriba aquí su nombre(s)"
                   required
                 />
               </div>
@@ -252,7 +194,7 @@ const SignUp = ({ onSignUp }) => {
                 <input
                   type="text"
                   name="lastName"
-                  placeholder="Escriba aquí sus apellidos"
+                  placeholder="Escriba aquí  sus apellidos"
                   required
                 />
               </div>
@@ -262,22 +204,22 @@ const SignUp = ({ onSignUp }) => {
             <input
               type="email"
               name="email"
-              placeholder="Escriba aquí su correo electrónico"
+              placeholder="Escriba aquí su correo electronico"
               required
             />
 
-            <label>Elija una contraseña</label>
+            <label>Contraseña</label>
             <div className="password-input-container">
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
-                placeholder="Escriba aquí su contraseña"
+                placeholder="Ingrese una contraseña"
                 required
               />
-              <button 
-                type="button" 
-                className="toggle-password-button" 
-                onClick={() => togglePasswordVisibility('password')}
+              <button
+                type="button"
+                className="toggle-password-button"
+                onClick={() => togglePasswordVisibility("password")}
               >
                 {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
               </button>
@@ -288,13 +230,13 @@ const SignUp = ({ onSignUp }) => {
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
-                placeholder="Escriba nuevamente su contraseña"
+                placeholder="Repite tu contraseña"
                 required
               />
-              <button 
-                type="button" 
-                className="toggle-password-button" 
-                onClick={() => togglePasswordVisibility('confirmPassword')}
+              <button
+                type="button"
+                className="toggle-password-button"
+                onClick={() => togglePasswordVisibility("confirm")}
               >
                 {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
               </button>
@@ -319,11 +261,10 @@ const SignUp = ({ onSignUp }) => {
             </button>
 
             <div className="separator">o registrarte con</div>
-
             <div className="social-buttons">
-              <button 
-                type="button" 
-                className="google-button" 
+              <button
+                type="button"
+                className="google-button"
                 onClick={handleGoogleSignUp}
               >
                 <span>
@@ -335,12 +276,16 @@ const SignUp = ({ onSignUp }) => {
           </form>
         </div>
       </div>
+      <div className="signup-image">
+        <img
+          src="https://st2.depositphotos.com/1017228/8310/i/450/depositphotos_83109326-stock-photo-fitness-man-standing-with-arms.jpg"
+          alt="Entrenador en gimnasio"
+        />
+      </div>
     </div>
   );
-};
+}
 
 SignUp.propTypes = {
-  onSignUp: PropTypes.func.isRequired
+  onSignUp: PropTypes.func.isRequired,
 };
-
-export default SignUp;
