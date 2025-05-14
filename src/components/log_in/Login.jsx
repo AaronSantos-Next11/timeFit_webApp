@@ -1,57 +1,51 @@
-import React from "react";
+// LoginPage.jsx
+import React, { useState } from "react";
 import PropTypes from "prop-types";
-import "./Login.css";
-import ForgotPasswordModal from "./ForgotPasswordModal";
-import { Link } from "react-router-dom";
-import timefitLogo from "../../assets/timefit.svg";
-
-// Importaciones de Firebase
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { auth, googleProvider } from "../../firebase/firebase-config";
-
 import GoogleIcon from "@mui/icons-material/Google";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
-const Login = ({ onLogin }) => {
-  const [error, setError] = React.useState("");
-  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [rememberMe, setRememberMe] = React.useState(false);
+import timefitLogo from "../../assets/timefit.svg";
+import "./Login.css";
 
-  // Expresión regular para validar formato de email
+export default function Login({ onLogin }) {
+  const [error, setError] = useState("");
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  const navigate = useNavigate();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // Función para manejar el envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
 
-    // Validar que el email tenga un formato correcto
     if (!emailRegex.test(email)) {
       setError("Ingrese un correo electrónico válido.");
       return;
     }
-
-    // Validar que la contraseña tenga al menos 8 caracteres
     if (password.length < 8) {
       setError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
 
     try {
-      // Iniciar sesión con Firebase Authentication
       await signInWithEmailAndPassword(auth, email, password);
-      setError(""); // Limpiar error si la autenticación es exitosa
-
-      // Actualizar el estado de autenticación en la aplicación
+      setError("");
       onLogin();
-    } catch (error) {
-      console.error("Error al iniciar sesión:", error);
-
-      // Manejo de errores específicos de Firebase
-      switch (error.code) {
+      navigate("/home");
+    } catch (err) {
+      console.error("Error al iniciar sesión:", err);
+      switch (err.code) {
         case "auth/user-not-found":
           setError("El correo electrónico no está registrado.");
           break;
@@ -70,32 +64,26 @@ const Login = ({ onLogin }) => {
     }
   };
 
-  // Autenticación con Google
   const handleGoogleSignIn = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
       onLogin();
-    } catch (error) {
-      console.error("Error en autenticación con Google:", error);
+      navigate("/home");
+    } catch (err) {
+      console.error("Error en autenticación con Google:", err);
       setError("Error al iniciar sesión con Google.");
     }
   };
 
-  // Función para abrir el modal de recuperación de contraseña
-  const openForgotPasswordModal = (e) => {
+  const togglePasswordVisibility = () => {
+    setShowPassword((v) => !v);
+  };
+
+  const openForgotModal = (e) => {
     e.preventDefault();
     setIsForgotPasswordOpen(true);
   };
-
-  // Función para cerrar el modal
-  const closeForgotPasswordModal = () => {
-    setIsForgotPasswordOpen(false);
-  };
-
-  // Función para alternar la visibilidad de la contraseña
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  const closeForgotModal = () => setIsForgotPasswordOpen(false);
 
   return (
     <div className="login-container">
@@ -116,7 +104,6 @@ const Login = ({ onLogin }) => {
         <p>
           Si aún no tienes cuenta, <Link to="/sign_up">regístrate aquí</Link>
         </p>
-
         <h4>Por favor, inicie sesión con su cuenta.</h4>
 
         <form onSubmit={handleSubmit}>
@@ -138,17 +125,25 @@ const Login = ({ onLogin }) => {
               required
               autoComplete="current-password"
             />
-            <button type="button" className="toggle-password-button" onClick={togglePasswordVisibility}>
+            <button
+              type="button"
+              className="toggle-password-button"
+              onClick={togglePasswordVisibility}
+            >
               {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
             </button>
           </div>
 
           <div className="login-options">
             <label>
-              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
               Mantener la sesión iniciada
             </label>
-            <a href="#" onClick={openForgotPasswordModal}>
+            <a href="#" onClick={openForgotModal}>
               ¿Olvidó su contraseña?
             </a>
           </div>
@@ -172,14 +167,123 @@ const Login = ({ onLogin }) => {
         </div>
       </div>
 
-      <ForgotPasswordModal isOpen={isForgotPasswordOpen} onClose={closeForgotPasswordModal} />
+      {isForgotPasswordOpen && (
+        <ForgotPasswordModal isOpen onClose={closeForgotModal} />
+      )}
     </div>
   );
-};
+}
 
-// Añadir validación de PropTypes
 Login.propTypes = {
-  onLogin: PropTypes.func.isRequired
+  onLogin: PropTypes.func.isRequired,
 };
 
-export default Login;
+// ----------------------------------------------------------
+
+function ForgotPasswordModal({ isOpen, onClose }) {
+  const [email, setEmail] = useState("");
+  const [step, setStep] = useState(1);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const stopProp = (e) => e.stopPropagation();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      setErrorMsg("Por favor, ingrese su correo electrónico");
+      return;
+    }
+    try {
+      setLoading(true);
+      setErrorMsg("");
+      await sendPasswordResetEmail(auth, email);
+      setLoading(false);
+      setStep(2);
+    } catch (err) {
+      setLoading(false);
+      switch (err.code) {
+        case "auth/invalid-email":
+          setErrorMsg("El correo electrónico no es válido.");
+          break;
+        case "auth/user-not-found":
+          setErrorMsg("No se encontró una cuenta con este correo.");
+          break;
+        case "auth/too-many-requests":
+          setErrorMsg("Demasiados intentos. Intente más tarde.");
+          break;
+        default:
+          setErrorMsg("Ocurrió un error. Intenta nuevamente.");
+      }
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={stopProp}>
+        {step === 1 ? (
+          <>
+            <h2>Recuperar contraseña</h2>
+            <p className="modal-description">
+              Ingresa tu correo y recibirás un enlace para restablecer tu
+              contraseña.
+            </p>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="reset-email">Correo electrónico</label>
+                <input
+                  id="reset-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Ingresa tu correo"
+                  disabled={loading}
+                />
+              </div>
+              {errorMsg && <p className="error-message">{errorMsg}</p>}
+              <div className="modal-buttons">
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={onClose}
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="submit-button"
+                  disabled={loading}
+                >
+                  {loading ? "Enviando..." : "Enviar enlace"}
+                </button>
+              </div>
+            </form>
+          </>
+        ) : (
+          <div className="confirmation-container">
+            <div className="confirmation-icon">✓</div>
+            <h2>Correo enviado</h2>
+            <p>
+              Hemos enviado un enlace a <strong>{email}</strong>. Revisa tu
+              bandeja de entrada.
+            </p>
+            <p className="note">
+              Si no lo ves, revisa tu carpeta de spam.
+            </p>
+            <button className="close-button" onClick={onClose}>
+              Cerrar
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ForgotPasswordModal.propTypes = {
+  isOpen: PropTypes.bool,
+  onClose: PropTypes.func.isRequired,
+};
