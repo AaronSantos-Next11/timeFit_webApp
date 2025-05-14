@@ -18,6 +18,8 @@ import {
   Add as AddIcon,
   FilterList as FilterIcon,
 } from '@mui/icons-material';
+
+// Importing CSS styles
 import './Collaborators.css';
 
 const Collaborators = () => {
