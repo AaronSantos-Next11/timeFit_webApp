@@ -1,3 +1,5 @@
+// Importing CSS styles
+import './Collaborators.css';
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -19,8 +21,7 @@ import {
   FilterList as FilterIcon,
 } from '@mui/icons-material';
 
-// Importing CSS styles
-import './Collaborators.css';
+
 
 const Collaborators = () => {
   const navigate = useNavigate();

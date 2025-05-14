@@ -1,27 +1,35 @@
 /* Collaborators.css */
 
-/* Estilos generales */
+/* 1) Reset básico y box-sizing para evitar sorpresas */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 2) Scope global: todo sale de .collaborators-container */
 .collaborators-container {
+  /* contenedor principal */
   color: white;
   min-height: 100vh;
   padding: 20px;
   font-family: 'Roboto', sans-serif;
 }
 
-.header {
+/* HEADER */
+.collaborators-container .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 40px;
 }
-
-.header-title {
+.collaborators-container .header-title {
   font-size: 28px;
   font-weight: 600;
-  margin: 0;
 }
 
-.search-bar {
+/* BARRA DE BÚSQUEDA */
+.collaborators-container .search-bar {
   display: flex;
   align-items: center;
   background-color: white;
@@ -31,8 +39,7 @@
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
   border: 1px solid #444;
 }
-
-.search-bar input {
+.collaborators-container .search-bar input {
   flex: 1;
   border: none;
   outline: none;
@@ -40,49 +47,45 @@
   font-size: 16px;
   color: #000;
 }
-
-.search-icon {
+.collaborators-container .search-icon {
   color: #aaa;
   font-size: 26px;
 }
 
-.header-actions {
+/* ACCIONES DEL HEADER */
+.collaborators-container .header-actions {
   display: flex;
   align-items: center;
   gap: 15px;
 }
-
-.icon-button {
+.collaborators-container .icon-button {
   background: none;
   border: none;
   color: white;
   cursor: pointer;
 }
 
-.user-info {
+/* INFO USUARIO */
+.collaborators-container .user-info {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
-.user-name {
+.collaborators-container .user-name {
   display: flex;
   flex-direction: column;
   text-align: right;
 }
-
-.user-name span:first-child {
+.collaborators-container .user-name span:first-child {
   color: #F8820B;
   font-weight: 500;
   font-size: 18px;
 }
-
-.user-name span:last-child {
+.collaborators-container .user-name span:last-child {
   font-size: 12px;
   color: #ccc;
 }
-
-.avatar {
+.collaborators-container .avatar {
   width: 50px;
   height: 50px;
   background-color: #4285F4;
@@ -95,26 +98,24 @@
   font-size: 20px;
 }
 
-/* Sección de contenido */
-.content-section {
+/* SECCIÓN DE CONTENIDO */
+.collaborators-container .content-section {
   margin-bottom: 30px;
 }
-
-.section-title {
+.collaborators-container .section-title {
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 15px;
 }
-
-.section-description {
+.collaborators-container .section-description {
   color: #ccc;
   margin-bottom: 25px;
   font-size: 16px;
   line-height: 1.5;
 }
 
-/* Botón para registrar */
-.register-button {
+/* BOTÓN REGISTRAR */
+.collaborators-container .register-button {
   background-color: #F8820B;
   color: black;
   border: none;
@@ -129,19 +130,19 @@
   font-size: 14px;
   margin-top: 10px;
 }
-
-.register-button:hover {
+.collaborators-container .register-button:hover {
   background-color: #FF6600;
   color: white;
 }
 
-.actions-container {
+/* CONTROLES DE FILTRADO */
+.collaborators-container .actions-container {
   display: flex;
   justify-content: space-between;
   margin-bottom: 15px;
 }
-
-.filter-button {
+.collaborators-container .filter-button,
+.collaborators-container .sort-button {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -152,80 +153,53 @@
   cursor: pointer;
 }
 
-.sort-button {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: none;
-  color: #F8820B;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-/* Tabla de colaboradores */
-.collaborators-table {
+/* TABLA DE COLABORADORES */
+.collaborators-container .collaborators-table {
   width: 100%;
   background-color: #45474B;
   border-radius: 10px;
   overflow: hidden;
   margin-top: 40px;
 }
-
-.table-header {
+.collaborators-container .table-header {
   background-color: #45474B;
   border-bottom: 1px solid #444;
   padding: 15px 20px;
 }
-
-.table-header-row {
+.collaborators-container .table-header-row,
+.collaborators-container .table-row {
   display: grid;
   grid-template-columns: 2fr 2fr 1fr 1.5fr 0.5fr;
-  font-weight: 500;
+  align-items: center;
+  justify-items: center;
+}
+.collaborators-container .table-header-row {
+  font-weight: bold;
   color: #ddd;
 }
-
-.table-header-row,
-.table-row {
-  display: grid;
-  /* tu grid-template-columns… */
-  align-items: center;      /* ya lo tenías */
-  justify-items: center;    /* ¡añádelo! */
-}
-
-
-.table-body {
+.collaborators-container .table-body {
   max-height: 400px;
   overflow-y: auto;
 }
-
-.table-row {
-  display: grid;
-  grid-template-columns: 2fr 2fr 1fr 1.5fr 0.5fr;
+.collaborators-container .table-row {
   padding: 15px 20px;
   border-bottom: 1px solid #444;
-  align-items: center;
 }
-
-.table-row:hover {
+.collaborators-container .table-row:hover {
   background-color: #333;
 }
-
-.table-cell {
+.collaborators-container .table-cell {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.table-cell.role {
+.collaborators-container .table-cell.role {
   font-weight: 500;
 }
-
-.table-cell.last-active {
+.collaborators-container .table-cell.last-active {
   color: #aaa;
 }
-
-.settings-button {
+.collaborators-container .settings-button {
   background: none;
   border: none;
   color: #888;
@@ -234,8 +208,8 @@
   justify-content: center;
 }
 
-/* Línea naranja encima de la tabla */
-.orange-line {
+/* LÍNEA NARANJA ENCIMA DE LA TABLA */
+.collaborators-container .orange-line {
   height: 3px;
   background-color: #F8820B;
   width: 100%;
@@ -245,19 +219,11 @@
   border-radius: 3px 3px 0 0;
 }
 
-/* Mensaje cuando no hay datos */
-.no-data {
-  grid-column: 1 / -1;      /* ocupa todo el ancho de la grid */
+/* MENSAJE “NO DATA” */
+.collaborators-container .no-data {
+  grid-column: 1 / -1;
   text-align: center;
   padding: 40px 0;
   color: #ccc;
   font-size: 16px;
 }
-
-/* Asegura centrado total en filas y encabezados */
-.table-header-row,
-.table-row {
-  justify-items: center;
-}
-
-/* (El resto de tu CSS permanece idéntico) */
