@@ -1,11 +1,8 @@
 // Revenue.jsx
 import React, { useState } from 'react';
-import { 
-  Search, 
+import {  
   Notifications, 
-  Chat, 
-  KeyboardArrowDown, 
-  KeyboardArrowUp,
+  Chat,
 
 } from '@mui/icons-material';
 import { 
@@ -20,11 +17,9 @@ import {
   TableRow,
   Paper,
   Grid,
-  InputBase,
   Avatar
 } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
-import './Revenue.css';
 
 const Revenue = () => {
   // Estado para los widgets expandidos/colapsados
@@ -55,13 +50,6 @@ const Revenue = () => {
     { id: '03', name: 'Botellas Reutilizables', quantity: '50 piezas', earnings: '$250 MXN', percentage: '10%' },
   ];
 
-  // Función para mostrar/ocultar widgets
-  const toggleWidget = (widget) => {
-    setExpandedWidgets(prev => ({
-      ...prev,
-      [widget]: !prev[widget]
-    }));
-  };
 
   // Mock data for user profile
   const displayName = "Yair Guzman";
@@ -76,37 +64,18 @@ const Revenue = () => {
   return (
     <div className="revenue-container">
       {/* Header con búsqueda y perfil */}
-      <Grid container alignItems="center" justifyContent="space-between" sx={{ padding: "10px 0px", marginBottom: "20px" }}>
+      <Grid container alignItems="center" justifyContent="space-between" sx={{ padding: "8px 0px", marginBottom: "20px" }}>
         {/* Título y descripción */}
         <Grid item>
           <Typography variant="h4" sx={{ margin: 0, fontSize: "32px", fontWeight: "bold" }}>
             Ingresos
           </Typography>
-          <Typography variant="body2" sx={{ margin: 0, fontSize: "14px", color: "#ccc" }}>
-            Esta sesión muestra las ganancias generadas por <hr/> servicios, productos y membresías del gimnasio.
+          <Typography variant="body2" sx={{ margin: 0, fontSize: "14px", color: "#ccc", marginRight: "220px", marginTop: "5px" }}>
+            Esta sesión muestra las ganancias generadas por servicios, productos y membresías del gimnasio.
           </Typography>
         </Grid>
 
-        {/* Barra de búsqueda */}
-        <Grid item>
-          <Paper component="form" sx={{ 
-            display: "flex", 
-            alignItems: "center", 
-            padding: "8px 15px", 
-            borderRadius: "8px", 
-            width: "455px", 
-            height: "45px", 
-            backgroundColor: "#fff"
-          }}>
-            <IconButton type="submit" sx={{ p: "8px" }} color="default">
-              <Search sx={{ fontSize: "22px", color: "#777" }} />
-            </IconButton>
-            <InputBase 
-              sx={{ ml: 1, flex: 1, fontSize: "16px", color: "#555" }} 
-              placeholder="Buscar un servicio, membresía..." 
-            />
-          </Paper>
-        </Grid>
+
 
         {/* Notificaciones y mensajes */}
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -121,7 +90,7 @@ const Revenue = () => {
         {/* Perfil del usuario */}
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box sx={{ textAlign: "right" }}>
-            <Typography sx={{ margin: 0, fontSize: "16px", color: "#F9A826", fontWeight: "bold" }}>
+            <Typography sx={{ margin: 0, fontSize: "16px", color: "#F8820B", fontWeight: "bold" }}>
               {displayName}
             </Typography>
             <Typography variant="body2" sx={{ margin: 0, fontSize: "14px", color: "#fff" }}>
@@ -147,7 +116,7 @@ const Revenue = () => {
         <Grid item xs={12} md={8}>
           {/* Widget de ganancias con gráfico */}
           <Paper sx={{ 
-            backgroundColor: "#2A2A2E", 
+            backgroundColor: "#45474B", 
             borderRadius: "10px", 
             padding: "20px",
             marginBottom: "20px"
@@ -159,24 +128,12 @@ const Revenue = () => {
               marginBottom: "20px" 
             }}>
               <Typography sx={{ 
-                color: "#F9A826", 
+                color: "#F8820B", 
                 fontSize: "20px", 
                 fontWeight: "bold" 
               }}>
                 Ganancias Obtenidas
               </Typography>
-              <IconButton 
-                sx={{ 
-                  backgroundColor: "#F9A826", 
-                  color: "white", 
-                  width: "30px", 
-                  height: "30px", 
-                  "&:hover": { backgroundColor: "#d88c19" } 
-                }}
-                onClick={() => toggleWidget('earnings')}
-              >
-                {expandedWidgets.earnings ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-              </IconButton>
             </Box>
             
             {expandedWidgets.earnings && (
@@ -184,13 +141,14 @@ const Revenue = () => {
                 <Typography variant="h3" sx={{ 
                   fontSize: "38px", 
                   fontWeight: "bold", 
-                  marginBottom: "10px" 
+                  marginBottom: "10px" ,
+                  color: "white"
                 }}>
                   $30,047
                   <Box component="span" sx={{ 
                     fontSize: "16px", 
                     marginLeft: "10px", 
-                    color: "#65B741" 
+                    color: "#B1D690" 
                   }}>
                     (+9.65%)
                   </Box>
@@ -206,25 +164,26 @@ const Revenue = () => {
                 <Box sx={{ 
                   display: "flex", 
                   gap: "20px", 
-                  marginBottom: "10px" 
+                  marginBottom: "20px",
+                  marginTop:"20px"
                 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: "5px", }}>
                     <Box sx={{ 
                       width: "15px", 
                       height: "15px", 
                       borderRadius: "3px", 
-                      backgroundColor: "#F9A826" 
+                      backgroundColor: "#F8820B" 
                     }}></Box>
-                    <Typography sx={{ fontSize: "14px" }}>Ingresos Actual</Typography>
+                    <Typography sx={{ fontSize: "14px", color: "white" }}>Ingresos Actual</Typography>
                   </Box>
                   <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
                     <Box sx={{ 
                       width: "15px", 
                       height: "15px", 
                       borderRadius: "3px", 
-                      backgroundColor: "#65B741" 
+                      backgroundColor: "#B1D690" 
                     }}></Box>
-                    <Typography sx={{ fontSize: "14px" }}>Incremento</Typography>
+                    <Typography sx={{ fontSize: "14px", color: "white"}}>Incremento</Typography>
                   </Box>
                   <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
                     <Box sx={{ 
@@ -233,17 +192,17 @@ const Revenue = () => {
                       borderRadius: "3px", 
                       backgroundColor: "#E94560" 
                     }}></Box>
-                    <Typography sx={{ fontSize: "14px" }}>Decremento</Typography>
+                    <Typography sx={{ fontSize: "14px" , color: "white" }}>Decremento</Typography>
                   </Box>
                 </Box>
                 
                 <Box sx={{ height: "300px" }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} barGap={0} barSize={30}>
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} />
-                      <YAxis tickFormatter={(tick) => `${tick}k`} axisLine={false} tickLine={false} />
-                      <Bar dataKey="income" stackId="a" fill="#F9A826" />
-                      <Bar dataKey="increase" stackId="a" fill="#65B741" />
+                      <XAxis dataKey="day" axisLine={false} tickLine={false}   tick={{fill: '#ffff', fontWeight:"bold"}} />
+                      <YAxis tickFormatter={(tick) => `${tick}k`} axisLine={false} tickLine={false} tick={{fill: '#ffff', fontWeight:"bold"}}/>
+                      <Bar dataKey="income" stackId="a" fill="#F8820B" />
+                      <Bar dataKey="increase" stackId="a" fill="#B1D690" />
                       <Bar dataKey="decrease" stackId="b" fill="#E94560" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -254,7 +213,7 @@ const Revenue = () => {
 
           {/* Widget de productos más vendidos con tabla */}
           <Paper sx={{ 
-            backgroundColor: "#2A2A2E", 
+            backgroundColor: "#45474B", 
             borderRadius: "10px", 
             padding: "20px" 
           }}>
@@ -265,24 +224,12 @@ const Revenue = () => {
               marginBottom: "20px" 
             }}>
               <Typography sx={{ 
-                color: "#F9A826", 
+                color: "#F8820B", 
                 fontSize: "20px", 
                 fontWeight: "bold" 
               }}>
                 Top de los productos mas vendidos
               </Typography>
-              <IconButton 
-                sx={{ 
-                  backgroundColor: "#F9A826", 
-                  color: "white", 
-                  width: "30px", 
-                  height: "30px", 
-                  "&:hover": { backgroundColor: "#d88c19" } 
-                }}
-                onClick={() => toggleWidget('topProducts')}
-              >
-                {expandedWidgets.topProducts ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-              </IconButton>
             </Box>
             
             {expandedWidgets.topProducts && (
@@ -290,24 +237,25 @@ const Revenue = () => {
                 <Table sx={{ minWidth: 650 }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>ID</TableCell>
-                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>Nombre del Producto</TableCell>
-                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>Cantidad Vendida</TableCell>
-                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>Ganancia Obtenida</TableCell>
-                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>Porcentaje</TableCell>
+                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px", fontWeight: "bold",  }}>ID</TableCell>
+                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px", fontWeight: "bold", }}>Nombre del Producto</TableCell>
+                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px", fontWeight: "bold",}}>Cantidad Vendida</TableCell>
+                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px", fontWeight: "bold", }}>Ganancia Obtenida</TableCell>
+                      <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px", fontWeight: "bold",}}>Porcentaje</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {topProducts.map((product) => (
                       <TableRow key={product.id}>
-                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>{product.id}</TableCell>
-                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>{product.name}</TableCell>
-                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>{product.quantity}</TableCell>
-                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>{product.earnings}</TableCell>
-                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #464648", padding: "15px 10px" }}>
+                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px" }}>{product.id}</TableCell>
+                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px" }}>{product.name}</TableCell>
+                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px" }}>{product.quantity}</TableCell>
+                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px" }}>{product.earnings}</TableCell>
+                        <TableCell sx={{ color: "#fff", borderBottom: "1px solid #F8820B", padding: "15px 10px" }}>
                           <Box sx={{ 
-                            backgroundColor: "#F9A826", 
-                            color: "white", 
+                            backgroundColor: "#F8820B", 
+                            color: "black",
+                            fontWeight: "bold",
                             padding: "5px 10px", 
                             borderRadius: "20px", 
                             display: "inline-block",
@@ -329,7 +277,7 @@ const Revenue = () => {
         <Grid item xs={12} md={4}>
           {/* Widget de productos vendidos */}
           <Paper sx={{ 
-            backgroundColor: "#2A2A2E", 
+            backgroundColor: "#45474B", 
             borderRadius: "10px", 
             padding: "20px",
             marginBottom: "20px"
@@ -341,29 +289,17 @@ const Revenue = () => {
               marginBottom: "20px" 
             }}>
               <Typography sx={{ 
-                color: "#F9A826", 
+                color: "#F8820B", 
                 fontSize: "20px", 
                 fontWeight: "bold" 
               }}>
                 Productos Vendidos
               </Typography>
-              <IconButton 
-                sx={{ 
-                  backgroundColor: "#F9A826", 
-                  color: "white", 
-                  width: "30px", 
-                  height: "30px", 
-                  "&:hover": { backgroundColor: "#d88c19" } 
-                }}
-                onClick={() => toggleWidget('products')}
-              >
-                {expandedWidgets.products ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-              </IconButton>
             </Box>
             
             {expandedWidgets.products && (
               <Box sx={{ textAlign: "center" }}>
-                <Typography variant="h2" sx={{ fontSize: "50px", fontWeight: "bold", marginBottom: "10px" }}>
+                <Typography variant="h2" sx={{ fontSize: "50px", fontWeight: "bold", marginBottom: "10px", color:"white" }}>
                   3000
                 </Typography>
                 <Box sx={{ 
@@ -373,10 +309,10 @@ const Revenue = () => {
                   gap: "5px",
                   fontSize: "16px"
                 }}>
-                  <Typography component="span" sx={{ color: "#65B741", fontSize: "16px" }}>
+                  <Typography component="span" sx={{ color: "#65B741", fontSize: "16px", fontWeight: "bold",}}>
                     +9.65%
                   </Typography>
-                  <Typography component="span" sx={{ fontSize: "16px" }}>
+                  <Typography component="span" sx={{ fontSize: "16px" , color:"white"}}>
                     respecto al semana anterior
                   </Typography>
                 </Box>
@@ -386,7 +322,7 @@ const Revenue = () => {
 
           {/* Widget de membresias vendidas */}
           <Paper sx={{ 
-            backgroundColor: "#2A2A2E", 
+            backgroundColor: "#45474B", 
             borderRadius: "10px", 
             padding: "20px",
             marginBottom: "20px"
@@ -398,29 +334,17 @@ const Revenue = () => {
               marginBottom: "20px" 
             }}>
               <Typography sx={{ 
-                color: "#F9A826", 
+                color: "#F8820B", 
                 fontSize: "20px", 
                 fontWeight: "bold" 
               }}>
                 Membrecías Vendidas
               </Typography>
-              <IconButton 
-                sx={{ 
-                  backgroundColor: "#F9A826", 
-                  color: "white", 
-                  width: "30px", 
-                  height: "30px", 
-                  "&:hover": { backgroundColor: "#d88c19" } 
-                }}
-                onClick={() => toggleWidget('memberships')}
-              >
-                {expandedWidgets.memberships ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-              </IconButton>
             </Box>
             
             {expandedWidgets.memberships && (
               <Box sx={{ textAlign: "center" }}>
-                <Typography variant="h2" sx={{ fontSize: "50px", fontWeight: "bold", marginBottom: "10px" }}>
+                <Typography variant="h2" sx={{ fontSize: "50px", fontWeight: "bold", marginBottom: "10px", color:"white" }}>
                   500
                 </Typography>
                 <Box sx={{ 
@@ -430,10 +354,10 @@ const Revenue = () => {
                   gap: "5px",
                   fontSize: "16px"
                 }}>
-                  <Typography component="span" sx={{ color: "#65B741", fontSize: "16px" }}>
+                  <Typography component="span" sx={{ color: "#65B741", fontSize: "16px", fontWeight: "bold",}}>
                     +10.6%
                   </Typography>
-                  <Typography component="span" sx={{ fontSize: "16px" }}>
+                  <Typography component="span" sx={{ fontSize: "16px", color:"white" }}>
                     respecto al semana anterior
                   </Typography>
                 </Box>
@@ -443,7 +367,7 @@ const Revenue = () => {
 
           {/* Widget de nuevos clientes */}
           <Paper sx={{ 
-            backgroundColor: "#2A2A2E", 
+            backgroundColor: "#45474B", 
             borderRadius: "10px", 
             padding: "20px",
             marginBottom: "20px"
@@ -455,29 +379,17 @@ const Revenue = () => {
               marginBottom: "20px" 
             }}>
               <Typography sx={{ 
-                color: "#F9A826", 
+                color: "#F8820B", 
                 fontSize: "20px", 
                 fontWeight: "bold" 
               }}>
                 Nuevos clientes
               </Typography>
-              <IconButton 
-                sx={{ 
-                  backgroundColor: "#F9A826", 
-                  color: "white", 
-                  width: "30px", 
-                  height: "30px", 
-                  "&:hover": { backgroundColor: "#d88c19" } 
-                }}
-                onClick={() => toggleWidget('newClients')}
-              >
-                {expandedWidgets.newClients ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-              </IconButton>
             </Box>
             
             {expandedWidgets.newClients && (
               <Box sx={{ textAlign: "center" }}>
-                <Typography variant="h2" sx={{ fontSize: "50px", fontWeight: "bold", marginBottom: "10px" }}>
+                <Typography variant="h2" sx={{ fontSize: "50px", fontWeight: "bold", marginBottom: "10px", color:"white" }}>
                   234
                 </Typography>
                 <Box sx={{ 
@@ -487,10 +399,10 @@ const Revenue = () => {
                   gap: "5px",
                   fontSize: "16px"
                 }}>
-                  <Typography component="span" sx={{ color: "#65B741", fontSize: "16px" }}>
+                  <Typography component="span" sx={{ color: "#65B741", fontSize: "16px", fontWeight: "bold",}}>
                     +2.6%
                   </Typography>
-                  <Typography component="span" sx={{ fontSize: "16px" }}>
+                  <Typography component="span" sx={{ fontSize: "16px", color:"white" }}>
                     respecto al semana anterior
                   </Typography>
                 </Box>
@@ -500,7 +412,7 @@ const Revenue = () => {
 
           {/* Widget de gastos totales */}
           <Paper sx={{ 
-            backgroundColor: "#2A2A2E", 
+            backgroundColor: "#45474B", 
             borderRadius: "10px", 
             padding: "20px"
           }}>
@@ -511,29 +423,18 @@ const Revenue = () => {
               marginBottom: "20px" 
             }}>
               <Typography sx={{ 
-                color: "#F9A826", 
+                color: "#F8820B", 
                 fontSize: "20px", 
                 fontWeight: "bold" 
               }}>
                 Gastos totales
               </Typography>
-              <IconButton 
-                sx={{ 
-                  backgroundColor: "#F9A826", 
-                  color: "white", 
-                  width: "30px", 
-                  height: "30px", 
-                  "&:hover": { backgroundColor: "#d88c19" } 
-                }}
-                onClick={() => toggleWidget('expenses')}
-              >
-                {expandedWidgets.expenses ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-              </IconButton>
+    
             </Box>
             
             {expandedWidgets.expenses && (
               <Box sx={{ textAlign: "center" }}>
-                <Typography variant="h2" sx={{ fontSize: "50px", fontWeight: "bold", marginBottom: "10px" }}>
+                <Typography variant="h2" sx={{ fontSize: "50px", fontWeight: "bold", marginBottom: "10px", color:"white" }}>
                   $15000
                 </Typography>
                 <Box sx={{ 
@@ -543,10 +444,10 @@ const Revenue = () => {
                   gap: "5px",
                   fontSize: "16px"
                 }}>
-                  <Typography component="span" sx={{ color: "#E94560", fontSize: "16px" }}>
+                  <Typography component="span" sx={{ color: "#E94560", fontSize: "16px", fontWeight: "bold",}}>
                     -7.6%
                   </Typography>
-                  <Typography component="span" sx={{ fontSize: "16px" }}>
+                  <Typography component="span" sx={{ fontSize: "16px", color:"white" }}>
                     respecto al semana anterior
                   </Typography>
                 </Box>

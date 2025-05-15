@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  ChatBubbleOutline as ChatIcon,
+  Chat as ChatIcon,
   Notifications as NotificationsIcon,
   MoreVert as MoreVertIcon,
   Add as AddIcon,
@@ -96,7 +96,7 @@ const Collaborators = () => {
     <div className="collaborators-container">
       {/* Header */}
       <Box className="header">
-        <Typography className="header-title">Colaboradores</Typography>
+        <Typography className="header-title" >Colaboradores</Typography>
         
         <Box className="search-bar">
           <InputBase
