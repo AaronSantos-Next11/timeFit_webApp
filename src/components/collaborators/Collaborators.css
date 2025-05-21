@@ -1,12 +1,3 @@
-/* Collaborators.css */
-
-/* 1) Reset básico y box-sizing para evitar sorpresas */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 /* 2) Scope global: todo sale de .collaborators-container */
 .collaborators-container {
   /* contenedor principal */
@@ -117,53 +108,58 @@
 
 /* BOTÓN REGISTRAR */
 .collaborators-container .register-button {
-  background-color: #F8820B;
-  color: black;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-weight: 600;
+  background-color: #F8820B !important; 
+  color: rgb(0, 0, 0) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  font-weight: 600 !important;
   display: flex;
   align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  gap: 10px !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s !important;
   font-size: 14px;
   margin-top: 10px;
 }
 .collaborators-container .register-button:hover {
-  background-color: #FF6600;
-  color: white;
+  background-color: #FF6600 !important;
+  color: white !important;
 }
 
 /* CONTROLES DE FILTRADO */
 .collaborators-container .actions-container {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
+  margin-bottom: 15px !important;
 }
-.collaborators-container .filter-button,
-.collaborators-container .sort-button {
+.filter-button,
+.sort-button {
   display: flex;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: none;
-  color: #F8820B;
-  font-weight: 500;
+  align-items: center !important;
+  gap: 5px !important;
+  background: none !important;
+  border: none !important;
+  color: #F8820B !important;
+  font-weight: 500 !important;
   cursor: pointer;
+}
+.filter-button:hover,
+.sort-button:hover {
+  background-color: #FF6600 !important;
+  color: white !important;
 }
 
 /* TABLA DE COLABORADORES */
 .collaborators-container .collaborators-table {
   width: 100%;
-  background-color: #45474B;
+  background-color: #45474B !important;
   border-radius: 10px;
   overflow: hidden;
   margin-top: 40px;
 }
 .collaborators-container .table-header {
-  background-color: #45474B;
+  background-color: #333 !important;
   border-bottom: 1px solid #444;
   padding: 15px 20px;
 }
@@ -174,9 +170,10 @@
   align-items: center;
   justify-items: center;
 }
-.collaborators-container .table-header-row {
+.table-header-row {
   font-weight: bold;
   color: #ddd;
+  
 }
 .collaborators-container .table-body {
   max-height: 400px;

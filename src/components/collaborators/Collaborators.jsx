@@ -133,13 +133,13 @@ const Collaborators = () => {
         </Typography>
         
         <Box className="actions-container">
-          <Button className="register-button" startIcon={<AddIcon />}>
+          <Button className="register-button" startIcon={<AddIcon />} >
             REGISTRAR COLABORADOR
           </Button>
           
           <IconButton className="filter-button" onClick={handleFilterClick}>
             <FilterIcon /> 
-            <h6>Filtrar</h6>
+            <h4>Filtrar</h4>
           </IconButton>
           <Menu
           
@@ -154,8 +154,8 @@ const Collaborators = () => {
         </Box>
         
         {/* Tabla */}
-        <Box className="collaborators-table">
-          <Box className="table-header">
+        <Box className="collaborators-table" >
+          <Box className="table-header" >
             <Box className="table-header-row">
               <Box className="table-cell">Nombre</Box>
               <Box className="table-cell">Correo electrónico</Box>
