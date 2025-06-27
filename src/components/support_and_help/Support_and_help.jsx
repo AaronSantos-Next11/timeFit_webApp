@@ -13,7 +13,10 @@ export default function Support_and_help() {
   const handleClose = () => setOpen(false);
 
   const handleSendReport = () => setOpenSuccess(true);
-  const handleCloseSuccess = () => setOpenSuccess(false);
+  const handleCloseSuccess = () => {
+    setOpenSuccess(false);
+    setOpen(false);
+  }
 
   const modules = {
     toolbar: [
@@ -248,7 +251,7 @@ export default function Support_and_help() {
                   <ReactQuill
                     modules={modules}
                     style={{
-                      height: '250px',           // Altura total del editor
+                      height: '250px',           
                       minHeight: '200px',
                       width: '100%',
                       background: '#fff',
