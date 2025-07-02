@@ -1,4 +1,5 @@
-import { Button, Typography, Paper, Modal, Box, TextField, Divider } from '@mui/material';
+import { Button, Typography, Paper, Modal, Box, TextField, Divider, IconButton } from '@mui/material';
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import React, { useState } from 'react';
 import Grid from '@mui/material/Grid2';
 import ReactQuill from 'react-quill';
@@ -8,15 +9,71 @@ export default function Support_and_help() {
 
   const [open, setOpen] = useState(false);
   const [openSuccess, setOpenSuccess] = useState(false);
+  const [expandedQuestions, setExpandedQuestions] = useState({});
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
+  const toggleQuestion = (questionId) => {
+    setExpandedQuestions(prev => ({
+      ...prev,
+      [questionId]: !prev[questionId]
+    }));
+  };
 
   const handleSendReport = () => setOpenSuccess(true);
   const handleCloseSuccess = () => {
     setOpenSuccess(false);
     setOpen(false);
   }
+
+  const questions = [
+    {
+      id: 1,
+      question: "¿Cómo puedo restablecer mi contraseña?",
+      answer: "Si has olvidado tu contraseña, ve a la pantalla de inicio de sesión y haz clic en el enlace \"¿Olvidaste tu contraseña?\". Te pediremos que ingreses tu correo electrónico para enviarte un enlace para restablecerla. Si no recibes el correo en unos minutos, revisa tu carpeta de spam."
+    },
+    {
+      id: 2,
+      question: "¿Cómo actualizo mi información personal (nombre, correo, teléfono)?",
+      answer: "Para actualizar tu información, inicia sesión en tu cuenta y ve a la sección \"Perfil de Usuario\". Allí podrás editar tus datos personales. No olvides guardar los cambios al finalizar."
+    },
+    {
+      id: 3,
+      question: "¿Cómo puedo cambiar el horario de las clases que ofrezco?",
+      answer: "Si eres un administrador o entrenador, ve a la sección \"Gestión de membresía\", después ingresar \"Administrar planes\" y selecciona la servicio que deseas modificar. Puedes cambiar el horario, la duración, el tipo de clase, y el número de plazas disponibles. Haz clic en \"Modificar Servicio\" para confirmar los cambios."
+    },
+    {
+      id: 4,
+      question: "¿Cómo puedo ajustar los precios de las membresías?",
+      answer: "Para actualizar los precios de las membresías, dirígete a la sección \"Gestión de membresía\", después ingresar \"Administrar planes\" . Allí podrás modificar los precios y las opciones de pago, así como agregar o eliminar tipos de membresías. Recuerda actualizar los precios en la plataforma para reflejar los cambios."
+    },
+    {
+      id: 5,
+      question: "¿Puedo personalizar la apariencia de la plataforma?",
+      answer: "Sí, en la sección \"Configuración\" podrás personalizar el diseño y la apariencia de la plataforma, como colores, logotipo y tema. Esto te permitirá adaptar la plataforma a la identidad visual del gimnasio."
+    },
+    {
+      id: 6,
+      question: "¿Cómo puedo contactar al soporte técnico?",
+      answer: "Si necesitas ayuda adicional, puedes contactar al soporte técnico a través del correo electrónico de soporte o utilizando el formulario de contacto en la sección \"Ayuda\". Nuestro equipo estará encantado de asistirte con cualquier problema que tengas."
+    },
+    {
+      id: 7,
+      question: "¿Cómo puedo dar de baja mi cuenta?",
+      answer: "Para dar de baja tu cuenta, ve a la sección \"Configuración\" y selecciona \"Eliminar cuenta\". Sigue las instrucciones para confirmar la eliminación. Ten en cuenta que esta acción es irreversible y perderás todos tus datos."
+    },
+    {
+      id: 8,
+      question: "¿Cómo puedo gestionar las reservas de clases?",
+      answer: "Para gestionar las reservas de clases, ve a la sección \"Reservas\" en tu perfil. Allí podrás ver las clases disponibles, reservar tu lugar y cancelar reservas si es necesario. Asegúrate de revisar las políticas de cancelación del gimnasio."
+    },
+    {
+      id: 9,
+      question: "¿Cómo puedo acceder a las estadísticas de uso de la plataforma?",
+      answer: "Como administrador, puedes acceder a las estadísticas de uso en la sección \"Informes\". Allí encontrarás datos sobre el número de usuarios, clases reservadas, ingresos generados y más. Estas métricas te ayudarán a tomar decisiones informadas sobre la gestión del gimnasio."
+    }
+  ];
 
   const modules = {
     toolbar: [
@@ -152,46 +209,73 @@ export default function Support_and_help() {
         <Typography variant='h1' sx={{ fontWeight: 'bold', color: '#fff', fontSize: '24px' }}>Preguntas Frecuentes (FAQ)</Typography>
       </Grid>
       <div>
-        <div>
-          <div style={{ marginBottom: '10px' }}>
-            <Typography variant='h2' sx={{ fontSize: '15px', color: '#F8820B' }}>¿Cómo puedo restablecer mi contraseña?</Typography>
+        {questions.map((item) => (
+          <div key={item.id} style={{ marginBottom: '20px' }}>
+            <div 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: '10px',
+                cursor: 'pointer',
+                padding: '10px',
+                backgroundColor: '#3A3B3C',
+                borderRadius: '8px',
+                transition: 'background-color 0.2s'
+              }}
+              onClick={() => toggleQuestion(item.id)}
+            >
+              <Typography 
+                variant='h2' 
+                sx={{ 
+                  fontSize: '15px', 
+                  color: '#F8820B',
+                  margin: 0,
+                  flex: 1
+                }}
+              >
+                {item.question}
+              </Typography>
+              <IconButton
+                sx={{ 
+                  color: '#F8820B',
+                  padding: '4px',
+                  '&:hover': {
+                    backgroundColor: 'rgba(248, 130, 11, 0.1)'
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleQuestion(item.id);
+                }}
+              >
+                {expandedQuestions[item.id] ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
+            </div>
+            
+            {expandedQuestions[item.id] && (
+              <Paper 
+                sx={{ 
+                  padding: '15px', 
+                  borderRadius: '8px', 
+                  backgroundColor: '#45474B',
+                  animation: 'fadeIn 0.3s ease-in-out',
+                  '@keyframes fadeIn': {
+                    from: { opacity: 0, transform: 'translateY(-10px)' },
+                    to: { opacity: 1, transform: 'translateY(0)' }
+                  }
+                }}
+              >
+                <Typography sx={{ color: '#fff', lineHeight: 1.6 }}>
+                  {item.answer}
+                </Typography>
+              </Paper>
+            )}
           </div>
-          <Paper sx={{ padding: '15px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#45474B' }}>
-            <Typography sx={{ justifyContent: 'center', color: '#fff' }}>Si has olvidado tu contraseña, ve a la pantalla de inicio de sesión y haz clic en el enlace "¿Olvidaste tu contraseña?". Te pediremos que ingreses tu correo electrónico para enviarte un enlace para restablecerla. Si no recibes el correo en unos minutos, revisa tu carpeta de spam.</Typography>
-          </Paper>
-        </div>
-        <div>
-          <div style={{ marginBottom: '10px' }}>
-            <Typography variant='h2' sx={{ fontSize: '15px', color: '#F8820B' }}>¿Cómo actualizo mi información personal (nombre, correo, teléfono)?</Typography>
-          </div>
-          <Paper sx={{ padding: '15px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#45474B' }}>
-            <Typography sx={{ justifyContent: 'center', color: '#fff' }}>Para actualizar tu información, inicia sesión en tu cuenta y ve a la sección "Perfil de Usuario". Allí podrás editar tus datos personales. No olvides guardar los cambios al finalizar.</Typography>
-          </Paper>
-        </div>
-        <div>
-          <div style={{ marginBottom: '10px' }}>
-            <Typography variant='h2' sx={{ fontSize: '15px', color: '#F8820B' }}>¿Cómo puedo cambiar el horario de las clases que ofrezco?</Typography>
-          </div>
-          <Paper sx={{ padding: '15px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#45474B' }}>
-            <Typography sx={{ justifyContent: 'center', color: '#fff' }}>Si eres un administrador o entrenador, ve a la sección "Gestión de membresía", después ingresar “Administrar planes” y selecciona la servicio que deseas modificar. Puedes cambiar el horario, la duración, el tipo de clase, y el número de plazas disponibles. Haz clic en "Modificar Servicio" para confirmar los cambios.</Typography>
-          </Paper>
-        </div>
-        <div>
-          <div style={{ marginBottom: '10px' }}>
-            <Typography variant='h2' sx={{ fontSize: '15px', color: '#F8820B' }}>¿Cómo puedo ajustar los precios de las membresías?</Typography>
-          </div>
-          <Paper sx={{ padding: '15px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#45474B' }}>
-            <Typography sx={{ justifyContent: 'center', color: '#fff' }}>Para actualizar los precios de las membresías, dirígete a la sección "Gestión de membresía", después ingresar “Administrar planes” . Allí podrás modificar los precios y las opciones de pago, así como agregar o eliminar tipos de membresías. Recuerda actualizar los precios en la plataforma para reflejar los cambios.</Typography>
-          </Paper>
-        </div>
-        <div>
-          <div style={{ marginBottom: '10px' }}>
-            <Typography variant='h2' sx={{ fontSize: '15px', color: '#F8820B' }}>¿Puedo personalizar la apariencia de la plataforma?</Typography>
-          </div>
-          <Paper sx={{ padding: '15px', borderRadius: '8px', marginBottom: '30px', backgroundColor: '#45474B' }}>
-            <Typography sx={{ justifyContent: 'center', color: '#fff' }}>Sí, en la sección "Configuración" podrás personalizar el diseño y la apariencia de la plataforma, como colores, logotipo y tema. Esto te permitirá adaptar la plataforma a la identidad visual del gimnasio.</Typography>
-          </Paper>
-        </div>
+        ))}
+
+        
+
       </div>
       <div style={{ display: 'flex', justifyContent: 'end', marginTop: '20px' }}>
         <Button variant="contained" sx={{ backgroundColor: '#F8820B', color: '#000', padding: '10px 20px', borderRadius: '8px' }}
