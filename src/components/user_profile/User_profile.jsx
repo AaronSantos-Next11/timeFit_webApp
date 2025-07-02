@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Typography from '@mui/material/Typography';
 import {
   Male,
@@ -11,7 +11,8 @@ import {
   Telegram,
   Circle,
   People,
-  Speed
+  Speed,
+  CameraAlt
 } from '@mui/icons-material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 
@@ -19,26 +20,75 @@ export default function User_profile() {
   // Obtén los datos del usuario desde localStorage
   const displayName = localStorage.getItem("displayName") || "Usuario";
   const photoURL = localStorage.getItem("photoURL") || "";
+  
+  // Estado para la imagen del banner
+  const [bannerImage, setBannerImage] = useState(localStorage.getItem("bannerImage") || "/img/OIP.jpg");
 
   // Si no hay foto, usa la inicial del nombre
   const inicial = displayName ? displayName[0].toUpperCase() : "?";
+
+  // Función para manejar el cambio de imagen del banner
+  const handleBannerImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newImageUrl = e.target.result;
+        setBannerImage(newImageUrl);
+        localStorage.setItem("bannerImage", newImageUrl);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div style={{ background: '#272829', minHeight: '100vh', padding: 0 }}>
       <div>
         {/* Imagen de portada */}
-        <img
-          src="/img/OIP.jpg"
-          alt="Portada"
-          style={{
-            width: '100%',
-            height: 180,
-            objectFit: 'cover',
-            borderRadius: 10,
-            marginBottom: -10,
-            boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
-          }}
-        />
+        <div style={{ position: 'relative' }}>
+          <img
+            src={bannerImage}
+            alt="Portada"
+            style={{
+              width: '100%',
+              height: 180,
+              objectFit: 'cover',
+              borderRadius: 10,
+              marginBottom: -10,
+              boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+            }}
+          />
+          {/* Botón para cambiar imagen */}
+          <div 
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              borderRadius: '50%',
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'background-color 0.3s ease'
+            }}
+            onClick={() => document.getElementById('banner-upload').click()}
+            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(248, 130, 11, 0.8)'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.6)'}
+          >
+            <CameraAlt style={{ color: 'white', fontSize: 20 }} />
+          </div>
+          {/* Input oculto para seleccionar archivo */}
+          <input
+            id="banner-upload"
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleBannerImageChange}
+          />
+        </div>
       </div>
       {/* Bloque de usuario */}
       <div style={{
@@ -65,7 +115,9 @@ export default function User_profile() {
               objectFit: 'cover',
               border: '4px solid #F8820B',
               background: '#fff',
-              flexShrink: 0
+              flexShrink: 0,
+              position: 'relative',
+              zIndex: 10
             }}
           />
         ) : (
@@ -80,7 +132,9 @@ export default function User_profile() {
             alignItems: 'center',
             justifyContent: 'center',
             border: '4px solid #F8820B',
-            flexShrink: 0
+            flexShrink: 0,
+            position: 'relative',
+            zIndex: 10
           }}>
             {inicial}
           </div>
