@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HashRouter as Router } from 'react-router-dom';
 import { Layout } from 'antd';
 import Logo from "./components/sidebar_menu/Logo";
@@ -14,12 +14,25 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+    // Al iniciar la app, revisa si hay sesión activa
+  useEffect(() => {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (token) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   const handleLogin = () => {
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    // Limpia todo al cerrar sesión
+    localStorage.removeItem("token");
+    localStorage.removeItem("admin");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("admin");
   };
 
   return (

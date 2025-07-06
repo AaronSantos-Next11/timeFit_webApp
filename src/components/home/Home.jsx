@@ -10,7 +10,6 @@ import {
   Box,
   Table,
   Badge,
-  InputBase,
   TableBody,
   TableCell,
   TableContainer,
@@ -31,7 +30,6 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import NotesIcon from "@mui/icons-material/Notes";
-import SearchIcon from "@mui/icons-material/Search";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import MailIcon from "@mui/icons-material/Mail";
@@ -70,8 +68,39 @@ export default function Home() {
     setAnchorEl(event.currentTarget);
   };
 
-  const displayName = localStorage.getItem("displayName") || "Usuario";
-  const photoURL = localStorage.getItem("photoURL") || "";
+// Buscar admin tanto en localStorage como en sessionStorage
+let admin = null;
+
+try {
+  const adminDataString =
+    localStorage.getItem("admin") || sessionStorage.getItem("admin");
+  admin = adminDataString ? JSON.parse(adminDataString) : null;
+} catch {
+  admin = null;
+}
+
+
+  // Función para obtener las iniciales del username (máximo 2 letras)
+  const getInitials = (username) => {
+    if (!username) return "";
+    return username.slice(0, 2).toUpperCase();
+  };
+
+  // Función para obtener el primer nombre y primer apellido
+  const getFirstNameAndLastName = (name, last_name) => {
+    if (!name || !last_name) return "Usuario";
+
+    const firstName = name.split(" ")[0];
+    const firstLastName = last_name.split(" ")[0];
+
+    return `${firstName} ${firstLastName}`;
+  };
+
+
+  const usernameInitials = admin ? getInitials(admin.username) : "";
+  const displayName = admin ? getFirstNameAndLastName(admin.name, admin.last_name) : "Usuario";
+  const roleName = admin?.role?.role_name || "Rol desconocido";
+
 
   // Manejadores para el menú
   const handleClick = (event) => {
@@ -124,67 +153,34 @@ export default function Home() {
         container
         alignItems="center"
         justifyContent="space-between"
-        sx={{ padding: "10px 20px", marginTop: "-12px" }}
+        sx={{ padding: "10px 0 20px 0" }}
       >
         {/* Título y descripción */}
         <Grid item>
-          <Typography variant="h4" sx={{ margin: 0, fontSize: "24px", fontWeight: "bold" }}>
+          <Typography variant="h4" sx={{ margin: 0, fontSize: "30px", fontWeight: "bold" }}>
             Hola, {displayName}
           </Typography>
-          <Typography variant="body2" sx={{ margin: 0, fontSize: "13px", color: "#ccc" }}>
+          <Typography variant="body2" sx={{ margin: 0, fontSize: "16px", color: "#ccc", marginTop: "10px" }}>
             Bienvenido a sistema administrativo de Time Fit
           </Typography>
         </Grid>
 
-        {/* Barra de búsqueda */}
-        <Grid item>
-          <Paper
-            component="form"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              padding: "8px 20px",
-              borderRadius: "30px",
-              boxShadow: 3,
-              width: "455px",
-              height: "45px",
-              marginTop: "-12px",
-              backgroundColor: "#ffff",
-              border: "1px solid #444",
-            }}
-          >
-            <IconButton type="submit" sx={{ p: "8px" }} color="primary">
-              <SearchIcon sx={{ fontSize: "26px", color: "#aaa" }} />
-            </IconButton>
-            <InputBase
-              sx={{ ml: 2, flex: 1, fontSize: "18px", color: "#000" }}
-              placeholder="Buscar un servicio, membresía..."
-            />
-          </Paper>
-        </Grid>
-
-        {/* Notificaciones y mensajes */}
+        {/* Perfil del usuario, notificacion y mensaje */}
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
+            <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
             <Badge badgeContent={messagesCount} color="error">
-              <MailIcon sx={{ fontSize: "24px" }} />
+              <MailIcon sx={{ fontSize: "30px" }} />
             </Badge>
           </IconButton>
           <IconButton size="large" aria-label="show new notifications" sx={{ color: "#fff" }}>
             <Badge badgeContent={notificationsCount} color="error">
-              <NotificationsIcon sx={{ fontSize: "24px" }} />
+              <NotificationsIcon sx={{ fontSize: "30px" }} />
             </Badge>
           </IconButton>
-        </Grid>
-
-        {/* Perfil del usuario */}
-        <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ textAlign: "right" }}>
-            <Typography sx={{ margin: 0, fontSize: "18px", color: "#F8820B" }}>
-              {displayName}
-            </Typography>
-            <Typography variant="body2" sx={{ margin: 0, fontSize: "13px", color: "#ccc" }}>
-              Administrador
+          <Box sx={{ textAlign: "right", marginLeft:"15px" }}>
+            <Typography sx={{ margin: 0, fontSize: "20px", color: "#F8820B", fontWeight: "bold" }}>{displayName}</Typography>
+            <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>
+              {roleName}
             </Typography>
           </Box>
           <IconButton
@@ -194,8 +190,8 @@ export default function Home() {
             onClick={handleProfileMenuOpen}
             sx={{ color: "#fff" }}
           >
-            {photoURL ? (
-              <Avatar alt={displayName} src={photoURL} sx={{ width: 40, height: 40 }} />
+            {usernameInitials ? (
+              <Avatar sx={{ width: 50, height: 50, bgcolor: "#F8820B", color: "#fff" }}>{usernameInitials}</Avatar>
             ) : (
               <AccountCircle sx={{ fontSize: "60px" }} />
             )}
@@ -218,101 +214,6 @@ export default function Home() {
                     <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
                       Inventario
                     </Typography>
-
-                    <div style={{ marginLeft: "auto" }}>
-                      <IconButton
-                        aria-label="más opciones"
-                        aria-controls={open ? "menu-opciones" : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={open ? "true" : undefined}
-                        onClick={handleClick}
-                        sx={{
-                          backgroundColor: "#FF8C00",
-                          borderRadius: "15px",
-                          width: "40px",
-                          height: "24px",
-                          padding: 0,
-                          minWidth: "40px",
-                          "&:hover": {
-                            backgroundColor: "#e67e00",
-                          },
-                        }}
-                      >
-                        <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
-                      </IconButton>
-                      <Menu
-                        id="menu-opciones"
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleClose}
-                        MenuListProps={{
-                          "aria-labelledby": "boton-menu",
-                          sx: {
-                            padding: 0,
-                          },
-                        }}
-                        PaperProps={{
-                          sx: {
-                            backgroundColor: "#f8820b",
-                            color: "Black",
-                            borderRadius: "20px",
-                          },
-                        }}
-                      >
-                        <MenuItem
-                          sx={{
-                            justifyContent: "center",
-                            textAlign: "center",
-                            "&:hover": {
-                              backgroundColor: "#272829",
-                              color: "#f8820b",
-                            },
-                          }}
-                          onClick={handleClose}
-                        >
-                          Hoy
-                        </MenuItem>
-                        <MenuItem
-                          sx={{
-                            justifyContent: "center",
-                            textAlign: "center",
-                            "&:hover": {
-                              backgroundColor: "#272829",
-                              color: "#f8820b",
-                            },
-                          }}
-                          onClick={handleClose}
-                        >
-                          Esta Semana
-                        </MenuItem>
-                        <MenuItem
-                          sx={{
-                            justifyContent: "center",
-                            textAlign: "center",
-                            "&:hover": {
-                              backgroundColor: "#272829",
-                              color: "#f8820b",
-                            },
-                          }}
-                          onClick={handleClose}
-                        >
-                          Este Mes
-                        </MenuItem>
-                        <MenuItem
-                          sx={{
-                            justifyContent: "center",
-                            textAlign: "center",
-                            "&:hover": {
-                              backgroundColor: "#272829",
-                              color: "#f8820b",
-                            },
-                          }}
-                          onClick={handleClose}
-                        >
-                          Este Año
-                        </MenuItem>
-                      </Menu>
-                    </div>
                   </Box>
 
                   <TableContainer>
@@ -434,101 +335,6 @@ export default function Home() {
                         <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
                           Cantidad Usuarios
                         </Typography>
-
-                        <div style={{ marginLeft: "auto" }}>
-                          <IconButton
-                            aria-label="más opciones"
-                            aria-controls={open ? "menu-opciones" : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={open ? "true" : undefined}
-                            onClick={handleClick}
-                            sx={{
-                              backgroundColor: "#FF8C00",
-                              borderRadius: "15px",
-                              width: "40px",
-                              height: "24px",
-                              padding: 0,
-                              minWidth: "40px",
-                              "&:hover": {
-                                backgroundColor: "#e67e00",
-                              },
-                            }}
-                          >
-                            <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
-                          </IconButton>
-                          <Menu
-                            id="menu-opciones"
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
-                            MenuListProps={{
-                              "aria-labelledby": "boton-menu",
-                              sx: {
-                                padding: 0,
-                              },
-                            }}
-                            PaperProps={{
-                              sx: {
-                                backgroundColor: "#f8820b",
-                                color: "Black",
-                                borderRadius: "20px",
-                              },
-                            }}
-                          >
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Hoy
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Esta Semana
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Mes
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Año
-                            </MenuItem>
-                          </Menu>
-                        </div>
                       </Box>
                       <Typography
                         variant="h2"
