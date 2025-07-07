@@ -31,30 +31,41 @@ export default function Login({ onLogin }) {
     }
 
     try {
-      const response = await fetch(`${API}/api/admins/login`, {
+      // Intentar login como admin
+      const loginAdmin = await fetch(`${API}/api/admins/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || "Credenciales inválidas");
+      if (loginAdmin.ok) {
+        const data = await loginAdmin.json();
+        localStorage.setItem("admin", JSON.stringify(data.admin));
+        localStorage.setItem("token", data.token);
+        onLogin();
+        navigate("/home");
         return;
       }
 
-      // Login exitoso
-      setError("");
+      // Intentar login como colaborador
+      const loginColab = await fetch(`${API}/api/colaborators/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-      const storage = localStorage; // ya no hay rememberMe
-      storage.setItem("admin", JSON.stringify(data.admin));
-      storage.setItem("token", data.token);
+      if (loginColab.ok) {
+        const data = await loginColab.json();
+        localStorage.setItem("admin", JSON.stringify(data.colaborator));
+        localStorage.setItem("token", data.token);
+        onLogin();
+        navigate("/home");
+        return;
+      }
 
-      onLogin();
-      navigate("/home");
+      // Si ambos fallan
+      const errorData = await loginColab.json();
+      setError(errorData.message || "Credenciales inválidas.");
     } catch (err) {
       console.error("Error de red o servidor:", err);
       setError("Error de red. Intenta más tarde.");
