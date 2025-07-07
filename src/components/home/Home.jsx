@@ -191,7 +191,7 @@ try {
             sx={{ color: "#fff" }}
           >
             {usernameInitials ? (
-              <Avatar sx={{ width: 50, height: 50, bgcolor: "#F8820B", color: "#fff" }}>{usernameInitials}</Avatar>
+              <Avatar sx={{ width: 50, height: 50, bgcolor: "#ff4300", color: "#fff", fontWeight: "bold"  }}>{usernameInitials}</Avatar>
             ) : (
               <AccountCircle sx={{ fontSize: "60px" }} />
             )}

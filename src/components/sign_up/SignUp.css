@@ -159,7 +159,7 @@ body {
   }
   
   .error-message {
-    color: #ff7f00;;
+    color: #ff4d4d !important;;
     margin-top: 10px;
     text-align: center;
   }
@@ -185,62 +185,6 @@ body {
     background-color: #ff4300;
     color: #fff;
     box-shadow: 0 0 30px rgba(255, 67, 0, 0.8);
-  }
-  
-  
-  .separator {
-    width: 100%;
-    text-align: center;
-    margin: 25px 0;
-    color: #999;
-    position: relative;
-  }
-  .separator::before,
-  .separator::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    width: 40%;
-    height: 1px;
-    background-color: #444;
-  }
-  .separator::before {
-    left: 0;
-  }
-  .separator::after {
-    right: 0;
-  }
-  
-  .social-buttons {
-    display: flex;
-    gap: 15px;
-    width: 100%;
-    margin-top: 10px;
-  }
-  .google-button {
-    flex: 1;
-    padding: 12px;
-    border: 1px solid #ff7f00;
-    border-radius: 5px;
-    background: transparent;
-    color: #ff7f00;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition:
-      background-color 0.3s ease,
-      color 0.3s ease,
-      box-shadow 0.3s ease;   /* animar también el glow */
-  }
-  
-  .google-button:hover {
-    background-color: #ff4300;
-    color: #fff;
-    /* glow idéntico al signup-button */
-    box-shadow: 0 0 30px rgba(255, 67, 0, 0.8);
-    border: 1px solid #ff4300;
   }
   
   

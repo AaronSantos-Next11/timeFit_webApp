@@ -1,26 +1,9 @@
-// SignUp.jsx
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Link, useNavigate } from "react-router-dom";
-import GoogleIcon from "@mui/icons-material/Google";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import timefitLogo from "../../assets/timefit.svg";
-
-import {
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-} from "firebase/auth";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
-import { auth, googleProvider } from "../../firebase/firebase-config";
 
 import "./SignUp.css";
 
@@ -30,6 +13,7 @@ export default function SignUp({ onSignUp }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
+  const API = import.meta.env.VITE_API_URL;
 
   const validateUsername = (u) => u.length >= 3;
   const validateName = (n) => n.length >= 2;
@@ -62,9 +46,7 @@ export default function SignUp({ onSignUp }) {
       return;
     }
     if (!passwordRegex.test(password)) {
-      setError(
-        "La contraseña debe tener al menos 8 caracteres, incluir una mayúscula, una minúscula y un número"
-      );
+      setError("La contraseña debe tener al menos 8 caracteres, incluir una mayúscula, una minúscula y un número");
       return;
     }
     if (password !== confirm) {
@@ -77,77 +59,38 @@ export default function SignUp({ onSignUp }) {
     }
 
     try {
-      const db = getFirestore();
-      const uc = await createUserWithEmailAndPassword(auth, email, password);
-      const user = uc.user;
-      await setDoc(doc(db, "users", user.uid), {
-        username,
-        fullName: firstName,
-        fullLastName: lastName,
-        email,
-        role: "admin",
-        createdAt: new Date(),
+      const response = await fetch(`${API}/api/admins/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          name: firstName,
+          last_name: lastName,
+          email,
+          password,
+          admin_code: "CRX2025", // código estático o genera uno dinámico si gustas
+        }),
       });
-      localStorage.setItem("displayName", `${firstName} ${lastName}`);
-      localStorage.setItem("username", username);
-      localStorage.setItem("email", email);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Error al registrarse. Intente nuevamente.");
+        return;
+      }
+
+      // Guardar en localStorage
+      localStorage.setItem("admin", JSON.stringify(data.admin));
+      localStorage.setItem("token", data.token);
 
       setError("");
-      onSignUp();
-      navigate("/home");
+      onSignUp(); // disparar la función de callback
+      navigate("/home"); // redireccionar al dashboard
     } catch (err) {
       console.error(err);
-      if (err.code === "auth/email-already-in-use") {
-        setError("El correo electrónico ya está registrado");
-      } else if (err.code === "auth/weak-password") {
-        setError("La contraseña es demasiado débil");
-      } else {
-        setError("Error al registrarse. Intente nuevamente.");
-      }
-    }
-  };
-
-  const handleGoogleSignUp = async () => {
-    try {
-      const uc = await signInWithPopup(auth, googleProvider);
-      const user = uc.user;
-      const db = getFirestore();
-      const q = query(
-        collection(db, "users"),
-        where("email", "==", user.email)
-      );
-      const snap = await getDocs(q);
-      const [first = "Usuario", last = "Google"] = user.displayName
-        ? user.displayName.split(" ")
-        : [];
-      const username = user.email.split("@")[0];
-
-      if (snap.empty) {
-        await setDoc(doc(db, "users", user.uid), {
-          username,
-          fullName: first,
-          fullLastName: last,
-          email: user.email,
-          role: "admin",
-          createdAt: new Date(),
-          photoURL: user.photoURL,
-        });
-      }
-
-      localStorage.setItem("displayName", `${first} ${last}`);
-      localStorage.setItem("username", username);
-      localStorage.setItem("email", user.email);
-      localStorage.setItem("photoURL", user.photoURL || "");
-
-      onSignUp();
-      navigate("/home");
-    } catch (err) {
-      console.error(err);
-      if (err.code === "auth/popup-closed-by-user") {
-        setError("Registro con Google cancelado");
-      } else {
-        setError("Error al registrarse con Google");
-      }
+      setError("Error al registrarse. Intente nuevamente.");
     }
   };
 
@@ -194,7 +137,7 @@ export default function SignUp({ onSignUp }) {
                 <input
                   type="text"
                   name="lastName"
-                  placeholder="Escriba aquí  sus apellidos"
+                  placeholder="Escriba aquí sus apellidos"
                   required
                 />
               </div>
@@ -204,7 +147,7 @@ export default function SignUp({ onSignUp }) {
             <input
               type="email"
               name="email"
-              placeholder="Escriba aquí su correo electronico"
+              placeholder="Escriba aquí su correo electrónico"
               required
             />
 
@@ -259,20 +202,6 @@ export default function SignUp({ onSignUp }) {
             <button type="submit" className="signup-button">
               Registrarse
             </button>
-
-            <div className="separator">o registrarte con</div>
-            <div className="social-buttons">
-              <button
-                type="button"
-                className="google-button"
-                onClick={handleGoogleSignUp}
-              >
-                <span>
-                  <GoogleIcon />
-                </span>
-                Registrarse con Google
-              </button>
-            </div>
           </form>
         </div>
       </div>

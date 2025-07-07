@@ -11,8 +11,8 @@ import "./Login.css";
 export default function Login({ onLogin }) {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
+  const API = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -31,7 +31,7 @@ export default function Login({ onLogin }) {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/admins/login", {
+      const response = await fetch(`${API}/api/admins/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,7 +49,7 @@ export default function Login({ onLogin }) {
       // Login exitoso
       setError("");
 
-      const storage = rememberMe ? localStorage : sessionStorage;
+      const storage = localStorage; // ya no hay rememberMe
       storage.setItem("admin", JSON.stringify(data.admin));
       storage.setItem("token", data.token);
 
@@ -68,7 +68,10 @@ export default function Login({ onLogin }) {
   return (
     <div className="login-container">
       <div className="login-image">
-        <img src="https://escueladfitness.com/wp-content/uploads/2022/09/entrenador.jpg" alt="Entrenador en gimnasio" />
+        <img
+          src="https://escueladfitness.com/wp-content/uploads/2022/09/entrenador.jpg"
+          alt="Entrenador en gimnasio"
+        />
       </div>
 
       <div className="login-form">
@@ -102,21 +105,18 @@ export default function Login({ onLogin }) {
               required
               autoComplete="current-password"
             />
-            <button type="button" className="toggle-password-button" onClick={togglePasswordVisibility}>
+            <button
+              type="button"
+              className="toggle-password-button"
+              onClick={togglePasswordVisibility}
+            >
               {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
             </button>
           </div>
 
-          <div className="login-options">
-            <label>
-              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
-              Mantener la sesión iniciada
-            </label>
-          </div>
-
           {error && <p className="error-message">{error}</p>}
 
-          <button type="submit" className="login-button" disabled={!rememberMe}>
+          <button type="submit" className="login-button">
             Iniciar sesión
           </button>
         </form>

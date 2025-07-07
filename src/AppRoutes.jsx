@@ -17,7 +17,6 @@ import Login from './components/log_in/Login';
 import Signup from './components/sign_up/Signup'; 
 import CrearMembresia from './components/membership_management/memberships_and_services/CrearMembresia';
 import LogoutModal from './components/log_out/LogoutModal';
-import RegisterGym from './components/sign_up/RegisterGym'
 
 const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
   return (
@@ -48,16 +47,6 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
           )
         }
       />
-      <Route
-  path="/register-gym"
-  element={
-    isAuthenticated ? (
-      <Navigate to="/home" replace />
-    ) : (
-      <RegisterGym />
-    )
-  }
-/>
       {/* Ruta de confirmación de logout */}
       <Route
         path="/logout-confirm"
