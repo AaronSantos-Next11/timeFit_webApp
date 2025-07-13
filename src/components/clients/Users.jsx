@@ -81,12 +81,34 @@ export default function Users() {
 
   const messagesCount = 4;
   const notificationsCount = 17;
-  
-  // Datos del usuario logeado
-  const displayName = localStorage.getItem("displayName") || "Usuario";
-  const photoURL = localStorage.getItem("photoURL") || "";
 
-  // Lógica de paginación
+  // Obtener datos del usuario logeado (como en Home.jsx)
+  let admin = null;
+  try {
+    const adminDataString =
+      localStorage.getItem("admin") || sessionStorage.getItem("admin");
+    admin = adminDataString ? JSON.parse(adminDataString) : null;
+  } catch {
+    admin = null;
+  }
+
+  const getInitials = (username) => {
+    if (!username) return "";
+    return username.slice(0, 2).toUpperCase();
+  };
+
+  const getFirstNameAndLastName = (name, last_name) => {
+    if (!name || !last_name) return "Usuario";
+    const firstName = name.split(" ")[0];
+    const firstLastName = last_name.split(" ")[0];
+    return `${firstName} ${firstLastName}`;
+  };
+
+  const displayName = admin ? getFirstNameAndLastName(admin.name, admin.last_name) : "Usuario";
+  const roleName = admin?.role?.role_name || "Rol desconocido";
+  const usernameInitials = admin ? getInitials(admin.username) : "";
+
+  // Paginación
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = usuarios.slice(indexOfFirstUser, indexOfLastUser);
@@ -169,29 +191,29 @@ export default function Users() {
           container
           alignItems="center"
           justifyContent="space-between"
-          sx={{ padding: "10px 20px", marginTop: "-12px" }}
+          sx={{ padding: "10px 0 20px 0" }}
         >
           <Grid item>
-            <Typography variant="h4" sx={{ margin: 0, fontSize: "28px", fontWeight: "bold" }}>
+            <Typography variant="h4" sx={{ margin: 0, fontSize: "30px", fontWeight: "bold" }}>
               Usuarios
             </Typography>
-            <Typography variant="body2" sx={{ margin: 0, fontSize: "16px", color: "#ccc" }}>
-              Gestiona la información de tus usuarios.
+            <Typography variant="body2" sx={{ margin: 0, fontSize: "16px", color: "#ccc", marginTop: "10px"  }}>
+              Gestiona la información de tus clientes.
             </Typography>
           </Grid>
 
           <Grid item>
             <Paper
-              component="form"
-              sx={{
+                component="form"
+                sx={{
                 display: "flex",
                 alignItems: "center",
                 padding: "8px 20px",
                 borderRadius: "30px",
                 boxShadow: 3,
-                width: "400px",
-                height: "60px",
-                marginTop: "-12px",
+                width: "420px",
+                height: "48px",
+                marginTop: "0px",
                 backgroundColor: "#ffff",
                 border: "1px solid #444",
               }}
@@ -201,31 +223,26 @@ export default function Users() {
               </IconButton>
               <InputBase
                 sx={{ ml: 2, flex: 1, fontSize: "18px", color: "#000" }}
-                placeholder="Buscar un servicio, membresía..."
+                placeholder="Buscar un cliente ..."
               />
             </Paper>
           </Grid>
 
-          <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
+        <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
               <Badge badgeContent={messagesCount} color="error">
-                <MailIcon sx={{ fontSize: "28px" }} />
+                <MailIcon sx={{ fontSize: "30px" }} />
               </Badge>
             </IconButton>
             <IconButton size="large" aria-label="show new notifications" sx={{ color: "#fff" }}>
               <Badge badgeContent={notificationsCount} color="error">
-                <NotificationsIcon sx={{ fontSize: "28px" }} />
+                <NotificationsIcon sx={{ fontSize: "30px" }} />
               </Badge>
             </IconButton>
-          </Grid>
-
-          <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box sx={{ textAlign: "right" }}>
-              <Typography variant="h6" sx={{ margin: 0, fontSize: "18px", color: "#F8820B" }}>
-                {displayName}
-              </Typography>
+            <Box sx={{ textAlign: "right", marginLeft:"15px" }}>
+              <Typography sx={{ margin: 0, fontSize: "20px", color: "#F8820B", fontWeight: "bold" }}>{displayName}</Typography>
               <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>
-                Administrador
+                {roleName}
               </Typography>
             </Box>
             <IconButton
@@ -235,10 +252,10 @@ export default function Users() {
               onClick={handleProfileMenuOpen}
               sx={{ color: "#fff" }}
             >
-              {photoURL ? (
-                <Avatar alt={displayName} src={photoURL} sx={{ width: 40, height: 40 }} />
+              {usernameInitials ? (
+                <Avatar sx={{ width: 50, height: 50, bgcolor: "#ff4300", color: "#fff", fontWeight: "bold"  }}>{usernameInitials}</Avatar>
               ) : (
-                <AccountCircle sx={{ fontSize: "40px" }} />
+                <AccountCircle sx={{ fontSize: "60px" }} />
               )}
             </IconButton>
           </Grid>

@@ -9,7 +9,6 @@ import { fontGrid } from "@mui/material/styles/cssUtils";
 import {
   Box,
   Table,
-  Badge,
   TableBody,
   TableCell,
   TableContainer,
@@ -30,9 +29,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import NotesIcon from "@mui/icons-material/Notes";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import MailIcon from "@mui/icons-material/Mail";
 import { Avatar } from "@mui/material";
 
 // Para las graficas
@@ -61,8 +58,6 @@ export default function Home() {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-  const messagesCount = 4;
-  const notificationsCount = 17;
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -165,18 +160,8 @@ try {
           </Typography>
         </Grid>
 
-        {/* Perfil del usuario, notificacion y mensaje */}
+        {/* Perfil del usuario */}
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
-            <Badge badgeContent={messagesCount} color="error">
-              <MailIcon sx={{ fontSize: "30px" }} />
-            </Badge>
-          </IconButton>
-          <IconButton size="large" aria-label="show new notifications" sx={{ color: "#fff" }}>
-            <Badge badgeContent={notificationsCount} color="error">
-              <NotificationsIcon sx={{ fontSize: "30px" }} />
-            </Badge>
-          </IconButton>
           <Box sx={{ textAlign: "right", marginLeft:"15px" }}>
             <Typography sx={{ margin: 0, fontSize: "20px", color: "#F8820B", fontWeight: "bold" }}>{displayName}</Typography>
             <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>

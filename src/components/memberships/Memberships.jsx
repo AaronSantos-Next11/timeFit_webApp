@@ -8,7 +8,6 @@ import {
   MenuItem,
   IconButton,
   Button,
-  Badge,
   Card,
   CardContent,
   Typography,
@@ -22,8 +21,6 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import MailIcon from "@mui/icons-material/Mail";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
 import GroupIcon from "@mui/icons-material/Group";
@@ -67,11 +64,32 @@ export default function Membership() {
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
-  const messagesCount = 4;
-  const notificationsCount = 17;
 
-  const displayName = localStorage.getItem("displayName") || "Usuario";
-  const photoURL = localStorage.getItem("photoURL") || "";
+// Obtener datos del usuario logeado (como en Home.jsx)
+  let admin = null;
+  try {
+    const adminDataString =
+      localStorage.getItem("admin") || sessionStorage.getItem("admin");
+    admin = adminDataString ? JSON.parse(adminDataString) : null;
+  } catch {
+    admin = null;
+  }
+
+  const getInitials = (username) => {
+    if (!username) return "";
+    return username.slice(0, 2).toUpperCase();
+  };
+
+  const getFirstNameAndLastName = (name, last_name) => {
+    if (!name || !last_name) return "Usuario";
+    const firstName = name.split(" ")[0];
+    const firstLastName = last_name.split(" ")[0];
+    return `${firstName} ${firstLastName}`;
+  };
+
+  const displayName = admin ? getFirstNameAndLastName(admin.name, admin.last_name) : "Usuario";
+  const roleName = admin?.role?.role_name || "Rol desconocido";
+  const usernameInitials = admin ? getInitials(admin.username) : "";
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: "ascending",
@@ -371,13 +389,20 @@ export default function Membership() {
 
   return (
     <>
-      <Grid container alignItems="center" justifyContent="space-between" sx={{ padding: "10px 20px", marginTop: "-12px" }}>
+      <Grid
+        container
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ padding: "10px 0 20px 0" }}>
+
         <Grid item>
-          <Typography variant="h4" sx={{ margin: 0, fontSize: "24px", fontWeight: "bold" }}>
-          Membresías y Servicios.
+          <Typography variant="h4" sx={{ margin: 0, fontSize: "30px", fontWeight: "bold" }}>
+          Membresías
           </Typography>
-          <Typography variant="body2" sx={{ margin: 0, fontSize: "12px", color: "#ccc" }}>
-            Administra fácilmente las membresías y <hr /> servicios de tu gimnasio
+          <Typography variant="body2" sx={{ margin: 0, fontSize: "16px", color: "#ccc", marginTop: "10px" }}>
+            {roleName === "Administrador" 
+              ? "Crea y administra tus propias membresías" 
+              : "Consulta las membresías disponibles"}
           </Typography>
         </Grid>
 
@@ -390,9 +415,9 @@ export default function Membership() {
               padding: "8px 20px",
               borderRadius: "30px",
               boxShadow: 3,
-              width: "455px",
-              height: "45px",
-              marginTop: "-12px",
+              width: "480px",
+              height: "48px",
+              marginTop: "0px",
               backgroundColor: "#ffff",
               border: "1px solid #444",
             }}
@@ -400,48 +425,33 @@ export default function Membership() {
             <IconButton type="submit" sx={{ p: "8px" }} color="primary">
               <SearchIcon sx={{ fontSize: "26px", color: "#aaa" }} />
             </IconButton>
-            <InputBase sx={{ ml: 2, flex: 1, fontSize: "18px", color: "#000" }} placeholder="Buscar un servicio, membresía..." />
+            <InputBase sx={{ ml: 2, flex: 1, fontSize: "18px", color: "#000" }} placeholder="Buscar una membresía..." />
           </Paper>
         </Grid>
 
-        <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
-            <Badge badgeContent={messagesCount} color="error">
-              <MailIcon sx={{ fontSize: "24px" }} />
-            </Badge>
-          </IconButton>
-          <IconButton size="large" aria-label="show new notifications" sx={{ color: "#fff" }}>
-            <Badge badgeContent={notificationsCount} color="error">
-              <NotificationsIcon sx={{ fontSize: "24px" }} />
-            </Badge>
-          </IconButton>
-        </Grid>
-
         {/* Perfil del usuario */}
-        <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ textAlign: "right" }}>
-            <Typography sx={{ margin: 0, fontSize: "18px", color: "#F8820B" }}>
-              {displayName}
-            </Typography>
-            <Typography variant="body2" sx={{ margin: 0, fontSize: "13px", color: "#ccc" }}>
-              Administrador
-            </Typography>
-          </Box>
-          <IconButton
-            aria-label="account of current user"
-            aria-controls="profile-menu"
-            aria-haspopup="true"
-            onClick={handleProfileMenuOpen}
-            sx={{ color: "#fff" }}
-          >
-            {photoURL ? (
-              <Avatar alt={displayName} src={photoURL} sx={{ width: 40, height: 40 }} />
-            ) : (
-              <AccountCircle sx={{ fontSize: "60px" }} />
-            )}
-          </IconButton>
-        </Grid>
-      </Grid>
+          <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ textAlign: "right", marginLeft:"15px" }}>
+              <Typography sx={{ margin: 0, fontSize: "20px", color: "#F8820B", fontWeight: "bold" }}>{displayName}</Typography>
+              <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>
+                {roleName}
+              </Typography>
+            </Box>
+            <IconButton
+              aria-label="account of current user"
+              aria-controls="profile-menu"
+              aria-haspopup="true"
+              onClick={handleProfileMenuOpen}
+              sx={{ color: "#fff" }}
+            >
+              {usernameInitials ? (
+                <Avatar sx={{ width: 50, height: 50, bgcolor: "#ff4300", color: "#fff", fontWeight: "bold"  }}>{usernameInitials}</Avatar>
+              ) : (
+                <AccountCircle sx={{ fontSize: "60px" }} />
+              )}
+            </IconButton>
+          </Grid>
+      </Grid> 
 
       <Grid container justifyContent="space-between" sx={{ padding: "20px 20px" }}>
         <Grid item sx={{ display: "flex", alignItems: "center" }}>

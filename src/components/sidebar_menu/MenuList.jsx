@@ -1,14 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Menu } from 'antd'
+import { Menu } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
+import {
     HouseFill,
-    PersonVcardFill,
     PeopleFill,
     LayoutTextSidebar,
     PersonBoundingBox,
-    CashCoin,
     CurrencyExchange,
     ArchiveFill,
     CalendarDateFill,
@@ -32,15 +30,26 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
         <Icon size={20} style={{ marginRight: '12px' }} />
     );
 
-    // PropTypes validation for IconWrapper
     IconWrapper.propTypes = {
         icon: PropTypes.elementType.isRequired
     };
 
+    let roleName = '';
+    try {
+        const adminDataString = localStorage.getItem('admin') || sessionStorage.getItem('admin');
+        const admin = adminDataString ? JSON.parse(adminDataString) : null;
+        roleName = admin?.role?.role_name || '';
+    } catch {
+        roleName = '';
+    }
+
+    const isAdmin = roleName === 'Administrador';
+    const isColab = roleName === 'Colaborador';
+
     return (
         <div className="menu-bar">
-            <Menu 
-                mode="inline" 
+            <Menu
+                mode="inline"
                 defaultSelectedKeys={[currentPath]}
                 selectedKeys={[currentPath]}
                 onClick={({ key }) => handleMenuClick(key)}
@@ -48,36 +57,34 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
                 <Menu.Item key="home" icon={<IconWrapper icon={HouseFill} />}>
                     {!collapsed && "Inicio"}
                 </Menu.Item>
-                
-                <Menu.SubMenu 
-                    key="membership_management" 
-                    icon={<IconWrapper icon={PersonVcardFill} />} 
-                    title={!collapsed && "Gestión de Membresías"}
-                >
-                    <Menu.Item key="membership_management/users" icon={<IconWrapper icon={PeopleFill} />}>
-                        {"Usuarios"}
-                    </Menu.Item>
-                    <Menu.Item key="membership_management/memberships" icon={<IconWrapper icon={LayoutTextSidebar} />}>
-                        {"Membresías y Servicios"}
-                    </Menu.Item>
-                </Menu.SubMenu>
 
-                <Menu.Item key="collaborators" icon={<IconWrapper icon={PersonBoundingBox} />}>
-                    {!collapsed && "Colaboradores"}
+                {isColab && (
+                    <Menu.Item key="users" icon={<IconWrapper icon={PeopleFill} />}>
+                        {!collapsed && "Usuarios"}
+                    </Menu.Item>
+                )}
+
+                <Menu.Item key="memberships" icon={<IconWrapper icon={LayoutTextSidebar} />}>
+                    {!collapsed && "Membresías"}
                 </Menu.Item>
 
-                <Menu.SubMenu 
-                    key="sales_management" 
-                    icon={<IconWrapper icon={CashCoin} />}
-                    title={!collapsed && "Gestión de Ventas"}
-                >
-                    <Menu.Item key="sales_management/revenue" icon={<IconWrapper icon={CurrencyExchange} />}>
-                        {"Ingresos"}
+                {isAdmin && (
+                    <Menu.Item key="collaborators" icon={<IconWrapper icon={PersonBoundingBox} />}>
+                        {!collapsed && "Colaboradores"}
                     </Menu.Item>
-                    <Menu.Item key="sales_management/inventorycontrol" icon={<IconWrapper icon={ArchiveFill} />}>
-                        {"Control de Inventario"}
+                )}
+
+                {isAdmin && (
+                    <Menu.Item key="revenue" icon={<IconWrapper icon={CurrencyExchange} />}>
+                        {!collapsed && "Ingresos"}
                     </Menu.Item>
-                </Menu.SubMenu>
+                )}
+
+                {(isAdmin || isColab) && (
+                    <Menu.Item key="inventorycontrol" icon={<IconWrapper icon={ArchiveFill} />}>
+                        {!collapsed && "Control de Inventario"}
+                    </Menu.Item>
+                )}
 
                 <Menu.Item key="calendar" icon={<IconWrapper icon={CalendarDateFill} />}>
                     {!collapsed && "Calendario"}
@@ -87,23 +94,24 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
                     {!collapsed && "Notas"}
                 </Menu.Item>
 
-                <Menu.Item key="settings" icon={<IconWrapper icon={GearFill} />}>
-                    {!collapsed && "Configuración"}
+                <Menu.Item key="gimnasio" icon={<IconWrapper icon={GearFill} />}>
+                    {!collapsed && "Gimnasio"}
                 </Menu.Item>
 
-                <Menu.Item key="support_and_help" icon={<IconWrapper icon={Tools} />}>
-                    {!collapsed && "Soporte y Ayuda"}
-                </Menu.Item>
+                {isAdmin && (
+                    <Menu.Item key="support_and_help" icon={<IconWrapper icon={Tools} />}>
+                        {!collapsed && "Soporte y Ayuda"}
+                    </Menu.Item>
+                )}
 
                 <Menu.Item key="user_profile" icon={<IconWrapper icon={PersonCircle} />}>
                     {!collapsed && "Perfil de Usuario"}
                 </Menu.Item>
             </Menu>
         </div>
-    )
-}
+    );
+};
 
-// PropTypes validation for MenuList
 MenuList.propTypes = {
     setCurrentPage: PropTypes.func.isRequired,
     collapsed: PropTypes.bool.isRequired

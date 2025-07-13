@@ -73,83 +73,39 @@ const InventoryControl = () => {
       code: "98765432111",
       purchaseDate: "21/10/24",
       status: "Agotado",
-    },
-    {
-      id: 3,
-      name: "Bebida Isotónica",
-      price: "$289.00 MXN",
-      quantity: "36 Botellas",
-      category: "Bebidas",
-      code: "45678912344",
-      purchaseDate: "05/08/24",
-      status: "Disponible",
-    },
-    {
-      id: 4,
-      name: "BCAA's",
-      price: "$599.00 MXN",
-      quantity: "12 Botes",
-      category: "Suplementos",
-      code: "67891234569",
-      purchaseDate: "08/07/22",
-      status: "Agotado",
-    },
-    {
-      id: 5,
-      name: "Horlicks",
-      price: "$599.00 MXN",
-      quantity: "14 Botes",
-      category: "Accesorios",
-      code: "78912345666",
-      purchaseDate: "09/1/24",
-      status: "Disponible",
-    },
-    {
-      id: 6,
-      name: "Toallas Deportivas",
-      price: "$159.00 MXN",
-      quantity: "25 Paquetes",
-      category: "Limpieza",
-      code: "32165498777",
-      purchaseDate: "09/1/24",
-      status: "Disponible",
-    },
-    {
-      id: 7,
-      name: "Desinfectante",
-      price: "$249.00 MXN",
-      quantity: "10 Galones",
-      category: "Equipo",
-      code: "74185296333",
-      purchaseDate: "15/09/24",
-      status: "Agotado",
-    },
-    {
-      id: 8,
-      name: "Guantes Fitness",
-      price: "$179.00 MXN",
-      quantity: "43 Unidades",
-      category: "Equipo",
-      code: "36925814777",
-      purchaseDate: "06/06/24",
-      status: "Disponible",
-    },
-    {
-      id: 9,
-      name: "Agua Mineral",
-      price: "$120.00 MXN",
-      quantity: "41 Paquetes",
-      category: "Bebidas",
-      code: "15935785222",
-      purchaseDate: "23/11/24",
-      status: "Insuficiente",
-    },
+    }
   ];
 
   // Manejo de cambio de página
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
   };
+
+  // Obtener datos del usuario logeado (como en Home.jsx)
+  let admin = null;
+  try {
+    const adminDataString =
+      localStorage.getItem("admin") || sessionStorage.getItem("admin");
+    admin = adminDataString ? JSON.parse(adminDataString) : null;
+  } catch {
+    admin = null;
+  }
+
+  const getInitials = (username) => {
+    if (!username) return "";
+    return username.slice(0, 2).toUpperCase();
+  };
+
+  const getFirstNameAndLastName = (name, last_name) => {
+    if (!name || !last_name) return "Usuario";
+    const firstName = name.split(" ")[0];
+    const firstLastName = last_name.split(" ")[0];
+    return `${firstName} ${firstLastName}`;
+  };
+
+  const displayName = admin ? getFirstNameAndLastName(admin.name, admin.last_name) : "Usuario";
+  const roleName = admin?.role?.role_name || "Rol desconocido";
+  const usernameInitials = admin ? getInitials(admin.username) : "";
 
   return (
     <div className="inventory-control-container">
@@ -161,14 +117,15 @@ const InventoryControl = () => {
               Control de Inventario
             </Typography>
             <Typography variant="body2" className="subtitle">
-              El Control de Inventario de Time Fit permite gestionar eficientemente el stock de productos del gimnasio.
+              Administrar el inventario de productos del gimnasio.
             </Typography>
           </div>
 
           <Box className="search-bar">
-            <InputBase placeholder="Buscar un producto..." fullWidth />
+            
             <IconButton type="submit" size="small">
               <SearchIcon className="search-icon" />
+              <InputBase placeholder="Buscar un producto..." fullWidth />
             </IconButton>
           </Box>
 
@@ -185,13 +142,13 @@ const InventoryControl = () => {
             <div className="user-profile">
               <div className="user-info">
                 <Typography variant="subtitle1" className="user-name">
-                  Yair Guzman
+                  {displayName}
                 </Typography>
                 <Typography variant="body2" className="user-role">
-                  Administrador
+                  {roleName}
                 </Typography>
               </div>
-              <Avatar className="avatar">G</Avatar>
+              <Avatar className="avatar">{usernameInitials}</Avatar>
             </div>
           </div>
         </Toolbar>

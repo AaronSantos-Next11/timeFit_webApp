@@ -8,20 +8,10 @@ import {
   Paper, 
   Grid, 
   IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Checkbox,
-  InputAdornment,
   Collapse
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import SearchIcon from '@mui/icons-material/Search';
-import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ImageIcon from '@mui/icons-material/Image';
@@ -37,10 +27,6 @@ const CrearMembresia = () => {
   const [membershipDescription, setMembershipDescription] = useState('');
   // Nuevo estado para capturar la cantidad de usuarios (por ejemplo, "grupal (dos usuarios)")
   const [membershipUsers, setMembershipUsers] = useState('');
-  
-  const [servicios] = useState([
-    { id: 1, nombre: 'Asesoría Nutricional', categoria: 'Nutrición', duracion: '1 sesión', seleccionado: true },
-  ]);
 
   const [imagenURL, setImagenURL] = useState('');
   const [mostrarPastePrompt, setMostrarPastePrompt] = useState(false);
@@ -601,82 +587,6 @@ const CrearMembresia = () => {
                   />
                 </Button>
               </Box>
-            </Box>
-
-            <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography sx={{ color: "#F8820B", fontWeight: 'bold' }}>
-                  Servicios
-                </Typography>
-                <ExpandMoreIcon />
-              </Box>
-              
-              <TextField
-                fullWidth
-                placeholder="Buscar un servicio, membresía..."
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                  sx: { 
-                    bgcolor: 'white',
-                    borderRadius: 2,
-                    mb: 2
-                  }
-                }}
-              />
-
-              <TableContainer component={Paper} sx={{ bgcolor: '#444', mb: 2 }}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ borderBottom: `2px solid ${"#F8820B"}`, color: 'white' }}>Nombre del servicio</TableCell>
-                      <TableCell sx={{ borderBottom: `2px solid ${"#F8820B"}`, color: 'white' }}>Categoría</TableCell>
-                      <TableCell sx={{ borderBottom: `2px solid ${"#F8820B"}`, color: 'white' }}>Duración</TableCell>
-                      <TableCell sx={{ borderBottom: `2px solid ${"#F8820B"}`, width: 60 }}></TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {servicios.map((servicio) => (
-                      <TableRow key={servicio.id}>
-                        <TableCell sx={{ color: 'white' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Checkbox 
-                              checked={servicio.seleccionado} 
-                              sx={{ 
-                                color: "#F8820B",
-                                '&.Mui-checked': {
-                                  color: "#F8820B",
-                                }
-                              }}
-                            />
-                            {servicio.nombre}
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ color: 'white' }}>{servicio.categoria}</TableCell>
-                        <TableCell sx={{ color: 'white' }}>{servicio.duracion}</TableCell>
-                        <TableCell>
-                          <IconButton size="small" sx={{ color: "#F8820B" }}>
-                            <EditIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              
-              <Button 
-                startIcon={<AddCircleOutlineIcon />} 
-                sx={{ 
-                  color: "#F8820B",
-                }}
-              >
-                Añadir más servicios
-              </Button>
             </Box>
           </Grid>
         </Grid>

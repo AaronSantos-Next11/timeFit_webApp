@@ -2,7 +2,9 @@
 .inventory-control-container {
   color: white;
   min-height: 100vh;
-  padding: 0 20px 20px;
+  padding: 10px 0 20px 0;
+  align-items: center;
+  justify-content: center;
   font-family: 'Roboto', sans-serif;
 }
 
@@ -27,14 +29,15 @@
 
 .title {
   color: white;
-  font-weight: 600 !important;
+  font-weight: bold !important;
   margin-bottom: 4px !important;
-  font-size: 1.75rem !important;
+  font-size: 30px !important;
 }
 
 .subtitle {
   color: white;
-  font-size: 0.78rem !important;
+  margin-top: 10px;
+  font-size: 16px !important;
   line-height: 1.5 !important;
 }
 
@@ -45,22 +48,21 @@
   background-color: white;
   border-radius: 30px;
   padding: 8px 20px;
-  width: 460px;
-  height: 50px;
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+  width: 420px;
+  height: 48px;
+  margin-top: 0px;
   border: 1px solid #444;
 }
 .search-bar input {
   flex: 1;
   border: none;
-  outline: none;
   padding: 8px;
   font-size: 16px;
   color: #000;
 }
 .search-icon {
   color: #aaa;
-  font-size: 26px;
+  font-size: 30px !important;
 }
 
 
@@ -85,24 +87,25 @@
 }
 
 .user-name {
-  color: #ff8c00 !important;
+  color: #F8820B !important;
   font-weight: bold !important;
   margin: 0 !important;
-  font-size: 18px !important;
+  font-size: 20px !important;
 }
 
 .user-role {
-  color: white;
-  font-size: 14px !important;
+  color: #ccc;
+  font-size: 15px !important;
   margin: 0 !important;
 }
 
 .avatar {
-  background-color: #1e90ff !important;
+  background-color: #ff4300 !important;
   color: white !important;
   width: 50px !important;
   height: 50px !important;
   font-size: 20px !important;
+  font-weight: bold !important;
 }
 
 /* Sección de resumen */
