@@ -11,7 +11,7 @@ import {
     ArchiveFill,
     CalendarDateFill,
     JournalBookmarkFill,
-    GearFill,
+    HeartPulse,
     Tools,
     PersonCircle
 } from 'react-bootstrap-icons';
@@ -48,66 +48,70 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
 
     return (
         <div className="menu-bar">
-            <Menu
-                mode="inline"
-                defaultSelectedKeys={[currentPath]}
-                selectedKeys={[currentPath]}
-                onClick={({ key }) => handleMenuClick(key)}
-            >
-                <Menu.Item key="home" icon={<IconWrapper icon={HouseFill} />}>
-                    {!collapsed && "Inicio"}
-                </Menu.Item>
+<Menu
+  mode="inline"
+  selectedKeys={[currentPath]}
+  onClick={({ key }) => handleMenuClick(key)}
+  items={[
+    {
+      key: 'home',
+      icon: <HouseFill size={20} />,
+      label: !collapsed && 'Inicio',
+    },
+    isColab && {
+      key: 'users',
+      icon: <PeopleFill size={20} />,
+      label: !collapsed && 'Usuarios',
+    },
+    {
+      key: 'memberships',
+      icon: <LayoutTextSidebar size={20} />,
+      label: !collapsed && 'Membresías',
+    },
+    isAdmin && {
+      key: 'collaborators',
+      icon: <PersonBoundingBox size={20} />,
+      label: !collapsed && 'Colaboradores',
+    },
+    isAdmin && {
+      key: 'revenue',
+      icon: <CurrencyExchange size={20} />,
+      label: !collapsed && 'Ingresos',
+    },
+    (isAdmin || isColab) && {
+      key: 'inventorycontrol',
+      icon: <ArchiveFill size={20} />,
+      label: !collapsed && 'Control de Inventario',
+    },
+    {
+      key: 'calendar',
+      icon: <CalendarDateFill size={20} />,
+      label: !collapsed && 'Calendario',
+    },
+    {
+      key: 'notes',
+      icon: <JournalBookmarkFill size={20} />,
+      label: !collapsed && 'Notas',
+    },
+    {
+      key: 'gimnasio',
+      icon: <HeartPulse size={20} />,
+      label: !collapsed && 'Gimnasio',
+    },
+    isAdmin && {
+      key: 'support_and_help',
+      icon: <Tools size={20} />,
+      label: !collapsed && 'Soporte y Ayuda',
+    },
+    {
+      key: 'user_profile',
+      icon: <PersonCircle size={20} />,
+      label: !collapsed && 'Perfil de Usuario',
+    },
+  ].filter(Boolean)}
+/>
 
-                {isColab && (
-                    <Menu.Item key="users" icon={<IconWrapper icon={PeopleFill} />}>
-                        {!collapsed && "Usuarios"}
-                    </Menu.Item>
-                )}
 
-                <Menu.Item key="memberships" icon={<IconWrapper icon={LayoutTextSidebar} />}>
-                    {!collapsed && "Membresías"}
-                </Menu.Item>
-
-                {isAdmin && (
-                    <Menu.Item key="collaborators" icon={<IconWrapper icon={PersonBoundingBox} />}>
-                        {!collapsed && "Colaboradores"}
-                    </Menu.Item>
-                )}
-
-                {isAdmin && (
-                    <Menu.Item key="revenue" icon={<IconWrapper icon={CurrencyExchange} />}>
-                        {!collapsed && "Ingresos"}
-                    </Menu.Item>
-                )}
-
-                {(isAdmin || isColab) && (
-                    <Menu.Item key="inventorycontrol" icon={<IconWrapper icon={ArchiveFill} />}>
-                        {!collapsed && "Control de Inventario"}
-                    </Menu.Item>
-                )}
-
-                <Menu.Item key="calendar" icon={<IconWrapper icon={CalendarDateFill} />}>
-                    {!collapsed && "Calendario"}
-                </Menu.Item>
-
-                <Menu.Item key="notes" icon={<IconWrapper icon={JournalBookmarkFill} />}>
-                    {!collapsed && "Notas"}
-                </Menu.Item>
-
-                <Menu.Item key="gimnasio" icon={<IconWrapper icon={GearFill} />}>
-                    {!collapsed && "Gimnasio"}
-                </Menu.Item>
-
-                {isAdmin && (
-                    <Menu.Item key="support_and_help" icon={<IconWrapper icon={Tools} />}>
-                        {!collapsed && "Soporte y Ayuda"}
-                    </Menu.Item>
-                )}
-
-                <Menu.Item key="user_profile" icon={<IconWrapper icon={PersonCircle} />}>
-                    {!collapsed && "Perfil de Usuario"}
-                </Menu.Item>
-            </Menu>
         </div>
     );
 };
