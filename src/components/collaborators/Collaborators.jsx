@@ -231,6 +231,7 @@ const Collaborators = ({ collapsed }) => {
             REGISTRAR COLABORADOR
             <AddIcon />
           </Button>
+          
         </Grid>
         <Grid item>
           <Button
