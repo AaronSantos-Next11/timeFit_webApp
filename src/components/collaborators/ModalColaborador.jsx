@@ -11,6 +11,9 @@ import {
   FormControlLabel,
   Checkbox,
   Typography,
+  Box,
+  Paper,
+  Chip,
 } from "@mui/material";
 
 const daysOfWeek = [
@@ -209,205 +212,440 @@ const ModalColaborador = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          overflow: 'hidden',
+          backgroundColor: '#121212',
+        }
+      }}
+    >
       <DialogTitle
         sx={{
-          fontWeight: "bold",
-          color: "#000000ff",
-          backgroundColor: "#FF6600",
-          borderBottom: "1px solid #444",
+          background: '#FF6600',
+          color: '#fff',
+          fontWeight: 700,
+          fontSize: '1.4rem',
+          padding: '20px 24px',
+          textAlign: 'center',
+          boxShadow: '0 2px 10px rgba(255,102,0,0.3)',
         }}
       >
-        {modoEdicion ? "Editar colaborador" : "Registrar nuevo colaborador"}
+        {modoEdicion ? "✏️ Editar Colaborador" : "👤 Registrar Nuevo Colaborador"}
       </DialogTitle>
 
       <DialogContent
         dividers
-        sx={{ backgroundColor: "#2a2a2a", color: "#fff", borderTop: "1px solid #444" }}
+        sx={{ 
+          backgroundColor: '#1d1c1cff',
+          padding: '24px',
+          borderTop: 'none',
+        }}
       >
-        <Grid container spacing={2}>
-          {[{ label: "Nombre", name: "name" },
-            { label: "Apellidos", name: "last_name" },
-            { label: "Correo electrónico", name: "email" },
-            { label: "Usuario", name: "username" }
-          ].map(({ label, name }) => (
-            <Grid item xs={6} key={name}>
-              <Typography sx={{ color: "#F8820B", fontWeight: "bold", mb: 0.5, mt: 1 }}>
-                {label}
+        {/* Sección Información Personal */}
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            p: 3, 
+            mb: 3, 
+            borderRadius: 2,
+            backgroundColor: '#302e2eff',
+          }}
+        >
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: '#ffffffff', 
+              fontWeight: 600, 
+              mb: 2.5,
+              fontSize: '1.1rem',
+              borderBottom: '2px solid #FF6600',
+              paddingBottom: '8px',
+              display: 'inline-block'
+            }}
+          >
+            📋 Información Personal
+          </Typography>
+          
+          <Grid container spacing={3}>
+            {[
+              { label: "Nombre", name: "name", icon: "👤" },
+              { label: "Apellidos", name: "last_name", icon: "👤" },
+              { label: "Correo electrónico", name: "email", icon: "📧" },
+              { label: "Usuario", name: "username", icon: "🔑" }
+            ].map(({ label, name, icon }) => (
+              <Grid item xs={12} sm={6} key={name}>
+                <Typography 
+                  sx={{ 
+                    color: '#FF6600', 
+                    fontWeight: 600, 
+                    mb: 1,
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  {icon} {label}
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder={`Ingrese ${label.toLowerCase()}`}
+                  name={name}
+                  value={form[name]}
+                  onChange={handleChange}
+                  error={!!errores[name]}
+                  helperText={errores[name]}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "#fff",
+                      borderRadius: 2,
+                      transition: 'all 0.3s ease',
+                      "& fieldset": { 
+                        borderColor: "#ddd",
+                        borderWidth: '1px'
+                      },
+                      "&:hover fieldset": { 
+                        borderColor: "#FF6600",
+                        borderWidth: '2px'
+                      },
+                      "&.Mui-focused fieldset": { 
+                        borderColor: "#FF6600",
+                        borderWidth: '2px',
+                        boxShadow: '0 0 0 3px rgba(255,102,0,0.1)'
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      color: "#333",
+                      fontSize: '0.95rem'
+                    }
+                  }}
+                />
+              </Grid>
+            ))}
+
+            <Grid item xs={12} sm={6}>
+              <Typography 
+                sx={{ 
+                  color: '#FF6600', 
+                  fontWeight: 600, 
+                  mb: 1,
+                  fontSize: '0.9rem'
+                }}
+              >
+                🔒 {modoEdicion ? "Nueva contraseña (opcional)" : "Contraseña"}
               </Typography>
               <TextField
                 fullWidth
-                placeholder={`Ingrese ${label.toLowerCase()}`}
-                name={name}
-                value={form[name]}
+                placeholder="Ingrese la contraseña"
+                name="password"
+                type="password"
+                value={form.password}
                 onChange={handleChange}
-                error={!!errores[name]}
-                helperText={errores[name]}
-                InputProps={{
-                  sx: {
-                    color: "black",
-                    "&::placeholder": { color: "#999" },
-                  },
-                }}
-                InputLabelProps={{ shrink: true }}
+                error={!!errores.password}
+                helperText={errores.password}
                 sx={{
                   "& .MuiOutlinedInput-root": {
-                    backgroundColor: "#ffffffff",
-                    "& fieldset": { borderColor: "#555" },
-                    "&:hover fieldset": { borderColor: "#F8820B" },
-                    "&.Mui-focused fieldset": { borderColor: "#F8820B" },
+                    backgroundColor: "#fff",
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    "& fieldset": { 
+                      borderColor: "#ddd",
+                      borderWidth: '1px'
+                    },
+                    "&:hover fieldset": { 
+                      borderColor: "#FF6600",
+                      borderWidth: '2px'
+                    },
+                    "&.Mui-focused fieldset": { 
+                      borderColor: "#FF6600",
+                      borderWidth: '2px',
+                      boxShadow: '0 0 0 3px rgba(255,102,0,0.1)'
+                    },
                   },
+                  "& .MuiInputBase-input": {
+                    color: "#333",
+                    fontSize: '0.95rem'
+                  }
                 }}
               />
             </Grid>
-          ))}
-
-          <Grid item xs={6}>
-            <Typography sx={{ color: "#F8820B", fontWeight: "bold", mb: 0.5 }}>
-              Contraseña
-            </Typography>
-            <TextField
-              fullWidth
-              placeholder="Ingrese la contraseña"
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              error={!!errores.password}
-              helperText={errores.password}
-              InputProps={{
-                sx: {
-                  color: "black",
-                  "&::placeholder": { color: "#999" },
-                },
-              }}
-              InputLabelProps={{ shrink: true }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "#ffffffff",
-                  "& fieldset": { borderColor: "#555" },
-                  "&:hover fieldset": { borderColor: "#F8820B" },
-                  "&.Mui-focused fieldset": { borderColor: "#F8820B" },
-                },
-              }}
-            />
           </Grid>
+        </Paper>
 
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, color: "#F8820B", fontWeight: "bold" }}>
-              Días laborales
+        {/* Sección Horario de Trabajo */}
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            p: 3, 
+            borderRadius: 2,
+            backgroundColor: '#302e2eff',
+          }}
+        >
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: '#ffffffff', 
+              fontWeight: 600, 
+              mb: 2.5,
+              fontSize: '1.1rem',
+              borderBottom: '2px solid #FF6600',
+              paddingBottom: '8px',
+              display: 'inline-block'
+            }}
+          >
+            ⏰ Horario de Trabajo
+          </Typography>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography 
+              variant="subtitle1" 
+              sx={{ 
+                mb: 2, 
+                color: '#FF6600', 
+                fontWeight: 600,
+                fontSize: '0.95rem'
+              }}
+            >
+              📅 Días laborales
             </Typography>
-            <Grid container spacing={1}>
-              {daysOfWeek.map((day) => (
-                <Grid item key={day}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={form.working_hour.days.includes(day)}
-                        onChange={() => handleCheckboxChange(day)}
-                        sx={{
-                          color: "#F8820B",
-                          "&.Mui-checked": {
-                            color: "#F8820B",
-                          },
-                          "& .MuiSvgIcon-root": {
-                            fill: "#F8820B",
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography sx={{ color: "#fff" }}>{day}</Typography>}
-                  />
-                </Grid>
-              ))}
-            </Grid>
+            
+            <Paper 
+              sx={{ 
+                p: 2.5, 
+                 backgroundColor: '#424141ff',
+                border: errores.days ? '2px solid #f44336' : '1px solid #302e2eff',
+                borderRadius: 2,
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <Grid container spacing={1}>
+                {daysOfWeek.map((day) => (
+                  <Grid item xs={6} sm={4} md={3} key={day}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={form.working_hour.days.includes(day)}
+                          onChange={() => handleCheckboxChange(day)}
+                          sx={{
+                            color: '#FF6600',
+                            '&.Mui-checked': {
+                              color: '#FF6600',
+                            },
+                            '& .MuiSvgIcon-root': {
+                              fontSize: 22,
+                            },
+                          }}
+                        />
+                      }
+                      label={
+                        <Typography 
+                          sx={{ 
+                            color: 'white', 
+                            fontSize: '0.9rem',
+                            fontWeight: form.working_hour.days.includes(day) ? 600 : 400,
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          {day}
+                        </Typography>
+                      }
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Paper>
+            
             {errores.days && (
-              <Typography color="error" variant="body2">
+              <Typography color="error" variant="body2" sx={{ mt: 1, fontSize: '0.8rem' }}>
                 {errores.days}
               </Typography>
             )}
-          </Grid>
 
-          <Grid item xs={6} sx={{ mt: 2 }}>
-            <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 0.5 }}>
-              Hora de entrada
-            </Typography>
-            <TextField
-              fullWidth
-              type="time"
-              InputLabelProps={{ shrink: true }}
-              value={form.working_hour.start_time}
-              onChange={(e) => handleTimeChange("start_time", e.target.value)}
-              error={!!errores.start_time}
-              helperText={errores.start_time}
-              InputProps={{ sx: { color: "black" } }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "#ffffffff",
-                  "& fieldset": { borderColor: "#555" },
-                  "&:hover fieldset": { borderColor: "#F8820B" },
-                  "&.Mui-focused fieldset": { borderColor: "#F8820B" },
-                },
-              }}
-            />
-          </Grid>
+            {/* Mostrar días seleccionados */}
+            {form.working_hour.days.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    mb: 1, 
+                    color: 'white',
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  Días seleccionados:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {form.working_hour.days.map((day) => (
+                    <Chip
+                      key={day}
+                      label={day}
+                      size="small"
+                      sx={{
+                        backgroundColor: '#FF6600',
+                        color: '#fff',
+                        fontWeight: 500,
+                        fontSize: '0.75rem'
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Box>
 
-          <Grid item xs={6} sx={{ mt: 2, mb: 2 }}>
-            <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 0.5 }}>
-              Hora de salida
-            </Typography>
-            <TextField
-              fullWidth
-              type="time"
-              InputLabelProps={{ shrink: true }}
-              value={form.working_hour.end_time}
-              onChange={(e) => handleTimeChange("end_time", e.target.value)}
-              error={!!errores.end_time}
-              helperText={errores.end_time}
-              InputProps={{ sx: { color: "black" } }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "#ffffffff",
-                  "& fieldset": { borderColor: "#555" },
-                  "&:hover fieldset": { borderColor: "#F8820B" },
-                  "&.Mui-focused fieldset": { borderColor: "#F8820B" },
-                },
-              }}
-            />
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <Typography 
+                sx={{ 
+                  color: '#FF6600', 
+                  fontWeight: 600, 
+                  mb: 1,
+                  fontSize: '0.9rem'
+                }}
+              >
+                🕐 Hora de entrada
+              </Typography>
+              <TextField
+                fullWidth
+                type="time"
+                InputLabelProps={{ shrink: true }}
+                value={form.working_hour.start_time}
+                onChange={(e) => handleTimeChange("start_time", e.target.value)}
+                error={!!errores.start_time}
+                helperText={errores.start_time}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#fff",
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    "& fieldset": { 
+                      borderColor: "#ddd",
+                      borderWidth: '1px'
+                    },
+                    "&:hover fieldset": { 
+                      borderColor: "#FF6600",
+                      borderWidth: '2px'
+                    },
+                    "&.Mui-focused fieldset": { 
+                      borderColor: "#FF6600",
+                      borderWidth: '2px',
+                      boxShadow: '0 0 0 3px rgba(255,102,0,0.1)'
+                    },
+                  },
+                  "& .MuiInputBase-input": {
+                    color: "#333",
+                    fontSize: '0.95rem'
+                  }
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Typography 
+                sx={{ 
+                  color: '#FF6600', 
+                  fontWeight: 600, 
+                  mb: 1,
+                  fontSize: '0.9rem'
+                }}
+              >
+                🕐 Hora de salida
+              </Typography>
+              <TextField
+                fullWidth
+                type="time"
+                InputLabelProps={{ shrink: true }}
+                value={form.working_hour.end_time}
+                onChange={(e) => handleTimeChange("end_time", e.target.value)}
+                error={!!errores.end_time}
+                helperText={errores.end_time}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "#fff",
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    "& fieldset": { 
+                      borderColor: "#ddd",
+                      borderWidth: '1px'
+                    },
+                    "&:hover fieldset": { 
+                      borderColor: "#FF6600",
+                      borderWidth: '2px'
+                    },
+                    "&.Mui-focused fieldset": { 
+                      borderColor: "#FF6600",
+                      borderWidth: '2px',
+                      boxShadow: '0 0 0 3px rgba(255,102,0,0.1)'
+                    },
+                  },
+                  "& .MuiInputBase-input": {
+                    color: "#333",
+                    fontSize: '0.95rem'
+                  }
+                }}
+              />
+            </Grid>
           </Grid>
-        </Grid>
+        </Paper>
       </DialogContent>
 
-      <DialogActions sx={{ backgroundColor: "#2a2a2a" }}>
+      <DialogActions 
+        sx={{ 
+          backgroundColor: '#1d1c1cff', 
+          padding: '20px 24px',
+          gap: 2
+        }}
+      >
         <Button
           onClick={onClose}
           variant="outlined"
+          size="large"
           sx={{
-            borderColor: "#F8820B",
-            color: "#F8820B",
-            fontWeight: "bold",
-            "&:hover": {
-              backgroundColor: "#FF6600",
-              color: "#fff",
+            borderColor: '#FF6600',
+            color: '#FF6600',
+            fontWeight: 600,
+            borderRadius: 2,
+            px: 4,
+            py: 1.2,
+            fontSize: '0.95rem',
+            textTransform: 'none',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 102, 0, 0.08)',
+              borderColor: '#FF6600',
+              transform: 'translateY(-1px)',
             },
           }}
         >
-          Cancelar
+          ❌ Cancelar
         </Button>
         <Button
           onClick={handleGuardar}
           variant="contained"
+          size="large"
           sx={{
-            backgroundColor: "#F8820B",
-            color: "#000",
-            fontWeight: "bold",
-            "&:hover": {
-              backgroundColor: "#FF6600",
-              color: "#fff",
+            background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+            color: '#fff',
+            fontWeight: 600,
+            borderRadius: 2,
+            px: 4,
+            py: 1.2,
+            fontSize: '0.95rem',
+            textTransform: 'none',
+            boxShadow: '0 4px 12px rgba(255, 102, 0, 0.3)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #e55a00 0%, #ff7326 100%)',
+              boxShadow: '0 6px 20px rgba(255, 102, 0, 0.4)',
+              transform: 'translateY(-2px)',
             },
           }}
         >
-          {modoEdicion ? "Guardar cambios" : "Registrar"}
+          {modoEdicion ? "💾 Guardar cambios" : "➕ Registrar"}
         </Button>
       </DialogActions>
     </Dialog>

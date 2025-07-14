@@ -15,12 +15,20 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Chip,
+  Divider,
+  Card,
+  CardContent,
 } from "@mui/material";
 import {
   Search as SearchIcon,
   MoreVert as MoreVertIcon,
   Add as AddIcon,
   FilterList as FilterIcon,
+  Person as PersonIcon,
+  Email as EmailIcon,
+  Badge as BadgeIcon,
+  Schedule as ScheduleIcon,
 } from "@mui/icons-material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import ModalColaborador from "./ModalColaborador";
@@ -150,6 +158,13 @@ const Collaborators = ({ collapsed }) => {
     }
   };
 
+  // Función para obtener color del avatar basado en el nombre
+  const getAvatarColor = (name) => {
+    const colors = ['#27ae60', '#e74c3c', '#2980b9', '#f39c12', '#8e44ad', '#e91e63', '#f1c40f'];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
   return (
     <>
       <Grid container alignItems="center" justifyContent="space-between" sx={{ padding: "10px 0 20px 0" }}>
@@ -260,75 +275,215 @@ const Collaborators = ({ collapsed }) => {
         </Grid>
       </Grid>
 
+      {/* TABLA MEJORADA */}
       <Grid item xs={12}>
-        <Box sx={{ backgroundColor: "#45474B", borderRadius: "10px", overflow: "hidden" }}>
-          <Box sx={{ backgroundColor: "#333", padding: "15px 20px" }}>
-            <Grid container spacing={2} sx={{ fontWeight: "bold", color: "#ddd" }}>
+        <Card 
+          sx={{ 
+            backgroundColor: "#2A2D31", 
+            borderRadius: "16px", 
+            overflow: "hidden",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+            border: "1px solid #404040"
+          }}
+        >
+          {/* Header de la tabla */}
+          <Box sx={{ 
+            background: "#f0420dff",
+            padding: "20px 24px",
+            position: "relative",
+            overflow: "hidden"
+          }}>
+            <Box sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(255,255,255,0.1)",
+              backdropFilter: "blur(10px)"
+            }} />
+            <Grid container spacing={2} sx={{ position: "relative", zIndex: 1 }}>
               <Grid item xs={1}>
-                ID
+                <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px" }}>
+                  ID
+                </Typography>
               </Grid>
-              <Grid item xs={1.5}>
-                Nombre
+              <Grid item xs={2.5}>
+                <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px" }}>
+                  <PersonIcon sx={{ fontSize: "16px", mr: 0.5, verticalAlign: "middle" }} />
+                  COLABORADOR
+                </Typography>
               </Grid>
-              <Grid item xs={2.3}>
-                Apellidos
-              </Grid>
-              <Grid item xs={2.2}>
-                Correo
+              <Grid item xs={3}>
+                <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px" }}>
+                  <EmailIcon sx={{ fontSize: "16px", mr: 0.5, verticalAlign: "middle" }} />
+                  CORREO
+                </Typography>
               </Grid>
               <Grid item xs={2}>
-                Matricula
+                <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px" }}>
+                  <BadgeIcon sx={{ fontSize: "16px", mr: 0.5, verticalAlign: "middle" }} />
+                  MATRÍCULA
+                </Typography>
               </Grid>
-              <Grid item xs={2}>
-                Horario
+              <Grid item xs={2.5}>
+                <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px" }}>
+                  <ScheduleIcon sx={{ fontSize: "16px", mr: 0.5, verticalAlign: "middle" }} />
+                  HORARIO
+                </Typography>
               </Grid>
               <Grid item xs={1}>
-                Ajustes
+                <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px", textAlign: "center" }}>
+                  ACCIONES
+                </Typography>
               </Grid>
             </Grid>
           </Box>
-          <div style={{ height: "3px", backgroundColor: "#F8820B", width: "100%" }}></div>
-          <Box sx={{ maxHeight: "400px", overflowY: "auto" }}>
-            {displayed.length === 0 ? (
-              <Box sx={{ textAlign: "center", padding: "40px 0", color: "#ccc", fontSize: "16px" }}>
-                No se encontraron colaboradores que coincidan con tu búsqueda.
-              </Box>
-            ) : (
-              displayed.map((c, idx) => (
-                <Grid
-                  container
-                  key={c._id}
-                  spacing={2}
-                  sx={{ padding: "15px 20px", borderBottom: "1px solid #444", "&:hover": { backgroundColor: "#333" } }}
-                >
-                  <Grid item xs={1}>
-                    {idx + 1}
-                  </Grid>
-                  <Grid item xs={1.5}>
-                    {c.name}
-                  </Grid>
-                  <Grid item xs={1.5}>
-                    {c.last_name}
-                  </Grid>
-                  <Grid item xs={3}>
-                    {c.email}
-                  </Grid>
-                  <Grid item xs={2}>
-                    {c.colaborator_code}
-                  </Grid>
-                  <Grid item xs={2}>
-                    {c.working_hour?.start_time} - {c.working_hour?.end_time}
-                  </Grid>
-                  <Grid item xs={1}>
-                    <IconButton onClick={(e) => handleMenuOpen(e, c)}>
-                      <MoreVertIcon sx={{ color: "#F8820B" }} />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-              ))
-            )}
-          </Box>
-        </Box>
+
+          {/* Contenido de la tabla */}
+          <CardContent sx={{ p: 0 }}>
+            <Box sx={{ maxHeight: "500px", overflowY: "auto" }}>
+              {displayed.length === 0 ? (
+                <Box sx={{ 
+                  textAlign: "center", 
+                  padding: "60px 20px", 
+                  color: "#888", 
+                  fontSize: "16px"
+                }}>
+                  <PersonIcon sx={{ fontSize: "48px", color: "#555", mb: 2 }} />
+                  <Typography variant="h6" sx={{ color: "#ccc", mb: 1 }}>
+                    No se encontraron colaboradores
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: "#888" }}>
+                    Intenta con otros términos de búsqueda
+                  </Typography>
+                </Box>
+              ) : (
+                displayed.map((c, idx) => (
+                  <Box key={c._id}>
+                    <Box sx={{
+                      padding: "20px 24px",
+                      transition: "all 0.2s ease",
+                      position: "relative",
+                      "&:hover": {
+                        backgroundColor: "#353842",
+                        transform: "translateX(4px)",
+                        boxShadow: "inset 4px 0 0 #F8820B"
+                      }
+                    }}>
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={1}>
+                          <Chip
+                            label={`#${idx + 1}`}
+                            size="small"
+                            sx={{
+                              backgroundColor: "#f0420dff",
+                              color: "#fff",
+                              fontWeight: "600",
+                              fontSize: "12px",
+                              height: "24px"
+                            }}
+                          />
+                        </Grid>
+                        
+                        <Grid item xs={2.5}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <Avatar 
+                              sx={{ 
+                                width: 40, 
+                                height: 40, 
+                                bgcolor: getAvatarColor(c.name),
+                                color: "#fff",
+                                fontWeight: "600",
+                                fontSize: "14px"
+                              }}
+                            >
+                              {c.name.charAt(0).toUpperCase()}{c.last_name.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Box>
+                              <Typography sx={{ 
+                                color: "#fff", 
+                                fontSize: "14px", 
+                                fontWeight: "600",
+                                lineHeight: 1.2
+                              }}>
+                                {c.name}
+                              </Typography>
+                              <Typography sx={{ 
+                                color: "#aaa", 
+                                fontSize: "12px",
+                                lineHeight: 1.2
+                              }}>
+                                {c.last_name}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Grid>
+                        
+                        <Grid item xs={3}>
+                          <Typography sx={{ 
+                            color: "#ccc", 
+                            fontSize: "14px",
+                            wordBreak: "break-word"
+                          }}>
+                            {c.email}
+                          </Typography>
+                        </Grid>
+                        
+                        <Grid item xs={2}>
+                          <Chip
+                            label={c.colaborator_code}
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              borderColor: "#F8820B",
+                              color: "#F8820B",
+                              fontSize: "12px",
+                              fontWeight: "500"
+                            }}
+                          />
+                        </Grid>
+                        
+                        <Grid item xs={2.5}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <ScheduleIcon sx={{ fontSize: "16px", color: "#F8820B" }} />
+                            <Typography sx={{ color: "#ccc", fontSize: "13px" }}>
+                              {c.working_hour?.start_time} - {c.working_hour?.end_time}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        
+                        <Grid item xs={1}>
+                          <Box sx={{ display: "flex", justifyContent: "center" }}>
+                            <IconButton 
+                              onClick={(e) => handleMenuOpen(e, c)}
+                              sx={{
+                                color: "#F8820B",
+                                backgroundColor: "rgba(248, 130, 11, 0.1)",
+                                borderRadius: "8px",
+                                padding: "8px",
+                                "&:hover": {
+                                  backgroundColor: "rgba(248, 130, 11, 0.2)",
+                                  transform: "scale(1.1)"
+                                }
+                              }}
+                            >
+                              <MoreVertIcon sx={{ fontSize: "20px" }} />
+                            </IconButton>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                    
+                    {idx < displayed.length - 1 && (
+                      <Divider sx={{ borderColor: "#404040", mx: 3 }} />
+                    )}
+                  </Box>
+                ))
+              )}
+            </Box>
+          </CardContent>
+        </Card>
       </Grid>
 
       <Menu
@@ -337,11 +492,25 @@ const Collaborators = ({ collapsed }) => {
         onClose={handleMenuClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
+        PaperProps={{
+          sx: {
+            backgroundColor: "#2A2D31",
+            border: "1px solid #404040",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
+          }
+        }}
       >
         <MenuItem
           onClick={() => {
             abrirModalEdicion(colabSeleccionado);
             handleMenuClose();
+          }}
+          sx={{
+            color: "#ccc",
+            "&:hover": {
+              backgroundColor: "#353842",
+              color: "#F8820B"
+            }
           }}
         >
           Editar
@@ -350,6 +519,13 @@ const Collaborators = ({ collapsed }) => {
           onClick={() => {
             setOpenDeleteDialog(true);
             handleMenuClose();
+          }}
+          sx={{
+            color: "#ccc",
+            "&:hover": {
+              backgroundColor: "#353842",
+              color: "#FF3B30"
+            }
           }}
         >
           Eliminar
@@ -366,15 +542,28 @@ const Collaborators = ({ collapsed }) => {
           fetchCollaborators();
         }}
       />
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-        <DialogTitle>¿Eliminar colaborador?</DialogTitle>
+      
+      <Dialog 
+        open={openDeleteDialog} 
+        onClose={() => setOpenDeleteDialog(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: "#2A2D31",
+            border: "1px solid #404040"
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: "#fff" }}>¿Eliminar colaborador?</DialogTitle>
         <DialogContent>
-          <Typography>
+          <Typography sx={{ color: "#ccc" }}>
             ¿Estás seguro de que deseas eliminar esta cuenta? Todos los datos relacionados serán eliminados.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)} color="inherit">
+          <Button 
+            onClick={() => setOpenDeleteDialog(false)} 
+            sx={{ color: "#ccc" }}
+          >
             Cancelar
           </Button>
           <Button
