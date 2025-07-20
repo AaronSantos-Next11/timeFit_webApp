@@ -386,7 +386,7 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
     <Grid container alignItems="center" justifyContent="space-between" sx={{ padding: "10px 0 20px 0" }}>
       <Grid item>
         <Typography variant="h4" sx={{ fontWeight: "bold", fontSize: 30 }}>
-          Gimnsasio
+          Gimnasio
         </Typography>
         {isAdmin ? (
           <Typography variant="body2" sx={{ color: "#ccc", marginTop: 1 }}>

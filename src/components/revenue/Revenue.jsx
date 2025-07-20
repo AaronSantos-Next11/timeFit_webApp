@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Badge,
   Typography,
   IconButton,
   Table,
@@ -16,19 +15,14 @@ import {
 } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import MailIcon from "@mui/icons-material/Mail";
 
 const Revenue = () => {
-    const messagesCount = 4;
-  const notificationsCount = 17;
-
 // Obtener datos del usuario logeado (como en Home.jsx)
   let admin = null;
   try {
     const adminDataString =
-      localStorage.getItem("admin") || sessionStorage.getItem("admin");
+      localStorage.getItem("user") || sessionStorage.getItem("user");
     admin = adminDataString ? JSON.parse(adminDataString) : null;
   } catch {
     admin = null;
@@ -93,16 +87,6 @@ const Revenue = () => {
 
         {/* Perfil del usuario, notificacion y mensaje */}
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton size="large" aria-label="show new mails" sx={{ color: "#fff" }}>
-            <Badge badgeContent={messagesCount} color="error">
-              <MailIcon sx={{ fontSize: "30px" }} />
-            </Badge>
-          </IconButton>
-          <IconButton size="large" aria-label="show new notifications" sx={{ color: "#fff" }}>
-            <Badge badgeContent={notificationsCount} color="error">
-              <NotificationsIcon sx={{ fontSize: "30px" }} />
-            </Badge>
-          </IconButton>
           <Box sx={{ textAlign: "right", marginLeft:"15px" }}>
             <Typography sx={{ margin: 0, fontSize: "20px", color: "#F8820B", fontWeight: "bold" }}>{displayName}</Typography>
             <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>

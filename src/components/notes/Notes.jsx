@@ -4,7 +4,7 @@
 // Este es el componente principal que maneja todas las notas del usuario
 // Funcionalidades: Crear, Editar, Eliminar y Visualizar notas con categorías
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 // Importación de componentes de Material-UI para la interfaz
 import {
   Card,          // Contenedor principal de cada nota
@@ -68,21 +68,20 @@ export default function Notes() {
   // DATOS DE USUARIO Y PERFIL
   // ============================================================================
   // Obtener datos del usuario desde localStorage
-  let admin = null;
+  const token = localStorage.getItem("token");
+
+  // --- Lectura segura del usuario (admin o colaborador) ---
+  let user = null;
   try {
-    const adminDataString = localStorage.getItem("admin") || sessionStorage.getItem("admin");
-    admin = adminDataString ? JSON.parse(adminDataString) : null;
+    const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+    user = raw ? JSON.parse(raw) : null;
   } catch {
-    admin = null;
+    user = null;
   }
 
-  const roleName = admin?.role?.role_name || "Rol desconocido";
-  
-  // Funciones para obtener datos del usuario
-  const getInitials = (username) => username?.slice(0, 2).toUpperCase() || "";
-  const usernameInitials = getInitials(admin?.username);
-  const getFirstNameAndLastName = (n, l) => `${n?.split(" ")[0] || ""} ${l?.split(" ")[0] || ""}`.trim();
-  const displayName = getFirstNameAndLastName(admin?.name, admin?.last_name);
+  const roleName = user?.role?.role_name || "Rol desconocido";
+  const displayName = `${user?.name?.split(" ")[0] || ""} ${user?.last_name?.split(" ")[0] || ""}`.trim();
+  const usernameInitials = user?.username?.slice(0, 2).toUpperCase() || "";
 
   // Funciones para manejar el menú de perfil
   const handleProfileMenuOpen = (e) => setAnchorEl(e.currentTarget);
