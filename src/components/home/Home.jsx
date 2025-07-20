@@ -63,17 +63,34 @@ export default function Home() {
     setAnchorEl(event.currentTarget);
   };
 
+    const colorMap = {
+  Rojo: "#e74c3c",
+  Azul: "#3498db",
+  Verde: "#2ecc71",
+  Amarillo: "#f1c40f",
+  Morado: "#9b59b6",
+  Naranja: "#e67e22",
+  Rosa: "#e91e63",
+  Durazno: "#ffb74d" ,
+  Turquesa: "#1abc9c",
+  RojoVino: "#880e4f" ,
+  Lima:"#cddc39",
+  Cian: "#00acc1",
+  Lavanda:"#9575cd",
+  Magenta: "#d81b60",
+  Coral: "#ff7043",
+};
+
+const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
+
 // Buscar admin tanto en localStorage como en sessionStorage
 let admin = null;
-
 try {
-  const adminDataString =
-    localStorage.getItem("admin") || sessionStorage.getItem("admin");
-  admin = adminDataString ? JSON.parse(adminDataString) : null;
+  const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+  admin = raw ? JSON.parse(raw) : null;
 } catch {
   admin = null;
 }
-
 
   // Función para obtener las iniciales del username (máximo 2 letras)
   const getInitials = (username) => {
@@ -176,7 +193,7 @@ try {
             sx={{ color: "#fff" }}
           >
             {usernameInitials ? (
-              <Avatar sx={{ width: 50, height: 50, bgcolor: "#ff4300", color: "#fff", fontWeight: "bold"  }}>{usernameInitials}</Avatar>
+              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(admin?.color) : "#ff4300", color: "#fff", fontWeight: "bold"  }}>{usernameInitials}</Avatar>
             ) : (
               <AccountCircle sx={{ fontSize: "60px" }} />
             )}

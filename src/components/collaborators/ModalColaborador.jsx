@@ -14,22 +14,16 @@ import {
   Box,
   Paper,
   Chip,
+  MenuItem,
 } from "@mui/material";
 
-const daysOfWeek = [
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-  "Domingo",
-];
+const daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 function parseJwt(token) {
   try {
     return JSON.parse(atob(token.split(".")[1]));
   } catch (e) {
+    console.error("Error parsing JWT token:", e);
     return null;
   }
 }
@@ -47,6 +41,7 @@ const ModalColaborador = ({
     email: "",
     username: "",
     password: "",
+    color: "Verde",
     working_hour: {
       days: [],
       start_time: "",
@@ -60,60 +55,73 @@ const ModalColaborador = ({
   const decodedToken = token ? parseJwt(token) : null;
   const gym_id = decodedToken?.gym_id || decodedToken?.gym || null;
 
-  useEffect(() => {
-    if (modoEdicion && colaboradorEditar) {
-      const {
-        name,
-        last_name,
-        email,
-        username,
-        working_hour,
-        _id,
-      } = colaboradorEditar;
+useEffect(() => {
+  if (modoEdicion && colaboradorEditar) {
+    const colaborator = colaboradorEditar.colaborator || colaboradorEditar;
 
-      setForm({
-        name,
-        last_name,
-        email,
-        username,
-        password: "",
-        working_hour: {
-          days: working_hour?.days || [],
-          start_time: working_hour?.start_time || "",
-          end_time: working_hour?.end_time || "",
-        },
-        id: _id,
-      });
-    } else {
-      setForm({
-        name: "",
-        last_name: "",
-        email: "",
-        username: "",
-        password: "",
-        working_hour: {
-          days: [],
-          start_time: "",
-          end_time: "",
-        },
-      });
-    }
-  }, [modoEdicion, colaboradorEditar]);
+    const {
+      name,
+      last_name,
+      email,
+      username,
+      working_hour,
+      color,
+      _id,
+    } = colaborator;
+
+    setForm({
+      name,
+      last_name,
+      email,
+      username,
+      password: "",
+      color,
+      working_hour: {
+        days: working_hour?.days || [],
+        start_time: working_hour?.start_time || "",
+        end_time: working_hour?.end_time || "",
+      },
+      id: _id,
+    });
+  } else {
+    setForm({
+      name: "",
+      last_name: "",
+      email: "",
+      username: "",
+      password: "",
+      color: "Verde",
+      working_hour: { days: [], start_time: "", end_time: "" },
+    });
+  }
+}, [modoEdicion, colaboradorEditar]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (day) => {
-    const newDays = form.working_hour.days.includes(day)
-      ? form.working_hour.days.filter((d) => d !== day)
-      : [...form.working_hour.days, day];
-    setForm((prev) => ({
-      ...prev,
-      working_hour: { ...prev.working_hour, days: newDays },
-    }));
-  };
+const handleCheckboxChange = (day) => {
+  let newDays;
+
+  if (form.working_hour.days.includes(day)) {
+    // Si ya está seleccionado, lo quitamos
+    newDays = form.working_hour.days.filter((d) => d !== day);
+  } else {
+    // Si no está seleccionado, lo agregamos
+    newDays = [...form.working_hour.days, day];
+  }
+
+  // Ordenamos los días según el orden de daysOfWeek
+  newDays.sort((a, b) => daysOfWeek.indexOf(a) - daysOfWeek.indexOf(b));
+
+  setForm((prev) => ({
+    ...prev,
+    working_hour: { ...prev.working_hour, days: newDays },
+  }));
+};
+
 
   const handleTimeChange = (field, value) => {
     setForm((prev) => ({
@@ -150,41 +158,79 @@ const ModalColaborador = ({
     return Object.keys(errs).length === 0;
   };
 
-  const handleGuardar = async () => {
-    if (!validar()) return;
+  const colorOptions = [
+    { name: "Verde", value: "Verde", color: "#4CAF50" },
+    { name: "Rojo", value: "Rojo", color: "#F44336" },
+    { name: "Azul", value: "Azul", color: "#2196F3" },
+    { name: "Naranja", value: "Naranja", color: "#FF9800" },
+    { name: "Amarillo", value: "Amarillo", color: "#f1c40f" },
+    { name: "Morado", value: "Morado", color: "#9C27B0" },
+    { name: "Rosa", value: "Rosa", color: "#E91E63" },
+    { name: "Durazno", value: "Durazno", color: "#ffb74d" },
+    { name: "Turquesa", value: "Turquesa", color: "#1abc9c" },
+    { name: "Rojo Vino", value: "RojoVino", color: "#880e4f" },
+    { name: "Lima", value: "Lima", color: "#cddc39" },
+    { name: "Cian", value: "Cian", color: "#00acc1" },
+    { name: "Lavanda", value: "Lavanda", color: "#9575cd" },
+    { name: "Magenta", value: "Magenta", color: "#d81b60" },
+    { name: "Coral", value: "Coral", color: "#ff7043" },
+  ];
 
-    const payload = modoEdicion
-      ? {
-          id: form.id,
-          username: form.username,
-          name: form.name,
-          last_name: form.last_name,
-          email: form.email,
-          working_hour: {
-            days: form.working_hour.days,
-            start_time: form.working_hour.start_time,
-            end_time: form.working_hour.end_time,
-          },
-          ...(form.password ? { password: form.password } : {}),
-        }
-      : {
-          username: form.username,
-          name: form.name,
-          last_name: form.last_name,
-          email: form.email,
-          password: form.password,
-          working_hour: {
-            days: form.working_hour.days,
-            start_time: form.working_hour.start_time,
-            end_time: form.working_hour.end_time,
-          },
-          gym_id,
-          role_id: "68681f0fecbb7626e767ca9a",
-        };
+const handleGuardar = async () => {
+  if (!validar()) return;
 
-    const endpoint = modoEdicion
-      ? `${API}/api/colaborators/updated`
-      : `${API}/api/colaborators/register`;
+  const generarCodigoColaborador = (name, last_name, gym_id) => {
+  const prefix = "colab";
+
+  const nombres = name.trim().split(" ");
+  const primerNombre = nombres[0] || "";
+  const segundoNombre = nombres[1] || "";
+
+  const apellidos = last_name.trim().split(" ");
+  const primerApellido = apellidos[0] || "";
+  const segundoApellido = apellidos[1] || "";
+
+  const inicialesNombre = primerNombre.charAt(0).toUpperCase() + (segundoNombre ? segundoNombre.charAt(0).toUpperCase() : "");
+  const inicialesApellido = primerApellido.charAt(0).toUpperCase() + (segundoApellido ? segundoApellido.charAt(0).toUpperCase() : "");
+
+  const hoy = new Date();
+  const yyyy = hoy.getFullYear();
+  const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+  const dd = String(hoy.getDate()).padStart(2, "0");
+  const fecha = `${yyyy}${mm}${dd}`;
+
+  const gymAbrev = gym_id ? gym_id.slice(0, 3).toUpperCase() : "GYM";
+
+  return `${prefix}-${inicialesNombre}-${inicialesApellido}-${fecha}-${gymAbrev}`;
+};
+
+
+  const payload = modoEdicion
+    ? {
+        id: form.id,
+        username: form.username,
+        name: form.name,
+        last_name: form.last_name,
+        email: form.email,
+        ...(form.colaborador_code ? { colaborator_code: form.colaborador_code } : {}),
+        color: form.color,
+        working_hour: { ...form.working_hour },
+        ...(form.password ? { password: form.password } : {}),
+      }
+    : {
+        username: form.username,
+        name: form.name,
+        last_name: form.last_name,
+        email: form.email,
+        password: form.password,
+        colaborator_code: generarCodigoColaborador(form.name, form.last_name, gym_id),
+        color: form.color,
+        working_hour: { ...form.working_hour },
+        gym_id,
+        role_id: "68681f0fecbb7626e767ca9a",
+      };
+
+    const endpoint = modoEdicion ? `${API}/api/colaborators/updated` : `${API}/api/colaborators/register`;
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -210,31 +256,30 @@ const ModalColaborador = ({
       alert("Ocurrió un error al guardar el colaborador.");
     }
   };
-
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
           borderRadius: 3,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-          overflow: 'hidden',
-          backgroundColor: '#121212',
-        }
+          boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+          overflow: "hidden",
+          backgroundColor: "#121212",
+        },
       }}
     >
       <DialogTitle
         sx={{
-          background: '#FF6600',
-          color: '#fff',
+          background: "#FF6600",
+          color: "#fff",
           fontWeight: 700,
-          fontSize: '1.4rem',
-          padding: '20px 24px',
-          textAlign: 'center',
-          boxShadow: '0 2px 10px rgba(255,102,0,0.3)',
+          fontSize: "1.4rem",
+          padding: "20px 24px",
+          textAlign: "center",
+          boxShadow: "0 2px 10px rgba(255,102,0,0.3)",
         }}
       >
         {modoEdicion ? "✏️ Editar Colaborador" : "👤 Registrar Nuevo Colaborador"}
@@ -242,51 +287,51 @@ const ModalColaborador = ({
 
       <DialogContent
         dividers
-        sx={{ 
-          backgroundColor: '#1d1c1cff',
-          padding: '24px',
-          borderTop: 'none',
+        sx={{
+          backgroundColor: "#1d1c1cff",
+          padding: "24px",
+          borderTop: "none",
         }}
       >
         {/* Sección Información Personal */}
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 3, 
-            mb: 3, 
+        <Paper
+          elevation={2}
+          sx={{
+            p: 3,
+            mb: 3,
             borderRadius: 2,
-            backgroundColor: '#302e2eff',
+            backgroundColor: "#302e2eff",
           }}
         >
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              color: '#ffffffff', 
-              fontWeight: 600, 
+          <Typography
+            variant="h6"
+            sx={{
+              color: "#ffffffff",
+              fontWeight: 600,
               mb: 2.5,
-              fontSize: '1.1rem',
-              borderBottom: '2px solid #FF6600',
-              paddingBottom: '8px',
-              display: 'inline-block'
+              fontSize: "1.1rem",
+              borderBottom: "2px solid #FF6600",
+              paddingBottom: "8px",
+              display: "inline-block",
             }}
           >
             📋 Información Personal
           </Typography>
-          
+
           <Grid container spacing={3}>
             {[
               { label: "Nombre", name: "name", icon: "👤" },
               { label: "Apellidos", name: "last_name", icon: "👤" },
               { label: "Correo electrónico", name: "email", icon: "📧" },
-              { label: "Usuario", name: "username", icon: "🔑" }
+              { label: "Usuario", name: "username", icon: "🔑" },
             ].map(({ label, name, icon }) => (
               <Grid item xs={12} sm={6} key={name}>
-                <Typography 
-                  sx={{ 
-                    color: '#FF6600', 
-                    fontWeight: 600, 
+                <Typography
+                  sx={{
+                    color: "#FF6600",
+                    fontWeight: 600,
                     mb: 1,
-                    fontSize: '0.9rem'
+                    fontSize: "0.9rem",
                   }}
                 >
                   {icon} {label}
@@ -303,37 +348,37 @@ const ModalColaborador = ({
                     "& .MuiOutlinedInput-root": {
                       backgroundColor: "#fff",
                       borderRadius: 2,
-                      transition: 'all 0.3s ease',
-                      "& fieldset": { 
+                      transition: "all 0.3s ease",
+                      "& fieldset": {
                         borderColor: "#ddd",
-                        borderWidth: '1px'
+                        borderWidth: "1px",
                       },
-                      "&:hover fieldset": { 
+                      "&:hover fieldset": {
                         borderColor: "#FF6600",
-                        borderWidth: '2px'
+                        borderWidth: "2px",
                       },
-                      "&.Mui-focused fieldset": { 
+                      "&.Mui-focused fieldset": {
                         borderColor: "#FF6600",
-                        borderWidth: '2px',
-                        boxShadow: '0 0 0 3px rgba(255,102,0,0.1)'
+                        borderWidth: "2px",
+                        boxShadow: "0 0 0 3px rgba(255,102,0,0.1)",
                       },
                     },
                     "& .MuiInputBase-input": {
                       color: "#333",
-                      fontSize: '0.95rem'
-                    }
+                      fontSize: "0.95rem",
+                    },
                   }}
                 />
               </Grid>
             ))}
 
             <Grid item xs={12} sm={6}>
-              <Typography 
-                sx={{ 
-                  color: '#FF6600', 
-                  fontWeight: 600, 
+              <Typography
+                sx={{
+                  color: "#FF6600",
+                  fontWeight: 600,
                   mb: 1,
-                  fontSize: '0.9rem'
+                  fontSize: "0.9rem",
                 }}
               >
                 🔒 {modoEdicion ? "Nueva contraseña (opcional)" : "Contraseña"}
@@ -351,75 +396,113 @@ const ModalColaborador = ({
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "#fff",
                     borderRadius: 2,
-                    transition: 'all 0.3s ease',
-                    "& fieldset": { 
+                    transition: "all 0.3s ease",
+                    "& fieldset": {
                       borderColor: "#ddd",
-                      borderWidth: '1px'
+                      borderWidth: "1px",
                     },
-                    "&:hover fieldset": { 
+                    "&:hover fieldset": {
                       borderColor: "#FF6600",
-                      borderWidth: '2px'
+                      borderWidth: "2px",
                     },
-                    "&.Mui-focused fieldset": { 
+                    "&.Mui-focused fieldset": {
                       borderColor: "#FF6600",
-                      borderWidth: '2px',
-                      boxShadow: '0 0 0 3px rgba(255,102,0,0.1)'
+                      borderWidth: "2px",
+                      boxShadow: "0 0 0 3px rgba(255,102,0,0.1)",
                     },
                   },
                   "& .MuiInputBase-input": {
                     color: "#333",
-                    fontSize: '0.95rem'
-                  }
+                    fontSize: "0.95rem",
+                  },
                 }}
               />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>Color de Identificación</Typography>
+              <TextField
+                select
+                fullWidth
+                name="color"
+                value={form.color}
+                onChange={handleChange}
+                disabled={false}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "#fff",
+                    borderRadius: "8px",
+                    "& fieldset": { borderColor: "#e0e0e0" },
+                    "&:hover fieldset": { borderColor: "#F8820B" },
+                    "&.Mui-focused fieldset": { borderColor: "#F8820B" },
+                  },
+                }}
+              >
+                {colorOptions.map((c) => (
+                  <MenuItem key={c.value} value={c.value}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Box
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
+                          bgcolor: c.color,
+                          border: "2px solid #fff",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        }}
+                      />
+                      {c.name}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
           </Grid>
         </Paper>
 
         {/* Sección Horario de Trabajo */}
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 3, 
+        <Paper
+          elevation={2}
+          sx={{
+            p: 3,
             borderRadius: 2,
-            backgroundColor: '#302e2eff',
+            backgroundColor: "#302e2eff",
           }}
         >
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              color: '#ffffffff', 
-              fontWeight: 600, 
+          <Typography
+            variant="h6"
+            sx={{
+              color: "#ffffffff",
+              fontWeight: 600,
               mb: 2.5,
-              fontSize: '1.1rem',
-              borderBottom: '2px solid #FF6600',
-              paddingBottom: '8px',
-              display: 'inline-block'
+              fontSize: "1.1rem",
+              borderBottom: "2px solid #FF6600",
+              paddingBottom: "8px",
+              display: "inline-block",
             }}
           >
             ⏰ Horario de Trabajo
           </Typography>
 
           <Box sx={{ mb: 3 }}>
-            <Typography 
-              variant="subtitle1" 
-              sx={{ 
-                mb: 2, 
-                color: '#FF6600', 
+            <Typography
+              variant="subtitle1"
+              sx={{
+                mb: 2,
+                color: "#FF6600",
                 fontWeight: 600,
-                fontSize: '0.95rem'
+                fontSize: "0.95rem",
               }}
             >
               📅 Días laborales
             </Typography>
-            
-            <Paper 
-              sx={{ 
-                p: 2.5, 
-                 backgroundColor: '#424141ff',
-                border: errores.days ? '2px solid #f44336' : '1px solid #302e2eff',
+
+            <Paper
+              sx={{
+                p: 2.5,
+                backgroundColor: "#424141ff",
+                border: errores.days ? "2px solid #f44336" : "1px solid #302e2eff",
                 borderRadius: 2,
-                transition: 'all 0.3s ease'
+                transition: "all 0.3s ease",
               }}
             >
               <Grid container spacing={1}>
@@ -431,23 +514,23 @@ const ModalColaborador = ({
                           checked={form.working_hour.days.includes(day)}
                           onChange={() => handleCheckboxChange(day)}
                           sx={{
-                            color: '#FF6600',
-                            '&.Mui-checked': {
-                              color: '#FF6600',
+                            color: "#FF6600",
+                            "&.Mui-checked": {
+                              color: "#FF6600",
                             },
-                            '& .MuiSvgIcon-root': {
+                            "& .MuiSvgIcon-root": {
                               fontSize: 22,
                             },
                           }}
                         />
                       }
                       label={
-                        <Typography 
-                          sx={{ 
-                            color: 'white', 
-                            fontSize: '0.9rem',
+                        <Typography
+                          sx={{
+                            color: "white",
+                            fontSize: "0.9rem",
                             fontWeight: form.working_hour.days.includes(day) ? 600 : 400,
-                            transition: 'all 0.2s ease'
+                            transition: "all 0.2s ease",
                           }}
                         >
                           {day}
@@ -458,9 +541,9 @@ const ModalColaborador = ({
                 ))}
               </Grid>
             </Paper>
-            
+
             {errores.days && (
-              <Typography color="error" variant="body2" sx={{ mt: 1, fontSize: '0.8rem' }}>
+              <Typography color="error" variant="body2" sx={{ mt: 1, fontSize: "0.8rem" }}>
                 {errores.days}
               </Typography>
             )}
@@ -468,27 +551,27 @@ const ModalColaborador = ({
             {/* Mostrar días seleccionados */}
             {form.working_hour.days.length > 0 && (
               <Box sx={{ mt: 2 }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    mb: 1, 
-                    color: 'white',
-                    fontSize: '0.85rem'
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mb: 1,
+                    color: "white",
+                    fontSize: "0.85rem",
                   }}
                 >
                   Días seleccionados:
                 </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                   {form.working_hour.days.map((day) => (
                     <Chip
                       key={day}
                       label={day}
-                      size="small"
+                      size="large"
                       sx={{
-                        backgroundColor: '#FF6600',
-                        color: '#fff',
-                        fontWeight: 500,
-                        fontSize: '0.75rem'
+                        backgroundColor: "#fb6806ff",
+                        color: "black",
+                        fontWeight: 600,
+                        fontSize: "0.75rem",
                       }}
                     />
                   ))}
@@ -499,12 +582,12 @@ const ModalColaborador = ({
 
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
-              <Typography 
-                sx={{ 
-                  color: '#FF6600', 
-                  fontWeight: 600, 
+              <Typography
+                sx={{
+                  color: "#FF6600",
+                  fontWeight: 600,
                   mb: 1,
-                  fontSize: '0.9rem'
+                  fontSize: "0.9rem",
                 }}
               >
                 🕐 Hora de entrada
@@ -521,36 +604,36 @@ const ModalColaborador = ({
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "#fff",
                     borderRadius: 2,
-                    transition: 'all 0.3s ease',
-                    "& fieldset": { 
+                    transition: "all 0.3s ease",
+                    "& fieldset": {
                       borderColor: "#ddd",
-                      borderWidth: '1px'
+                      borderWidth: "1px",
                     },
-                    "&:hover fieldset": { 
+                    "&:hover fieldset": {
                       borderColor: "#FF6600",
-                      borderWidth: '2px'
+                      borderWidth: "2px",
                     },
-                    "&.Mui-focused fieldset": { 
+                    "&.Mui-focused fieldset": {
                       borderColor: "#FF6600",
-                      borderWidth: '2px',
-                      boxShadow: '0 0 0 3px rgba(255,102,0,0.1)'
+                      borderWidth: "2px",
+                      boxShadow: "0 0 0 3px rgba(255,102,0,0.1)",
                     },
                   },
                   "& .MuiInputBase-input": {
                     color: "#333",
-                    fontSize: '0.95rem'
-                  }
+                    fontSize: "0.95rem",
+                  },
                 }}
               />
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Typography 
-                sx={{ 
-                  color: '#FF6600', 
-                  fontWeight: 600, 
+              <Typography
+                sx={{
+                  color: "#FF6600",
+                  fontWeight: 600,
                   mb: 1,
-                  fontSize: '0.9rem'
+                  fontSize: "0.9rem",
                 }}
               >
                 🕐 Hora de salida
@@ -567,25 +650,25 @@ const ModalColaborador = ({
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "#fff",
                     borderRadius: 2,
-                    transition: 'all 0.3s ease',
-                    "& fieldset": { 
+                    transition: "all 0.3s ease",
+                    "& fieldset": {
                       borderColor: "#ddd",
-                      borderWidth: '1px'
+                      borderWidth: "1px",
                     },
-                    "&:hover fieldset": { 
+                    "&:hover fieldset": {
                       borderColor: "#FF6600",
-                      borderWidth: '2px'
+                      borderWidth: "2px",
                     },
-                    "&.Mui-focused fieldset": { 
+                    "&.Mui-focused fieldset": {
                       borderColor: "#FF6600",
-                      borderWidth: '2px',
-                      boxShadow: '0 0 0 3px rgba(255,102,0,0.1)'
+                      borderWidth: "2px",
+                      boxShadow: "0 0 0 3px rgba(255,102,0,0.1)",
                     },
                   },
                   "& .MuiInputBase-input": {
                     color: "#333",
-                    fontSize: '0.95rem'
-                  }
+                    fontSize: "0.95rem",
+                  },
                 }}
               />
             </Grid>
@@ -593,59 +676,41 @@ const ModalColaborador = ({
         </Paper>
       </DialogContent>
 
-      <DialogActions 
-        sx={{ 
-          backgroundColor: '#1d1c1cff', 
-          padding: '20px 24px',
-          gap: 2
+      <DialogActions
+        sx={{
+          backgroundColor: "#1d1c1cff",
+          padding: "20px 24px",
+          gap: 2,
         }}
       >
         <Button
           onClick={onClose}
           variant="outlined"
           size="large"
-          sx={{
-            borderColor: '#FF6600',
-            color: '#FF6600',
-            fontWeight: 600,
-            borderRadius: 2,
-            px: 4,
-            py: 1.2,
-            fontSize: '0.95rem',
-            textTransform: 'none',
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              backgroundColor: 'rgba(255, 102, 0, 0.08)',
-              borderColor: '#FF6600',
-              transform: 'translateY(-1px)',
-            },
+          sx={{ 
+            color: "#FF6600",
+            borderColor: "#FF6600",
+            "&:hover": { borderColor: "#FF6600", bgcolor: "#FF6600", color: "#fff", fontWeight: "bold"}
           }}
         >
-          ❌ Cancelar
+          Cancelar
         </Button>
         <Button
           onClick={handleGuardar}
           variant="contained"
           size="large"
           sx={{
-            background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-            color: '#fff',
-            fontWeight: 600,
-            borderRadius: 2,
-            px: 4,
-            py: 1.2,
-            fontSize: '0.95rem',
-            textTransform: 'none',
-            boxShadow: '0 4px 12px rgba(255, 102, 0, 0.3)',
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #e55a00 0%, #ff7326 100%)',
-              boxShadow: '0 6px 20px rgba(255, 102, 0, 0.4)',
-              transform: 'translateY(-2px)',
-            },
+              background: "#F8820B",
+              color: "black",
+              fontWeight: "bold",
+              px: 3,
+              borderRadius: "8px",
+              "&:hover": { 
+               borderColor: "#FF6600", bgcolor: "#FF6600", color: "white", fontWeight: "bold",
+              }
           }}
         >
-          {modoEdicion ? "💾 Guardar cambios" : "➕ Registrar"}
+          {modoEdicion ? "Guardar cambios" : "Registrar"}
         </Button>
       </DialogActions>
     </Dialog>

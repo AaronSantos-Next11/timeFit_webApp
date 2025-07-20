@@ -34,16 +34,24 @@ const getPeriodByDays = (days) => {
 
 
 const colorOptions = [
-  { name: "Verde", value: "Verde", color: "#4CAF50" },
-  { name: "Rojo", value: "Rojo", color: "#F44336" },
-  { name: "Azul", value: "Azul", color: "#2196F3" },
-  { name: "Naranja", value: "Naranja", color: "#FF9800" },
-  { name: "Morado", value: "Morado", color: "#9C27B0" },
-  { name: "Rosado", value: "Rosado", color: "#E91E63" },
-  { name: "Amarillo", value: "Amarillo", color: "#FFEB3B" },
+      { name: "Verde", value: "Verde", color: "#4CAF50" },
+    { name: "Rojo", value: "Rojo", color: "#F44336" },
+    { name: "Azul", value: "Azul", color: "#2196F3" },
+    { name: "Naranja", value: "Naranja", color: "#FF9800" },
+    { name: "Amarillo", value: "Amarillo", color: "#f1c40f" },
+    { name: "Morado", value: "Morado", color: "#9C27B0" },
+    { name: "Rosa", value: "Rosa", color: "#E91E63" },
+    { name: "Durazno", value: "Durazno", color: "#ffb74d" },
+    { name: "Turquesa", value: "Turquesa", color: "#1abc9c" },
+    { name: "Rojo Vino", value: "RojoVino", color: "#880e4f" },
+    { name: "Lima", value: "Lima", color: "#cddc39" },
+    { name: "Cian", value: "Cian", color: "#00acc1" },
+    { name: "Lavanda", value: "Lavanda", color: "#9575cd" },
+    { name: "Magenta", value: "Magenta", color: "#d81b60" },
+    { name: "Coral", value: "Coral", color: "#ff7043" },
 ];
 
-const periods = ["diario", "semanal", "quincenal", "mensual", "trimestral", "anual"];
+const periods = ["quincenal", "mensual", "trimestral", "anual"];
 const currencies = ["MXN", "USD", "EUR"];
 const statuses = ["Activado", "Cancelado"];
 
@@ -74,7 +82,7 @@ const ModalMembership = ({ open, onClose, membershipId, role }) => {
   if (!form.name_membership.trim()) newErrors.name_membership = "Nombre requerido";
   if (!form.description.trim()) newErrors.description = "Descripción requerida";
   if (!form.price || form.price <= 0) newErrors.price = "Precio inválido";
-  if (!form.duration_days || form.duration_days <= 0) newErrors.duration_days = "Duración inválida";
+  if (!form.duration_days || form.duration_days < 15) newErrors.duration_days = "Duración inválida (mínimo 15 días)";
   if (!form.period) newErrors.period = "Período requerido";
   if (!form.status) newErrors.status = "Estado requerido";
   setErrors(newErrors);
@@ -128,25 +136,53 @@ useEffect(() => {
     const period = getPeriodByDays(Number(value));
     updatedForm.period = period;
   }
-
+  if (name === "period") {
+    // Autocompletar duración basada en el período seleccionado
+    const periodDurations = {
+      diario: 1,
+      semanal: 7,
+      quincenal: 15,
+      mensual: 30,
+      trimestral: 90,
+      anual: 365,
+    };
+    updatedForm.duration_days = periodDurations[value] || "";
+  }
   setForm(updatedForm);
 };
 
 
-  const handleSave = () => {
-    if (!validate()) return;
-    const url = membershipId ? "/api/memberships/updated" : "/api/memberships/created";
+const handleSave = () => {
+  if (!validate()) return;
 
-    const payload = { ...form, gym_id, ...(membershipId && { id: membershipId }) };
+  const url = membershipId ? "/api/memberships/updated" : "/api/memberships/created";
+  const payload = { ...form, gym_id, ...(membershipId && { id: membershipId }) };
 
-    fetch(`${API}${url}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
+  fetch(`${API}${url}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(payload),
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        // Intentamos leer el mensaje del backend
+        let { message } = await res.json().catch(() => ({}));
+        // Si no viene message, ponemos un genérico
+        alert(message || "Primero registra tu gimnasio");
+        return;
+      }
+      // Si todo fue OK, cerramos
+      onClose();
     })
-      .then((res) => (res.ok ? onClose() : console.error("Error al guardar")))
-      .catch((err) => console.error(err));
-  };
+    .catch((err) => {
+      console.error("Error al guardar membresía:", err);
+      alert("Error al guardar. Intenta de nuevo.");
+    });
+};
+
 
   const readonly = role !== "Administrador";
   const selectedColor = colorOptions.find(c => c.value === form.color)?.color || "#4CAF50";

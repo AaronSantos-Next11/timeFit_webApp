@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+
 import Home from './components/home/Home';
 import Memberships from './components/memberships/Memberships';
 import Users from './components/clients/Users';
@@ -21,51 +22,54 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
   const location = useLocation();
   console.log("Ruta actual:", location.pathname);
 
-  // Obtener el rol del usuario logeado
-  let roleName = "";
-  try {
-    const adminDataString = localStorage.getItem("admin") || sessionStorage.getItem("admin");
-    const admin = adminDataString ? JSON.parse(adminDataString) : null;
-    roleName = admin?.role?.role_name || "";
-  } catch {
-    roleName = "";
-  }
+  const [roleName, setRoleName] = useState("");
+
+  // Actualiza el rol cuando cambia isAuthenticated o cuando cambia localStorage "user"
+  useEffect(() => {
+    let user = null;
+    try {
+      const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+      user = raw ? JSON.parse(raw) : null;
+    } catch {
+      user = null;
+    }
+    setRoleName(user?.role?.role_name || "");
+  }, [isAuthenticated]); // Se vuelve a ejecutar cada vez que isAuthenticated cambie
 
   const isAdmin = roleName === "Administrador";
   const isColab = roleName === "Colaborador";
 
   return (
     <Routes>
-      {/* Ruta raíz */}
+      {/* Rutas públicas */}
       <Route path="/" element={
         isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />
       } />
-
-      {/* Ruta login */}
       <Route path="/login" element={
         isAuthenticated ? <Navigate to="/home" replace /> : <Login onLogin={onLogin} />
       } />
-
-      {/* Ruta registro */}
       <Route path="/sign_up" element={
         isAuthenticated ? <Navigate to="/home" replace /> : <Signup onSignUp={onLogin} />
       } />
-
-      {/* Ruta logout confirm */}
       <Route path="/logout-confirm" element={
         isAuthenticated ? <LogoutModal /> : <Navigate to="/login" replace />
       } />
-
-      {/* Ruta logout */}
       <Route path="/logout" element={<Logout onLogout={onLogout} />} />
 
       {/* Rutas protegidas */}
       <Route path="/*" element={
         isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
       }>
+        {/* Rutas comunes */}
         <Route path="home" element={<Home />} />
+        <Route path="users" element={<Users />} />
         <Route path="memberships" element={<Memberships />} />
+        <Route path="calendar" element={<Calendar />} />
+        <Route path="notes" element={<Notes />} />
+        <Route path="gimnasio" element={<Gym />} />
+        <Route path="user_profile" element={<UserProfile />} />
 
+        {/* Rutas ADMINISTRADOR */}
         {isAdmin && (
           <>
             <Route path="collaborators" element={<Collaborators />} />
@@ -75,18 +79,12 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
           </>
         )}
 
-        {isColab && (
+        {/* Rutas COLABORADOR */}
+        {isColab && !isAdmin && (
           <>
-            <Route path="users" element={<Users />} />
             <Route path="inventorycontrol" element={<InventoryControl />} />
           </>
         )}
-
-        {/* Rutas compartidas */}
-        <Route path="calendar" element={<Calendar />} />
-        <Route path="notes" element={<Notes />} />
-        <Route path="gimnasio" element={<Gym />} />
-        <Route path="user_profile" element={<UserProfile />} />
 
         {/* Ruta comodín */}
         <Route path="*" element={<Navigate to="/home" replace />} />

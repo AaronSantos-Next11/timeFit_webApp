@@ -30,6 +30,7 @@ import "./InventoryControl.css";
 const InventoryControl = () => {
   // Estado para la página actual
   const [currentPage, setCurrentPage] = useState(2);
+  
 
   // Datos de muestra
   const inventorySummary = {
@@ -85,7 +86,7 @@ const InventoryControl = () => {
   let admin = null;
   try {
     const adminDataString =
-      localStorage.getItem("admin") || sessionStorage.getItem("admin");
+      localStorage.getItem("user") || sessionStorage.getItem("user");
     admin = adminDataString ? JSON.parse(adminDataString) : null;
   } catch {
     admin = null;

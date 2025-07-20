@@ -1,16 +1,12 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Link, useNavigate } from "react-router-dom";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import timefitLogo from "../../assets/timefit.svg";
 
 import "./SignUp.css";
 
 export default function SignUp({ onSignUp }) {
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
   const API = import.meta.env.VITE_API_URL;
@@ -20,6 +16,31 @@ export default function SignUp({ onSignUp }) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
+function generarMatriculaProfesional(nombre, apellidos) {
+  const fecha = new Date();
+  const yy = String(fecha.getFullYear()).slice(-2);
+  const mm = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dd = String(fecha.getDate()).padStart(2, "0");
+
+  const nombreClean = nombre.trim().toUpperCase().replace(/\s+/g, "");
+  const apellidosClean = apellidos.trim().toUpperCase().replace(/\s+/g, "");
+
+  const parteNombre = nombreClean.slice(0, 3).padEnd(3, "X");
+  const parteApellido = apellidosClean.slice(0, 3).padEnd(3, "X");
+
+  const fechaStr = `${yy}${mm}${dd}`;
+
+  const caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let aleatorio = "";
+  for (let i = 0; i < 4; i++) {
+    aleatorio += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+
+  return `ADM-${parteNombre}${parteApellido}${fechaStr}-${aleatorio}`;
+}
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const username = e.target.username.value.trim();
@@ -28,6 +49,8 @@ export default function SignUp({ onSignUp }) {
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
     const confirm = e.target.confirmPassword.value;
+    const matriculaAdmin = generarMatriculaProfesional(firstName, lastName);
+
 
     if (!validateUsername(username)) {
       setError("Nombre de usuario debe tener al menos 3 caracteres.");
@@ -70,7 +93,7 @@ export default function SignUp({ onSignUp }) {
           last_name: lastName,
           email,
           password,
-          admin_code: "CRX2025", // código estático o genera uno dinámico si gustas
+          admin_code: matriculaAdmin, 
         }),
       });
 
@@ -82,7 +105,7 @@ export default function SignUp({ onSignUp }) {
       }
 
       // Guardar en localStorage
-      localStorage.setItem("admin", JSON.stringify(data.admin));
+      localStorage.setItem("user", JSON.stringify(data.admin));
       localStorage.setItem("token", data.token);
 
       setError("");
@@ -92,11 +115,6 @@ export default function SignUp({ onSignUp }) {
       console.error(err);
       setError("Error al registrarse. Intente nuevamente.");
     }
-  };
-
-  const togglePasswordVisibility = (field) => {
-    if (field === "password") setShowPassword((v) => !v);
-    else setShowConfirmPassword((v) => !v);
   };
 
   return (
@@ -154,35 +172,21 @@ export default function SignUp({ onSignUp }) {
             <label>Contraseña</label>
             <div className="password-input-container">
               <input
-                type={showPassword ? "text" : "password"}
+                type="password"
                 name="password"
                 placeholder="Ingrese una contraseña"
                 required
               />
-              <button
-                type="button"
-                className="toggle-password-button"
-                onClick={() => togglePasswordVisibility("password")}
-              >
-                {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-              </button>
             </div>
 
             <label>Confirmar contraseña</label>
             <div className="password-input-container">
               <input
-                type={showConfirmPassword ? "text" : "password"}
+                type="password"
                 name="confirmPassword"
                 placeholder="Repite tu contraseña"
                 required
               />
-              <button
-                type="button"
-                className="toggle-password-button"
-                onClick={() => togglePasswordVisibility("confirm")}
-              >
-                {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-              </button>
             </div>
 
             <div className="terms-container">

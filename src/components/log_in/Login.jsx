@@ -2,15 +2,12 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Link, useNavigate } from "react-router-dom";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 import timefitLogo from "../../assets/timefit.svg";
 import "./Login.css";
 
 export default function Login({ onLogin }) {
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   const API = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
@@ -31,7 +28,7 @@ export default function Login({ onLogin }) {
     }
 
     try {
-      // Intentar login como admin
+      // 1) Intentar login como admin
       const loginAdmin = await fetch(`${API}/api/admins/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,14 +37,15 @@ export default function Login({ onLogin }) {
 
       if (loginAdmin.ok) {
         const data = await loginAdmin.json();
-        localStorage.setItem("admin", JSON.stringify(data.admin));
+        // El servidor devuelve `token` y `admin`
         localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.admin));
         onLogin();
         navigate("/home");
         return;
       }
 
-      // Intentar login como colaborador
+      // 2) Intentar login como colaborador
       const loginColab = await fetch(`${API}/api/colaborators/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,24 +54,21 @@ export default function Login({ onLogin }) {
 
       if (loginColab.ok) {
         const data = await loginColab.json();
-        localStorage.setItem("admin", JSON.stringify(data.colaborator));
+        // El servidor devuelve `token` y `colaborator`
         localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.colaborator));
         onLogin();
         navigate("/home");
         return;
       }
 
-      // Si ambos fallan
+      // 3) Si ambos fallan
       const errorData = await loginColab.json();
       setError(errorData.message || "Credenciales inválidas.");
     } catch (err) {
       console.error("Error de red o servidor:", err);
       setError("Error de red. Intenta más tarde.");
     }
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword((v) => !v);
   };
 
   return (
@@ -110,19 +105,12 @@ export default function Login({ onLogin }) {
           <label>Contraseña</label>
           <div className="password-input-container">
             <input
-              type={showPassword ? "text" : "password"}
+              type="password"
               name="password"
               placeholder="Escriba aquí su contraseña"
               required
               autoComplete="current-password"
             />
-            <button
-              type="button"
-              className="toggle-password-button"
-              onClick={togglePasswordVisibility}
-            >
-              {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-            </button>
           </div>
 
           {error && <p className="error-message">{error}</p>}

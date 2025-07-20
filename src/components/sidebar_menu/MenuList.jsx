@@ -36,7 +36,8 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
 
     let roleName = '';
     try {
-        const adminDataString = localStorage.getItem('admin') || sessionStorage.getItem('admin');
+        // Cambiado aquí para usar "user" en vez de "admin"
+        const adminDataString = localStorage.getItem('user') || sessionStorage.getItem('user');
         const admin = adminDataString ? JSON.parse(adminDataString) : null;
         roleName = admin?.role?.role_name || '';
     } catch {
@@ -48,70 +49,68 @@ export const MenuList = ({ setCurrentPage, collapsed }) => {
 
     return (
         <div className="menu-bar">
-<Menu
-  mode="inline"
-  selectedKeys={[currentPath]}
-  onClick={({ key }) => handleMenuClick(key)}
-  items={[
-    {
-      key: 'home',
-      icon: <HouseFill size={20} />,
-      label: !collapsed && 'Inicio',
-    },
-    isColab && {
-      key: 'users',
-      icon: <PeopleFill size={20} />,
-      label: !collapsed && 'Usuarios',
-    },
-    {
-      key: 'memberships',
-      icon: <LayoutTextSidebar size={20} />,
-      label: !collapsed && 'Membresías',
-    },
-    isAdmin && {
-      key: 'collaborators',
-      icon: <PersonBoundingBox size={20} />,
-      label: !collapsed && 'Colaboradores',
-    },
-    isAdmin && {
-      key: 'revenue',
-      icon: <CurrencyExchange size={20} />,
-      label: !collapsed && 'Ingresos',
-    },
-    (isAdmin || isColab) && {
-      key: 'inventorycontrol',
-      icon: <ArchiveFill size={20} />,
-      label: !collapsed && 'Control de Inventario',
-    },
-    {
-      key: 'calendar',
-      icon: <CalendarDateFill size={20} />,
-      label: !collapsed && 'Calendario',
-    },
-    {
-      key: 'notes',
-      icon: <JournalBookmarkFill size={20} />,
-      label: !collapsed && 'Notas',
-    },
-    {
-      key: 'gimnasio',
-      icon: <HeartPulse size={20} />,
-      label: !collapsed && 'Gimnasio',
-    },
-    isAdmin && {
-      key: 'support_and_help',
-      icon: <Tools size={20} />,
-      label: !collapsed && 'Soporte y Ayuda',
-    },
-    {
-      key: 'user_profile',
-      icon: <PersonCircle size={20} />,
-      label: !collapsed && 'Perfil de Usuario',
-    },
-  ].filter(Boolean)}
-/>
-
-
+            <Menu
+                mode="inline"
+                selectedKeys={[currentPath]}
+                onClick={({ key }) => handleMenuClick(key)}
+                items={[
+                    {
+                        key: 'home',
+                        icon: <HouseFill size={20} />,
+                        label: !collapsed && 'Inicio',
+                    },
+                    (isAdmin || isColab) && {
+                        key: 'users',
+                        icon: <PeopleFill size={20} />,
+                        label: !collapsed && 'Usuarios',
+                    },
+                    {
+                        key: 'memberships',
+                        icon: <LayoutTextSidebar size={20} />,
+                        label: !collapsed && 'Membresías',
+                    },
+                    isAdmin && {
+                        key: 'collaborators',
+                        icon: <PersonBoundingBox size={20} />,
+                        label: !collapsed && 'Colaboradores',
+                    },
+                    isAdmin && {
+                        key: 'revenue',
+                        icon: <CurrencyExchange size={20} />,
+                        label: !collapsed && 'Ingresos',
+                    },
+                    (isAdmin || isColab) && {
+                        key: 'inventorycontrol',
+                        icon: <ArchiveFill size={20} />,
+                        label: !collapsed && 'Control de Inventario',
+                    },
+                    {
+                        key: 'calendar',
+                        icon: <CalendarDateFill size={20} />,
+                        label: !collapsed && 'Calendario',
+                    },
+                    {
+                        key: 'notes',
+                        icon: <JournalBookmarkFill size={20} />,
+                        label: !collapsed && 'Notas',
+                    },
+                    {
+                        key: 'gimnasio',
+                        icon: <HeartPulse size={20} />,
+                        label: !collapsed && 'Gimnasio',
+                    },
+                    isAdmin && {
+                        key: 'support_and_help',
+                        icon: <Tools size={20} />,
+                        label: !collapsed && 'Soporte y Ayuda',
+                    },
+                    {
+                        key: 'user_profile',
+                        icon: <PersonCircle size={20} />,
+                        label: !collapsed && 'Perfil de Usuario',
+                    },
+                ].filter(Boolean)}
+            />
         </div>
     );
 };

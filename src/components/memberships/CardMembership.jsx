@@ -8,8 +8,6 @@ import {
   IconButton,
   Box,
   Avatar,
-  Menu,
-  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -19,11 +17,14 @@ import {
   Divider,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PeopleIcon from "@mui/icons-material/People";
 import ModalMembership from "./ModalMembership";
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+
 
 const borderColors = [
   { name: "Verde", color: "#27ae60" },
@@ -33,28 +34,27 @@ const borderColors = [
   { name: "Morado", color: "#8e44ad" },
   { name: "Rosado", color: "#e91e63" },
   { name: "Amarillo", color: "#f1c40f" },
+  { name: "Durazno", color: "#ffb74d" },
+  { name: "Turquesa", color: "#1abc9c" },
+  { name: "Rojo Vino", color: "#880e4f" },
+  { name: "Lima", color: "#cddc39" },
+  { name: "Cian", color: "#00acc1" },
+  { name: "Lavanda", color: "#9575cd" },
+  { name: "Magenta", color: "#d81b60" },
+  { name: "Coral", color: "#ff7043" },
 ];
 
 const CardMembership = ({ collapsed, role, memberships, refreshMemberships }) => {
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-    const API = import.meta.env.VITE_API_URL;
+  const API = import.meta.env.VITE_API_URL;
 
-
-  const handleMenuOpen = (event, membership) => {
-    setSelected(membership);
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => setAnchorEl(null);
-
-  const handleEdit = () => {
-handleMenuClose();
-  setTimeout(() => setModalOpen(true), 100);
-  };
+  const handleEdit = (membership) => {
+  setSelected(membership); 
+  setModalOpen(true);          
+};
 
   const handleDelete = async () => {
     const token = localStorage.getItem("token");
@@ -68,23 +68,20 @@ handleMenuClose();
     });
     setOpenDeleteDialog(false);
     refreshMemberships();
-;
   };
 
-  const handleDeleteClick = () => {
-  handleMenuClose();
-  setTimeout(() => setOpenDeleteDialog(true), 100);
-};
+  const handleDeleteClick = (membership) => {
+    setSelected(membership);
+    setOpenDeleteDialog(true);
+  };
 
   const handleCloseModal = () => {
     setModalOpen(false);
     refreshMemberships();
-;
   };
 
   const columns = collapsed ? 3 : 4;
 
-  // Mensaje cuando no hay membresías
   if (memberships.length === 0) {
     return (
       <>
@@ -99,6 +96,7 @@ handleMenuClose();
             p: 4,
           }}
         >
+          <ReceiptLongIcon sx={{ fontSize: 80, color: "#ccc", mb: 2 }} />
           <Typography
             variant="h5"
             sx={{
@@ -116,7 +114,9 @@ handleMenuClose();
               mb: 3,
             }}
           >
-            Por favor, registre su primera membresía para comenzar
+            {role === "Administrador"
+            ? "Comience creando su primera membresía para gestionar los planes del gimnasio"
+            : "No hay membresías disponibles por el momento. Contacte al administrador para más información."}
           </Typography>
           {role === "Administrador" && (
             <Button
@@ -129,14 +129,15 @@ handleMenuClose();
                 py: 1.5,
                 boxShadow: "0 4px 12px rgba(248, 130, 11, 0.4)",
                 "&:hover": {
-                  backgroundColor: "#d35400",
-                  boxShadow: "0 6px 16px rgba(248, 130, 11, 0.6)",
+                  backgroundColor: "#ff4300",
+                  color:"white",
+                  boxShadow: "0 6px 16px rgba(248, 66, 11, 0.68)",
                 },
                 borderRadius: 2,
               }}
               onClick={() => setModalOpen(true)}
             >
-              Registrar Primera Membresía
+              Registrar Su Primera Membresía
             </Button>
           )}
         </Box>
@@ -159,7 +160,8 @@ handleMenuClose();
             <Grid item xs={12 / columns} key={m._id}>
               <Card
                 sx={{
-                  height: 320,
+                  minheight: 380,
+                  maxHeight: 580,
                   background: `linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)`,
                   color: "#fff",
                   borderRadius: 4,
@@ -210,7 +212,13 @@ handleMenuClose();
                           color: "#fff",
                           fontWeight: "bold",
                           fontSize: "1.2rem",
-                          lineHeight: 1.2,
+                          lineHeight: 1.3,
+                          wordBreak: "break-word",
+                          whiteSpace: "normal",
+                          overflowWrap: "break-word",
+                          paddingTop: role === "Colaborador" ? "15px" : "10px",
+                          paddingRight: role === "Administrador" ? "48px" : "0px",
+                          minHeight: "3.6em",
                         }}
                       >
                         {m.name_membership}
@@ -227,8 +235,13 @@ handleMenuClose();
                       color: "#ccc",
                       mb: 2,
                       fontSize: "0.9rem",
-                      lineHeight: 1.4,
-                      minHeight: "40px",
+                      lineHeight: 1.5,
+                      minHeight: "60px",
+                      maxHeight: "120px",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
                     }}
                   >
                     {m.description}
@@ -236,7 +249,6 @@ handleMenuClose();
 
                   <Divider sx={{ borderColor: `${color}30`, mb: 2 }} />
 
-                  {/* Información en grid */}
                   <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <AttachMoneyIcon sx={{ color: color, fontSize: 18 }} />
@@ -245,7 +257,7 @@ handleMenuClose();
                           Precio
                         </Typography>
                         <Typography variant="body2" sx={{ fontWeight: "bold", color: "#fff" }}>
-                          ${m.price}
+                          ${m.price} {m.currency}
                         </Typography>
                       </Box>
                     </Box>
@@ -288,7 +300,7 @@ handleMenuClose();
                   </Box>
 
                   {/* Status Badge */}
-                  <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+                  <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
                     <Chip
                       label={m.status}
                       sx={{
@@ -303,83 +315,52 @@ handleMenuClose();
                   </Box>
                 </CardContent>
 
-                {/* Botón de edición */}
+                {/* Iconos de editar y eliminar */}
                 {role === "Administrador" && (
-                  <IconButton
-                    sx={{
-                      position: "absolute",
-                      top: 15,
-                      right: 15,
-                      backgroundColor: "#F8820B",
-                      color: "#000",
-                      width: 40,
-                      height: 40,
-                      boxShadow: "0 4px 12px rgba(248, 130, 11, 0.4)",
-                      "&:hover": {
-                        backgroundColor: "#FF6600",
-                        transform: "scale(1.1)",
-                      },
-                      transition: "all 0.2s ease",
-                    }}
-                    onClick={(e) => handleMenuOpen(e, m)}
+                  <Box
+                    sx={{ position: "absolute", top: 22, right: 10, display: "flex", flexDirection: "row", gap: -1 }}
                   >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
+                    <IconButton
+                      sx={{
+                        color: color,
+                        width: 30,
+                        height: 30,
+                        "&:hover": {
+                          backgroundColor: color,
+                          color: "#fff",
+                          transform: "scale(1.1)",
+                        },
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() => handleEdit(m)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      sx={{
+                        color: color,
+                        width: 30,
+                        height: 30,
+                        "&:hover": {
+                          backgroundColor: color,
+                          color: "#fff",
+                          transform: "scale(1.1)",
+                        },
+                        transition: "all 0.2s ease",
+                      }}
+                      onClick={() => handleDeleteClick(m)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
                 )}
-
-                {/* Decoración de esquina */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    bottom: 0,
-                    right: 0,
-                    width: 60,
-                    height: 60,
-                    background: `linear-gradient(135deg, transparent 50%, ${color}20 50%)`,
-                    borderTopLeftRadius: "50px",
-                  }}
-                />
               </Card>
             </Grid>
           );
         })}
       </Grid>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-        PaperProps={{
-          sx: {
-            backgroundColor: "#2d2d2d",
-            color: "#fff",
-            borderRadius: 2,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-          },
-        }}
-      >
-        <MenuItem
-          onClick={handleEdit}
-          sx={{
-            "&:hover": { backgroundColor: "#F8820B20" },
-            color: "#fff",
-          }}
-        >
-          Editar
-        </MenuItem>
-        <MenuItem
-          onClick={handleDeleteClick}
-          sx={{
-            "&:hover": { backgroundColor: "#e74c3c20" },
-            color: "#fff",
-          }}
-        >
-          Eliminar
-        </MenuItem>
-      </Menu>
-
+      {/* Diálogo de confirmación de eliminación */}
       <Dialog
         open={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
@@ -392,7 +373,9 @@ handleMenuClose();
           },
         }}
       >
-        <DialogTitle sx={{ color: "#F8820B", fontWeight: "bold" }}>¿Eliminar membresía?</DialogTitle>
+        <DialogTitle sx={{ color: "#F8820B", fontWeight: "bold" }}>
+          ¿Eliminar membresía?
+        </DialogTitle>
         <DialogContent>
           <Typography sx={{ color: "#ccc" }}>
             ¿Estás seguro de eliminar esta membresía? Los registros relacionados podrían perderse.

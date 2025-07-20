@@ -35,14 +35,35 @@ const GymRegistration = () => {
   const [roleName, setRoleName] = useState("");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
+    const colorMap = {
+  Rojo: "#e74c3c",
+  Azul: "#3498db",
+  Verde: "#2ecc71",
+  Amarillo: "#f1c40f",
+  Morado: "#9b59b6",
+  Naranja: "#e67e22",
+  Rosa: "#e91e63",
+  Durazno: "#ffb74d",
+  Turquesa: "#1abc9c",
+  RojoVino: "#880e4f",
+  Lima: "#cddc39",
+  Cian: "#00acc1",
+  Lavanda: "#9575cd",
+  Magenta: "#d81b60",
+  Coral: "#ff7043",
+};
+
+const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
+
+
   // Estado para encabezado usuario
   const [admin, setAdmin] = useState(null);
 
   // Leer usuario admin/colaborador y rol
   useEffect(() => {
     try {
-      const adminDataString = localStorage.getItem("admin") || sessionStorage.getItem("admin");
-      const adminObj = adminDataString ? JSON.parse(adminDataString) : null;
+      const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+      const adminObj = raw ? JSON.parse(raw) : null;
       setAdmin(adminObj);
       setRoleName(adminObj?.role?.role_name || "");
     } catch {
@@ -384,11 +405,10 @@ const GymRegistration = () => {
             {roleName}
           </Typography>
         </Box>
-        <Avatar sx={{ width: 50, height: 50, bgcolor: "#ff4300", fontWeight: "bold" }}>{usernameInitials}</Avatar>
+        <Avatar sx={{ width: 50, height: 50, bgcolor:  roleName === "Colaborador" ? getMappedColor(admin?.color) : "#ff4300", fontWeight: "bold" }}>{usernameInitials}</Avatar>
       </Grid>
     </Grid>
   );
-
   return (
     <Grid container alignItems="center" justifyContent="space-between" sx={{ padding: "10px 0 20px 0" }}>
       <HeaderComponent />
@@ -507,7 +527,7 @@ const GymRegistration = () => {
               onDrop={handleDrop}
               sx={{
                 width: "100%",
-                height: 225,
+                height: isAdmin ? 225 : 288,
                 borderRadius: 2,
                 border: "2px dashed #777",
                 position: "relative",
@@ -540,7 +560,7 @@ const GymRegistration = () => {
                         top: 6,
                         right: 6,
                         bgcolor: "rgba(0, 0, 0, 0.5)",
-                        color: "#ff0000ff",
+                        color: "#ff0000d5",
                         "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
                       }}
                     >

@@ -59,21 +59,17 @@ const Collaborators = ({ collapsed }) => {
   };
 
   const cerrarModal = () => setModalAbierto(false);
-
-  let admin = null;
+  // --- Lectura segura del usuario (admin o colaborador) ---
+  let user = null;
   try {
-    const adminDataString = localStorage.getItem("admin") || sessionStorage.getItem("admin");
-    admin = adminDataString ? JSON.parse(adminDataString) : null;
+    const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+    user = raw ? JSON.parse(raw) : null;
   } catch {
-    admin = null;
+    user = null;
   }
-
-  const getInitials = (username) => (!username ? "" : username.slice(0, 2).toUpperCase());
-  const getFirstNameAndLastName = (name, last_name) =>
-    !name || !last_name ? "Usuario" : `${name.split(" ")[0]} ${last_name.split(" ")[0]}`;
-  const displayName = admin ? getFirstNameAndLastName(admin.name, admin.last_name) : "Usuario";
-  const roleName = admin?.role?.role_name || "Rol desconocido";
-  const usernameInitials = admin ? getInitials(admin.username) : "";
+  const roleName = user?.role?.role_name || "Rol desconocido";
+  const displayName = `${user?.name?.split(" ")[0] || ""} ${user?.last_name?.split(" ")[0] || ""}`.trim();
+  const usernameInitials = user?.username?.slice(0, 2).toUpperCase() || "";
 
   const handleMenuOpen = (e, colaborador) => {
     setAnchorElMenu(e.currentTarget);
@@ -118,12 +114,13 @@ const Collaborators = ({ collapsed }) => {
   }, []);
 
   const displayed = useMemo(() => {
-    let arr = collaborators.filter(
-      (c) =>
-        `${c.name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (c.colaborator_code || "").toLowerCase().includes(searchTerm.toLowerCase())
-    );
+let arr = collaborators.filter(
+  (c) =>
+    (c.name && c.last_name && `${c.name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (c.colaborator_code && (c.colaborator_code || "").toLowerCase().includes(searchTerm.toLowerCase()))
+);
+
     if (sortBy === "name") arr.sort((a, b) => a.name.localeCompare(b.name));
     if (sortBy === "role") arr.sort((a, b) => a.colaborator_code.localeCompare(b.colaborator_code));
     if (sortBy === "date") arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -158,12 +155,27 @@ const Collaborators = ({ collapsed }) => {
     }
   };
 
-  // Función para obtener color del avatar basado en el nombre
-  const getAvatarColor = (name) => {
-    const colors = ['#27ae60', '#e74c3c', '#2980b9', '#f39c12', '#8e44ad', '#e91e63', '#f1c40f'];
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
-  };
+  const colorMap = {
+  Rojo: "#e74c3c",
+  Azul: "#3498db",
+  Verde: "#2ecc71",
+  Amarillo: "#f1c40f",
+  Morado: "#9b59b6",
+  Naranja: "#e67e22",
+  Rosa: "#e91e63",
+  Durazno: "#ffb74d" ,
+  Turquesa: "#1abc9c",
+  RojoVino: "#880e4f" ,
+  Lima:"#cddc39",
+  Cian: "#00acc1",
+  Lavanda:"#9575cd",
+  Magenta: "#d81b60",
+  Coral: "#ff7043",
+};
+
+const getMappedColor = (colorName) => {
+  return colorMap[colorName] || "#888"; // color por defecto si no existe
+};
 
   return (
     <>
@@ -184,7 +196,7 @@ const Collaborators = ({ collapsed }) => {
               display: "flex",
               alignItems: "center",
               padding: "8px 20px",
-              borderRadius: "30px",
+              borderRadius: "30px", 
               boxShadow: 3,
               width: collapsed ? "420px" : "700px",
               maxWidth: "100%",
@@ -288,7 +300,7 @@ const Collaborators = ({ collapsed }) => {
         >
           {/* Header de la tabla */}
           <Box sx={{ 
-            background: "#f0420dff",
+            background: "#4d4a49ff",
             padding: "20px 24px",
             position: "relative",
             overflow: "hidden"
@@ -308,19 +320,19 @@ const Collaborators = ({ collapsed }) => {
                   ID
                 </Typography>
               </Grid>
-              <Grid item xs={2.5}>
+              <Grid item xs={2.4}>
                 <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px" }}>
                   <PersonIcon sx={{ fontSize: "16px", mr: 0.5, verticalAlign: "middle" }} />
                   COLABORADOR
                 </Typography>
               </Grid>
-              <Grid item xs={3}>
+              <Grid item xs={2.5}>
                 <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px" }}>
                   <EmailIcon sx={{ fontSize: "16px", mr: 0.5, verticalAlign: "middle" }} />
                   CORREO
                 </Typography>
               </Grid>
-              <Grid item xs={2}>
+              <Grid item xs={2.6}>
                 <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px" }}>
                   <BadgeIcon sx={{ fontSize: "16px", mr: 0.5, verticalAlign: "middle" }} />
                   MATRÍCULA
@@ -386,13 +398,13 @@ const Collaborators = ({ collapsed }) => {
                           />
                         </Grid>
                         
-                        <Grid item xs={2.5}>
+                        <Grid item xs={2}>
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                             <Avatar 
                               sx={{ 
                                 width: 40, 
                                 height: 40, 
-                                bgcolor: getAvatarColor(c.name),
+                                bgcolor: getMappedColor(c.color),
                                 color: "#fff",
                                 fontWeight: "600",
                                 fontSize: "14px"
@@ -420,7 +432,7 @@ const Collaborators = ({ collapsed }) => {
                           </Box>
                         </Grid>
                         
-                        <Grid item xs={3}>
+                        <Grid item xs={2.5}>
                           <Typography sx={{ 
                             color: "#ccc", 
                             fontSize: "14px",
@@ -430,7 +442,7 @@ const Collaborators = ({ collapsed }) => {
                           </Typography>
                         </Grid>
                         
-                        <Grid item xs={2}>
+                        <Grid item xs={3}>
                           <Chip
                             label={c.colaborator_code}
                             variant="outlined"
@@ -494,7 +506,7 @@ const Collaborators = ({ collapsed }) => {
         transformOrigin={{ vertical: "top", horizontal: "right" }}
         PaperProps={{
           sx: {
-            backgroundColor: "#2A2D31",
+            backgroundColor: "#4d4a49ff",
             border: "1px solid #404040",
             boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
           }
@@ -506,7 +518,7 @@ const Collaborators = ({ collapsed }) => {
             handleMenuClose();
           }}
           sx={{
-            color: "#ccc",
+            color: "white",
             "&:hover": {
               backgroundColor: "#353842",
               color: "#F8820B"
@@ -521,7 +533,7 @@ const Collaborators = ({ collapsed }) => {
             handleMenuClose();
           }}
           sx={{
-            color: "#ccc",
+            color: "white",
             "&:hover": {
               backgroundColor: "#353842",
               color: "#FF3B30"
