@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Modal } from 'antd';
 import './LogoutModal.css';
@@ -6,66 +6,30 @@ import './LogoutModal.css';
 const LogoutModal = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isVisible, setIsVisible] = useState(true);
   
-  // Obtain the previous route to return if the user cancels
   const from = location.state?.from || '/home';
 
-  // Function to handle confirmed logout
   const handleLogout = () => {
     try {
-      // Ensure logout actions are performed
       localStorage.removeItem('authToken');
       sessionStorage.removeItem('authToken');
       localStorage.removeItem('user');
-
-      // Navigate to logout route
-      navigate('/logout', { 
-        state: { from: location.pathname } 
-      });
+      navigate('/logout', { state: { from: location.pathname } });
     } catch (error) {
       console.error('Logout error:', error);
-      // Fallback navigation if something goes wrong
       navigate('/login');
     }
   };
 
-  // Function to cancel and return to the previous page
   const handleCancel = () => {
     navigate(from);
   };
 
-  // Debugging: Log location state
-  useEffect(() => {
-    console.log('Location state:', location.state);
-  }, [location.state]);
-
-  // If accessed directly (reloading page), redirect to home
   useEffect(() => {
     if (!location.state) {
       navigate('/home');
     }
   }, [location.state, navigate]);
-
-  // Ensure modal is always visible
-  useEffect(() => {
-    const handleResize = () => {
-      setIsVisible(true);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Fallback render if something goes wrong
-  if (!isVisible) {
-    return (
-      <div className="logout-content">
-        <h1 className="logout-heading">Error al cargar el modal de cierre de sesión</h1>
-        <button onClick={() => setIsVisible(true)}>Reintentar</button>
-      </div>
-    );
-  }
 
   return (
     <Modal
@@ -73,47 +37,35 @@ const LogoutModal = () => {
       onCancel={handleCancel}
       footer={null}
       centered
-      className="logout-modal-exact"
-      width="100%"
+      className="logout-modal"
       closable={false}
-      maskStyle={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.85)', 
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0
-      }}
+      maskStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)' }}
       destroyOnClose={true}
-      style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        margin: 0, 
-        width: '100vw', 
-        height: '100vh' 
-      }}
     >
-      <div className="logout-content">
-        <h1 className="logout-heading">¿Estás seguro de que deseas cerrar sesión?</h1>
+      <div className="logout-container">
+        <div className="logout-icon">
+          <i className="bi bi-shield-exclamation"></i>
+        </div>
         
-        <div className="logout-buttons-container">
+        <h2 className="logout-title">Cerrar Sesión</h2>
+        <p className="logout-message">¿Estás seguro que deseas salir de tu cuenta?</p>
+        
+        <div className="logout-actions">
           <button 
-            className="exit-button"
+            className="btn-cancel"
+            onClick={handleCancel}
+            type="button"
+          >
+            Cancelar
+          </button>
+          
+          <button 
+            className="btn-logout"
             onClick={handleLogout}
             type="button"
           >
             <i className="bi bi-box-arrow-right"></i>
-            Salir de la aplicación
-          </button>
-          
-          <button 
-            className="return-button"
-            onClick={handleCancel}
-            type="button"
-          >
-            <i className="bi bi-arrow-return-left"></i>
-            Regresar a la aplicación
+            Cerrar Sesión
           </button>
         </div>
       </div>

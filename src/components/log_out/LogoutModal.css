@@ -1,92 +1,145 @@
-/* Modal styles */
-.logout-modal-exact .ant-modal-content {
-    background: transparent;
-    box-shadow: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
+/* === LOGOUT MODAL STYLES - DARK MODE === */
+
+.logout-modal .ant-modal-content {
+  background: linear-gradient(135deg, #302e2e 0%, #4d4a49 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.logout-modal .ant-modal-body {
+  padding: 0;
+}
+
+.logout-container {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.logout-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #FF6600 0%, #F8820B 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(255, 102, 0, 0.3);
+}
+
+.logout-icon i {
+  font-size: 28px;
+  color: white;
+}
+
+.logout-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+}
+
+.logout-message {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 28px;
+  line-height: 1.5;
+}
+
+.logout-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.btn-logout {
+  background: linear-gradient(135deg, #FF6600 0%, #F8820B 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.btn-logout:hover {
+  background: linear-gradient(135deg, #f0420d 0%, #FF6600 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(255, 102, 0, 0.4);
+}
+
+.btn-logout:active {
+  transform: translateY(0);
+}
+
+.btn-logout i {
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .logout-modal .ant-modal-content {
+    margin: 16px;
+    max-width: calc(100% - 32px);
   }
   
-  .logout-modal-exact .ant-modal-body {
-    padding: 0;
-    width: 100%;
+  .logout-container {
+    padding: 28px 20px;
   }
   
-  /* Content container */
-  .logout-content {
-    display: flex;
+  .logout-title {
+    font-size: 22px;
+  }
+  
+  .logout-icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+  }
+  
+  .logout-icon i {
+    font-size: 24px;
+  }
+  
+  .logout-actions {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
+    gap: 10px;
+  }
+  
+  .btn-cancel,
+  .btn-logout {
     width: 100%;
+    padding: 14px 20px;
   }
-  
-  /* Heading styles */
-  .logout-heading {
-    font-size: 48px;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 50px;
-    text-align: center;
-  }
-  
-  /* Buttons container */
-  .logout-buttons-container {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-  }
-  
-  /* Exit button (left button) */
-  .exit-button {
-    background-color: transparent;
-    color: #FF6D00;
-    border: 2px solid #FF6D00;
-    border-radius: 50px;
-    padding: 12px 30px;
-    font-size: 16px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .exit-button:hover {
-    background-color: #E65100;
-    color: white;
-  }
-  
-  /* Return button (right button) */
-  .return-button {
-    background-color: #F8820B;
-    color: black;
-    border: none;
-    border-radius: 50px;
-    padding: 12px 30px;
-    font-size: 16px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .return-button:hover {
-    background-color: #E65100;
-    color: white;
-  }
-  
-  /* Full screen modal styles */
-  .logout-modal-exact {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    margin: 0;
-    top: 0;
-    padding: 0;
-    height: 100vh;
-  }
+}

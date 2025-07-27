@@ -32,7 +32,7 @@ export default function Membership({ collapsed }) {
   const displayName = `${user?.name?.split(" ")[0] || ""} ${user?.last_name?.split(" ")[0] || ""}`.trim();
   const usernameInitials = user?.username?.slice(0, 2).toUpperCase() || "";
 
-      const colorMap = {
+const colorMap = {
   Rojo: "#e74c3c",
   Azul: "#3498db",
   Verde: "#2ecc71",
@@ -163,7 +163,7 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
           <Typography variant="h4" fontWeight="bold">
             Membresías
           </Typography>
-          <Typography variant="body2" color="#aaa" mt={1}>
+          <Typography sx={{fontSize: "16px"}} color="#aaa" mt={1}>
             {roleName === "Administrador"
               ? "Crea y administra tus propias membresías"
               : "Consulta las membresías disponibles"}

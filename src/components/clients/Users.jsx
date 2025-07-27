@@ -492,8 +492,8 @@ export default function Users({ collapsed }) {
           <Typography variant="h4" sx={{ fontSize: 30, fontWeight: "bold" }}>
             Clientes
           </Typography>
-          <Typography variant="body2" sx={{ fontSize: 16, color: "#ccc", mt: 1 }}>
-            Registra y gestiona tus clientes
+          <Typography variant="body2" sx={{ fontSize: "16px", color: "#ccc", mt: 1 }}>
+            Registra y gestiona los clientes del gym
           </Typography>
         </Grid>
         <Grid item xs={12} sm={7} md={5} lg={6}>
@@ -546,18 +546,25 @@ export default function Users({ collapsed }) {
       </Grid>
 
       {/* Botones de acción */}
-      <Grid container justifyContent="flex-end" spacing={2} sx={{ mb: 4 }}>
+      <Grid container justifyContent="flex-end" spacing={2} sx={{ mb: 5, marginTop: "5px" }}>
         <Grid item>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             sx={{
-              bgcolor: "#F8820B",
+              backgroundColor: "#F8820B",
               color: "black",
-              borderRadius: 2,
-              fontWeight: 800,
-              px: 2,
-              "&:hover": { bgcolor: "#FF6600", color: "#fff" },
+              borderRadius: "8px",
+              padding: "10px 20px",
+              fontWeight: "600",
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              "&:hover": {
+                backgroundColor: "#FF6600",
+                color: "white",
+              },
             }}
             onClick={abrirRegistro}
           >
@@ -568,18 +575,18 @@ export default function Users({ collapsed }) {
           <Button
             startIcon={<FilterIcon />}
             onClick={handleFilterClick}
-            sx={{
-              color: "#F8820B",
-              fontWeight: "500",
-              borderRadius: 2,
-              px: 2,
-              border: "1px solid #F8820B",
-              "&:hover": {
-                bgcolor: "#FF6600",
-                border: "1px solid #FF6600",
-                color: "white",
-              },
-            }}
+          sx={{
+            color: "#F8820B",
+            fontWeight: "Bold",
+            borderRadius: "8px",
+            padding: "10px 20px",
+            border: "1px solid #F8820B",
+            "&:hover": {
+              backgroundColor: "#FF6600",
+              border: "1px solid #FF6600",
+              color: "white",
+            },
+          }}
           >
             Filtrar
           </Button>

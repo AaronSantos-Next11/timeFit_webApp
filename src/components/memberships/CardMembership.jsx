@@ -144,8 +144,8 @@ const CardMembership = ({ collapsed, role, memberships, refreshMemberships }) =>
 
         <ModalMembership open={modalOpen} onClose={handleCloseModal} membershipId={null} role={role} />
       </>
-    );
-  }
+    )
+  } 
 
   return (
     <>
