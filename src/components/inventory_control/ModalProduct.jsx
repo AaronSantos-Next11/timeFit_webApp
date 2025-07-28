@@ -1,0 +1,966 @@
+import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, Button, Grid, Typography, MenuItem,
+  Box, Paper, Avatar, IconButton, InputAdornment
+} from "@mui/material";
+import {
+  Inventory as InventoryIcon,
+  Close as CloseIcon,
+  Edit as EditIcon,
+  Add as AddIcon,
+  QrCode as BarcodeIcon,
+  Image as ImageIcon,
+  Info as InfoIcon,
+  CloudUpload as CloudUploadIcon,
+  AttachMoney as MoneyIcon,
+  Delete as DeleteIcon
+} from "@mui/icons-material";
+
+// Categorías que coinciden con la base de datos
+const categories = [
+  "Equipamento",
+  "Suplementos", 
+  "Ropa",
+  "Accesorios",
+  "Bebidas",
+  "Otros"
+];
+
+// Colores que coinciden con la base de datos
+const colorOptions = [
+  { name: "Azul", value: "Azul", color: "#2196F3" },
+  { name: "Verde", value: "Verde", color: "#4CAF50" },
+  { name: "Naranja", value: "Naranja", color: "#FF9800" },
+  { name: "Rojo", value: "Rojo", color: "#F44336" },
+  { name: "Morado", value: "Morado", color: "#9C27B0" },
+  { name: "Turquesa", value: "Turquesa", color: "#1abc9c" },
+  { name: "Rosa", value: "Rosa", color: "#E91E63" },
+  { name: "Amarillo", value: "Amarillo", color: "#f1c40f" },
+  { name: "Cian", value: "Cian", color: "#00acc1" },
+  { name: "Lima", value: "Lima", color: "#cddc39" }
+];
+
+// Unidades que coinciden con la base de datos
+const unitOptions = [
+  "pieza",
+  "kg",
+  "litro", 
+  "gramo",
+  "paquete",
+  "caja"
+];
+
+// Estados que coinciden con la base de datos
+const statusOptions = [
+  "Activo",
+  "Inactivo",
+  "Agotado",
+  "Cancelado"
+];
+
+const currencyOptions = [
+  "MXN",
+  "USD",
+  "EUR"
+];
+
+const ModalProduct = ({ open, onClose, productId, role, refreshProducts }) => {
+  const [form, setForm] = useState({
+    name_product: "",
+    category: "",
+    cardColor: "Azul", // Cambiado de 'color' a 'cardColor' para coincidir con BD
+    barcode: "",
+    stock: {
+      quantity: "",
+      unit: "pieza"
+    },
+    price: {
+      amount: "",
+      currency: "MXN"
+    },
+    purchase_date: new Date().toISOString().split('T')[0],
+    status: "Activo",
+    supplier_id: "",
+    image_url: "",
+  });
+
+  const [errors, setErrors] = useState({});
+  const [imagePreview, setImagePreview] = useState("");
+  const [suppliers, setSuppliers] = useState([]);
+
+  const API = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem("token");
+
+  const validate = () => {
+    const newErrors = {};
+    if (!form.name_product.trim()) newErrors.name_product = "Nombre del producto requerido";
+    if (!form.category) newErrors.category = "Categoría requerida";
+    if (!form.cardColor) newErrors.cardColor = "Color requerido";
+    if (!form.stock.quantity || form.stock.quantity <= 0) newErrors.stock_quantity = "Cantidad de stock inválida";
+    if (!form.stock.unit) newErrors.stock_unit = "Unidad de medida requerida";
+    if (!form.price.amount || form.price.amount <= 0) newErrors.price_amount = "Precio inválido";
+    if (!form.price.currency) newErrors.price_currency = "Moneda requerida";
+    if (!form.status) newErrors.status = "Estado requerido";
+    if (!form.supplier_id) newErrors.supplier_id = "Proveedor requerido";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Cargar proveedores y producto (si existe)
+  useEffect(() => {
+    if (open) {
+      // Cargar los proveedores
+      fetch(`${API}/api/suppliers/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.suppliers) {
+            setSuppliers(data.suppliers);
+          }
+        })
+        .catch((err) => console.error("Error al obtener proveedores:", err));
+
+      // Si hay productId, cargar el producto para editar
+      if (productId) {
+        fetch(`${API}/api/products/${productId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.product) {
+              const product = data.product;
+              
+              setForm({
+                name_product: product.name_product || "",
+                category: product.category || "",
+                cardColor: product.cardColor || "Azul",
+                barcode: product.barcode || "",
+                stock: {
+                  quantity: product.stock?.quantity || "",
+                  unit: product.stock?.unit || "pieza"
+                },
+                price: {
+                  amount: product.price?.amount || "",
+                  currency: product.price?.currency || "MXN"
+                },
+                purchase_date: product.purchase_date 
+                  ? new Date(product.purchase_date).toISOString().split('T')[0]
+                  : new Date().toISOString().split('T')[0],
+                status: product.status || "Activo",
+                supplier_id: product.supplier_id?._id || product.supplier_id || "",
+                image_url: product.image_url || "",
+              });
+              setImagePreview(product.image_url || "");
+            }
+          })
+          .catch((err) => console.error("Error al obtener producto:", err));
+      } else {
+        // Resetear form para nuevo producto
+        setForm({
+          name_product: "",
+          category: "",
+          cardColor: "Azul",
+          barcode: "",
+          stock: {
+            quantity: "",
+            unit: "pieza"
+          },
+          price: {
+            amount: "",
+            currency: "MXN"
+          },
+          purchase_date: new Date().toISOString().split('T')[0],
+          status: "Activo",
+          supplier_id: "",
+          image_url: "",
+        });
+        setImagePreview("");
+        setErrors({});
+      }
+    }
+  }, [productId, open, API, token]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setForm(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // Función para leer archivo como base64
+  const readFileAsDataURL = (file) => {
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert("La imagen no debe superar los 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64String = event.target.result;
+      setForm(prev => ({ ...prev, image_url: base64String }));
+      setImagePreview(base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Función para manejar la carga de la imagen desde input file
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      readFileAsDataURL(file);
+    } else if (file) {
+      alert("Solo se permiten archivos de imagen");
+    }
+  };
+
+  // Función para manejar el pegado de imágenes
+  const handlePaste = (e) => {
+    if (readonly) return;
+
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        readFileAsDataURL(file);
+        e.preventDefault();
+        break;
+      }
+    }
+  };
+
+  // Función para manejar el arrastre sobre el área
+  const handleDragOver = (e) => {
+    if (readonly) return;
+    e.preventDefault();
+  };
+
+  // Función para manejar el soltar archivos
+  const handleDrop = (e) => {
+    if (readonly) return;
+
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith("image/")) {
+        readFileAsDataURL(file);
+      } else {
+        alert("Solo se permiten archivos de imagen");
+      }
+    }
+  };
+
+  // Función para remover la imagen
+  const removeImage = () => {
+    if (readonly) return;
+    setImagePreview("");
+    setForm(prev => ({ ...prev, image_url: "" }));
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+
+    const productData = {
+      name_product: form.name_product.trim(),
+      category: form.category,
+      cardColor: form.cardColor,
+      barcode: form.barcode?.trim() || "",
+      stock: {
+        quantity: Number(form.stock.quantity),
+        unit: form.stock.unit
+      },
+      price: {
+        amount: Number(form.price.amount),
+        currency: form.price.currency
+      },
+      purchase_date: form.purchase_date,
+      status: form.status,
+      supplier_id: form.supplier_id || null,
+      image_url: form.image_url || "",
+      ...(productId && { id: productId }),
+    };
+
+    try {
+      let response;
+      if (productId) {
+        // Actualizar producto existente
+        response = await fetch(`${API}/api/products/update`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(productData),
+        });
+      } else {
+        // Crear nuevo producto
+        response = await fetch(`${API}/api/products/create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(productData),
+        });
+      }
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(`Error al guardar el producto: ${responseData.message || response.statusText}`);
+      }
+
+      // Cerrar modal y refrescar lista
+      onClose();
+      if (refreshProducts) {
+        refreshProducts();
+      }
+    } catch (error) {
+      console.error("Error al guardar el producto:", error);
+      alert(`Error al guardar el producto: ${error.message}`);
+    }
+  };
+
+  const readonly = role !== "Administrador";
+
+  return (
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      fullWidth 
+      maxWidth="md"
+      PaperProps={{
+        sx: {
+          bgcolor: "#1a1a1a",
+          borderRadius: "16px",
+          border: "1px solid #333",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
+        }
+      }}
+    >
+      {/* Header */}
+      <DialogTitle sx={{ 
+        bgcolor: "linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%)",
+        color: "#fff",
+        p: 0,
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        <Box sx={{ 
+          background: "#FF6600",
+          p: 3,
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          position: "relative"
+        }}>
+          <Avatar sx={{ 
+            bgcolor: "rgba(255,255,255,0.2)", 
+            color: "rgba(14, 14, 14, 1)",
+            width: 48,
+            height: 48
+          }}>
+            <InventoryIcon />
+          </Avatar>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h5" sx={{ fontWeight: "bold", color: "black" }}>
+              {productId ? "Editar Producto" : "Nuevo Producto"}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "rgba(3, 3, 3, 0.8)", fontWeight: "bold" }}>
+              {productId ? "Modificar los datos del producto" : "Registrar un nuevo producto en el inventario"}
+            </Typography>
+          </Box>
+          <IconButton 
+            onClick={onClose}
+            sx={{ 
+              color: "#fff",
+              bgcolor: "rgba(255,255,255,0.1)",
+              "&:hover": { bgcolor: "rgba(255,255,255,0.2)" }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+
+      <DialogContent sx={{ 
+        bgcolor: "#1a1a1a", 
+        color: "#fff",
+        p: 3
+      }}>
+        <Grid container spacing={3}>
+          {/* Información General */}
+          <Grid item xs={12}>
+            <Paper sx={{ 
+              p: 2, 
+              bgcolor: "#2a2a2a", 
+              borderRadius: "12px",
+              border: "1px solid #333"
+            }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <InfoIcon sx={{ color: "#F8820B" }} />
+                <Typography variant="h6" sx={{ color: "#F8820B", fontWeight: "bold" }}>
+                  Información General
+                </Typography>
+              </Box>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Nombre del Producto
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    name="name_product"
+                    value={form.name_product}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    error={!!errors.name_product}
+                    helperText={errors.name_product}
+                    placeholder="Ej: Proteína Whey 1kg"
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      },
+                      "& .MuiInputBase-input": { color: "#000" }
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Categoría
+                  </Typography>
+                  <TextField
+                    select
+                    fullWidth
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    error={!!errors.category}
+                    helperText={errors.category}
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      }
+                    }}
+                  >
+                    {categories.map((category) => (
+                      <MenuItem key={category} value={category}>
+                        {category}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Color de Identificación
+                  </Typography>
+                  <TextField
+                    select
+                    fullWidth
+                    name="cardColor"
+                    value={form.cardColor}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    error={!!errors.cardColor}
+                    helperText={errors.cardColor}
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      }
+                    }}
+                  >
+                    {colorOptions.map((c) => (
+                      <MenuItem key={c.value} value={c.value}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                          <Box
+                            sx={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: "50%",
+                              bgcolor: c.color,
+                              border: "2px solid #fff",
+                              boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                            }}
+                          />
+                          {c.name}
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Proveedor
+                  </Typography>
+                  <TextField
+                    select
+                    fullWidth
+                    name="supplier_id"
+                    value={form.supplier_id}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    error={!!errors.supplier_id}
+                    helperText={errors.supplier_id}
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      }
+                    }}
+                  >
+                    {suppliers.map((supplier) => (
+                      <MenuItem key={supplier._id} value={supplier._id}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                          {supplier.name}
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Stock y Precio */}
+          <Grid item xs={12}>
+            <Paper sx={{ 
+              p: 2, 
+              bgcolor: "#2a2a2a", 
+              borderRadius: "12px",
+              border: "1px solid #333"
+            }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <MoneyIcon sx={{ color: "#F8820B" }} />
+                <Typography variant="h6" sx={{ color: "#F8820B", fontWeight: "bold" }}>
+                  Stock y Precio
+                </Typography>
+              </Box>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={4}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Cantidad en Stock
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    name="stock.quantity"
+                    type="number"
+                    value={form.stock.quantity}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    error={!!errors.stock_quantity}
+                    helperText={errors.stock_quantity}
+                    placeholder="100"
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      },
+                      "& .MuiInputBase-input": { color: "#000" }
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={4}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Unidad de Medida
+                  </Typography>
+                  <TextField
+                    select
+                    fullWidth
+                    name="stock.unit"
+                    value={form.stock.unit}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    error={!!errors.stock_unit}
+                    helperText={errors.stock_unit}
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      }
+                    }}
+                  >
+                    {unitOptions.map((unit) => (
+                      <MenuItem key={unit} value={unit}>
+                        {unit}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={12} md={4}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Estado
+                  </Typography>
+                  <TextField
+                    select
+                    fullWidth
+                    name="status"
+                    value={form.status}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    error={!!errors.status}
+                    helperText={errors.status}
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      }
+                    }}
+                  >
+                    {statusOptions.map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {status}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Precio Unitario
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    name="price.amount"
+                    type="number"
+                    value={form.price.amount}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    error={!!errors.price_amount}
+                    helperText={errors.price_amount}
+                    placeholder="500.00"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <MoneyIcon sx={{ color: "#F8820B" }} />
+                        </InputAdornment>
+                      )
+                    }}
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      },
+                      "& .MuiInputBase-input": { color: "#000" }
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Moneda
+                  </Typography>
+                  <TextField
+                    select
+                    fullWidth
+                    name="price.currency"
+                    value={form.price.currency}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    error={!!errors.price_currency}
+                    helperText={errors.price_currency}
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      }
+                    }}
+                  >
+                    {currencyOptions.map((currency) => (
+                      <MenuItem key={currency} value={currency}>
+                        {currency}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Detalles Adicionales */}
+          <Grid item xs={12}>
+            <Paper sx={{ 
+              p: 2, 
+              bgcolor: "#2a2a2a", 
+              borderRadius: "12px",
+              border: "1px solid #333"
+            }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <BarcodeIcon sx={{ color: "#F8820B" }} />
+                <Typography variant="h6" sx={{ color: "#F8820B", fontWeight: "bold" }}>
+                  Detalles Adicionales
+                </Typography>
+              </Box>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Código de Barras
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    name="barcode"
+                    value={form.barcode}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    placeholder="Código de barras (opcional)"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <BarcodeIcon sx={{ color: "#F8820B" }} />
+                        </InputAdornment>
+                      )
+                    }}
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      },
+                      "& .MuiInputBase-input": { color: "#000" }
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography sx={{ color: "#F8820B", fontWeight: "600", mb: 1 }}>
+                    Fecha de Compra
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    name="purchase_date"
+                    type="date"
+                    value={form.purchase_date}
+                    onChange={handleChange}
+                    disabled={readonly}
+                    sx={{ 
+                      "& .MuiOutlinedInput-root": {
+                        bgcolor: "#fff",
+                        borderRadius: "8px",
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#F8820B" },
+                        "&.Mui-focused fieldset": { borderColor: "#F8820B" }
+                      },
+                      "& .MuiInputBase-input": { color: "#000" }
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Imagen del Producto */}
+          <Grid item xs={12}>
+            <Paper sx={{ 
+              p: 2, 
+              bgcolor: "#2a2a2a", 
+              borderRadius: "12px",
+              border: "1px solid #333"
+            }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                <ImageIcon sx={{ color: "#F8820B" }} />
+                <Typography variant="h6" sx={{ color: "#F8820B", fontWeight: "bold" }}>
+                  Imagen del Producto
+                </Typography>
+              </Box>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <input
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    id="image-upload"
+                    type="file"
+                    onChange={handleImageUpload}
+                    disabled={readonly}
+                  />
+                  <label htmlFor="image-upload">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      fullWidth
+                      disabled={readonly}
+                      startIcon={<CloudUploadIcon />}
+                      sx={{
+                        color: "#F8820B",
+                        borderColor: "#F8820B",
+                        "&:hover": { borderColor: "#F8820B", bgcolor: "rgba(248, 130, 11, 0.1)" },
+                        py: 2
+                      }}
+                    >
+                      Subir Imagen
+                    </Button>
+                  </label>
+                  <Typography variant="body2" sx={{ color: "#ccc", mt: 1, textAlign: "center" }}>
+                    Formatos: JPG, PNG. Máximo 5MB
+                  </Typography>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Box 
+                    onPaste={handlePaste}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    sx={{
+                      width: "100%",
+                      height: 120,
+                      bgcolor: "#1a1a1a",
+                      borderRadius: "8px",
+                      border: "2px dashed #F8820B",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      position: "relative",
+                      cursor: readonly ? "default" : "pointer"
+                    }}
+                  >
+                    {imagePreview ? (
+                      <>
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: "100%",
+                            objectFit: "contain"
+                          }}
+                        />
+                        {!readonly && (
+                          <IconButton
+                            onClick={removeImage}
+                            sx={{
+                              position: "absolute",
+                              top: 4,
+                              right: 4,
+                              bgcolor: "rgba(0, 0, 0, 0.7)",
+                              color: "#ff4444",
+                              width: 28,
+                              height: 28,
+                              "&:hover": { 
+                                bgcolor: "rgba(0, 0, 0, 0.9)",
+                                color: "#ff0000"
+                              }
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </>
+                    ) : (
+                      <Typography sx={{ color: "#777", textAlign: "center", px: 2 }}>
+                        {readonly 
+                          ? "No hay imagen seleccionada" 
+                          : "Selecciona una imagen, arrástrala aquí o pégala con Ctrl+V"
+                        }
+                      </Typography>
+                    )}
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+      </DialogContent>
+
+      <DialogActions sx={{ 
+        bgcolor: "#1a1a1a", 
+        p: 3,
+        borderTop: "1px solid #333"
+      }}>
+        <Button 
+          onClick={onClose}
+          sx={{ 
+            color: "#FF6600",
+            borderColor: "#FF6600",
+            "&:hover": { borderColor: "#FF6600", bgcolor: "#FF6600", color: "#fff", fontWeight: "bold" }
+          }}
+          variant="outlined"
+        >
+          Cancelar
+        </Button>
+        {role === "Administrador" && (
+          <Button 
+            onClick={handleSave} 
+            variant="contained"
+            startIcon={productId ? <EditIcon /> : <AddIcon />}
+            sx={{ 
+              background: "#F8820B",
+              color: "black",
+              fontWeight: "bold",
+              px: 3,
+              borderRadius: "8px",
+              "&:hover": { 
+                borderColor: "#FF6600", bgcolor: "#FF6600", color: "black", fontWeight: "bold"
+              }
+            }}
+          >
+            {productId ? "Actualizar" : "Registrar"}
+          </Button>
+        )}
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+ModalProduct.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  productId: PropTypes.string,                // null o el id del producto
+  role: PropTypes.string.isRequired,          // "Administrador" o "Colaborador"
+  refreshProducts: PropTypes.func,            // función para refrescar la lista de productos
+};
+
+export default ModalProduct;

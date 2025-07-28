@@ -1,385 +1,274 @@
-import React, { useState } from "react";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Box,
-  InputBase,
-  IconButton,
-  Avatar,
-  Badge,
-  Paper,
-  Grid,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import CardProduct from "./CardProduct";
+import ModalProduct from "./ModalProduct";
+import TableVentas from "./TableVentas";
+import CardProveedores from "./CardProveedores";
+import { 
+  Grid, 
+  Typography, 
+  Box, 
+  Avatar, 
+  ButtonGroup,
+  Button
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import ChatIcon from "@mui/icons-material/Chat";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import "./InventoryControl.css";
+import AccountCircle from "@mui/icons-material/AccountCircle";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import BusinessIcon from "@mui/icons-material/Business";
 
-const InventoryControl = () => {
-  // Estado para la página actual
-  const [currentPage, setCurrentPage] = useState(2);
-  
+export default function InventoryControl({ collapsed }) {
+  const [products, setProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [activeTab, setActiveTab] = useState("productos"); // productos, ventas, proveedores
 
-  // Datos de muestra
-  const inventorySummary = {
-    categories: {
-      count: 14,
-      period: "Últimos 7 días",
-    },
-    products: {
-      count: 345,
-      period: "Últimos 7 días",
-      income: "$15,000 MXN",
-    },
-    topSelling: {
-      count: 3,
-      period: "Últimos 7 días",
-      cost: "$2,450 MXN",
-    },
-    lowStock: {
-      ordered: 7,
-      insufficient: 2,
-    },
-  };
+  const API = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem("token");
 
-  const products = [
-    {
-      id: 1,
-      name: "Proteína Whey",
-      price: "$1,299.00 MXN",
-      quantity: "43 Unidades",
-      category: "Suplementos",
-      code: "12334567777",
-      purchaseDate: "11/09/24",
-      status: "Disponible",
-    },
-    {
-      id: 2,
-      name: "Barras Proteicas",
-      price: "$349.00 MXN",
-      quantity: "22 Cajas",
-      category: "Snacks",
-      code: "98765432111",
-      purchaseDate: "21/10/24",
-      status: "Agotado",
-    }
-  ];
-
-  // Manejo de cambio de página
-  const handlePageChange = (event, value) => {
-    setCurrentPage(value);
-  };
-
-  // Obtener datos del usuario logeado (como en Home.jsx)
-  let admin = null;
+  // --- Lectura segura del usuario (admin o colaborador) ---
+  let user = null;
   try {
-    const adminDataString =
-      localStorage.getItem("user") || sessionStorage.getItem("user");
-    admin = adminDataString ? JSON.parse(adminDataString) : null;
+    const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+    user = raw ? JSON.parse(raw) : null;
   } catch {
-    admin = null;
+    user = null;
   }
+  const roleName = user?.role?.role_name || "Rol desconocido";
+  const displayName = `${user?.name?.split(" ")[0] || ""} ${user?.last_name?.split(" ")[0] || ""}`.trim();
+  const usernameInitials = user?.username?.slice(0, 2).toUpperCase() || "";
 
-  const getInitials = (username) => {
-    if (!username) return "";
-    return username.slice(0, 2).toUpperCase();
+  const colorMap = {
+    Rojo: "#e74c3c",
+    Azul: "#3498db",
+    Verde: "#2ecc71",
+    Amarillo: "#f1c40f",
+    Morado: "#9b59b6",
+    Naranja: "#e67e22",
+    Rosa: "#e91e63",
+    Durazno: "#ffb74d",
+    Turquesa: "#1abc9c",
+    RojoVino: "#880e4f",
+    Lima: "#cddc39",
+    Cian: "#00acc1",
+    Lavanda: "#9575cd",
+    Magenta: "#d81b60",
+    Coral: "#ff7043",
   };
 
-  const getFirstNameAndLastName = (name, last_name) => {
-    if (!name || !last_name) return "Usuario";
-    const firstName = name.split(" ")[0];
-    const firstLastName = last_name.split(" ")[0];
-    return `${firstName} ${firstLastName}`;
+  const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
+
+  // --- Fetch productos con fallback a [] ---
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${API}/api/products/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        console.warn("No se pudieron cargar los productos:", res.status);
+        setProducts([]);
+        return;
+      }
+      const data = await res.json();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error al obtener productos:", err);
+      setProducts([]);
+    }
   };
 
-  const displayName = admin ? getFirstNameAndLastName(admin.name, admin.last_name) : "Usuario";
-  const roleName = admin?.role?.role_name || "Rol desconocido";
-  const usernameInitials = admin ? getInitials(admin.username) : "";
+  // --- Fetch proveedores con fallback a [] ---
+  const fetchSuppliers = async () => {
+    try {
+      const res = await fetch(`${API}/api/suppliers/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        console.warn("No se pudieron cargar los proveedores:", res.status);
+        setSuppliers([]);
+        return;
+      }
+      const data = await res.json();
+      setSuppliers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error al obtener proveedores:", err);
+      setSuppliers([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    fetchSuppliers();
+  }, []);
+
+  // --- Handlers de modal ---
+  const openCreateModal = () => {
+    if (!user?.gym) {
+      alert("Primero registra tu gimnasio");
+      return;
+    }
+    setSelectedProductId(null);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (id) => {
+    if (!user?.gym) {
+      alert("Primero registra tu gimnasio");
+      return;
+    }
+    setSelectedProductId(id);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedProductId(null);
+    fetchProducts();
+  };
 
   return (
-    <div className="inventory-control-container">
+    <>
       {/* Header */}
-      <AppBar position="static" color="transparent" elevation={0} className="app-bar">
-        <Toolbar className="toolbar">
-          <div className="header-left">
-            <Typography variant="h5" component="h1" className="title">
-              Control de Inventario
-            </Typography>
-            <Typography variant="body2" className="subtitle">
-              Administrar el inventario de productos del gimnasio.
-            </Typography>
-          </div>
-
-          <Box className="search-bar">
-            
-            <IconButton type="submit" size="small">
-              <SearchIcon className="search-icon" />
-              <InputBase placeholder="Buscar un producto..." fullWidth />
-            </IconButton>
-          </Box>
-
-          {/* Notification and Profile */}
-          <div className="header-right">
-            <IconButton className="icon-button">
-              <ChatIcon />
-            </IconButton>
-            <IconButton className="icon-button">
-              <Badge badgeContent={0} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-            <div className="user-profile">
-              <div className="user-info">
-                <Typography variant="subtitle1" className="user-name">
-                  {displayName}
-                </Typography>
-                <Typography variant="body2" className="user-role">
-                  {roleName}
-                </Typography>
-              </div>
-              <Avatar className="avatar">{usernameInitials}</Avatar>
-            </div>
-          </div>
-        </Toolbar>
-      </AppBar>
-
-      {/* Summary Section */}
-      <Paper className="summary-paper">
-        <div className="summary-header">
-          <Typography variant="h6" className="summary-title">
-            Resumen de su inventario del gimnasio
+      <Grid container alignItems="center" justifyContent="space-between" sx={{ padding: "10px 0 20px 0" }}>
+        <Grid item sx={{ marginRight: "2px" }}>
+          <Typography variant="h4" fontWeight="bold">
+            Control de Inventario
           </Typography>
-          <Button variant="outlined" startIcon={<FilterListIcon />} className="filter-button">
-            Filtrar
-          </Button>
-        </div>
-
-        <Grid container spacing={0} className="summary-container">
-          {/* Categories */}
-          <Grid item xs={3} className="summary-item">
-            <Typography variant="h6" className="summary-item-title categories-title">
-              Categorias
-            </Typography>
-            <Typography variant="h4" className="summary-item-value">
-              {inventorySummary.categories.count}
-            </Typography>
-            <Typography variant="body2" className="summary-item-label">
-              {inventorySummary.categories.period}
-            </Typography>
-          </Grid>
-
-          {/* Total Products */}
-          <Grid item xs={3} className="summary-item">
-            <Typography variant="h6" className="summary-item-title products-title">
-              Total de productos
-            </Typography>
-            <div className="low-stock-counts">
-              <div className="low-stock-item">
-                <Typography variant="h4" className="summary-item-value">
-                  {inventorySummary.products.count}
-                </Typography>
-                <Typography variant="body2" className="summary-item-period">
-                  {inventorySummary.products.period}
-                </Typography>
-              </div>
-              <div className="low-stock-item">
-                <Typography variant="h4" className="summary-item-income">
-                  {inventorySummary.products.income}
-                </Typography>
-                <Typography variant="body2" className="summary-item-label">
-                  Ingreso
-                </Typography>
-              </div>
-            </div>
-          </Grid>
-
-          {/* Top Selling Products */}
-          <Grid item xs={3} className="summary-item">
-            <Typography variant="h6" className="summary-item-title top-selling-title">
-              Productos mas vendidos
-            </Typography>
-            <div className="low-stock-counts">
-              <div className="low-stock-item">
-                <Typography variant="h4" className="summary-item-value">
-                  {inventorySummary.topSelling.count}
-                </Typography>
-                <Typography variant="body2" className="summary-item-period">
-                  {inventorySummary.topSelling.period}
-                </Typography>
-              </div>
-              <div className="low-stock-item">
-                <Typography variant="h" className="summary-item-income">
-                  {inventorySummary.topSelling.cost}
-                </Typography>
-                <Typography variant="body2" className="summary-item-label">
-                  Costo
-                </Typography>
-              </div>
-            </div>
-          </Grid>
-
-          {/* Low Stock */}
-          <Grid item xs={3} className="summary-item">
-            <Typography variant="h6" className="summary-item-title low-stock-title">
-              Bajo Stocks
-            </Typography>
-            <div className="low-stock-counts">
-              <div className="low-stock-item">
-                <Typography variant="h4" className="summary-item-value">
-                  {inventorySummary.lowStock.ordered}
-                </Typography>
-                <Typography variant="body2" className="summary-item-label">
-                  Ordenados
-                </Typography>
-              </div>
-              <div className="low-stock-item">
-                <Typography variant="h4" className="summary-item-value">
-                  {inventorySummary.lowStock.insufficient}
-                </Typography>
-                <Typography variant="body2" className="summary-item-label">
-                  Insuficientes
-                </Typography>
-              </div>
-            </div>
-          </Grid>
+          <Typography sx={{ fontSize: "16px" }} color="#aaa" mt={1} mr={1}>
+            {roleName === "Administrador"
+              ? "Administra productos, controla el inventario y gestiona proveedores de tu gimnasio"
+              : "Consulta los productos disponibles en el inventario"}
+          </Typography>
         </Grid>
-      </Paper>
 
-      {/* Products Table */}
-      <Paper className="products-paper">
-        <div className="products-header">
-          <Typography variant="h6" className="products-title">
+        <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box textAlign="right">
+            <Typography fontSize={20} color="#F8820B" fontWeight="bold">
+              {displayName}
+            </Typography>
+            <Typography variant="body2" fontSize={15} color="#ccc">
+              {roleName}
+            </Typography>
+          </Box>
+          {usernameInitials ? (
+            <Avatar 
+              sx={{ 
+                width: 50, 
+                height: 50, 
+                bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300", 
+              }}
+            >
+              {usernameInitials}
+            </Avatar>
+          ) : (
+            <AccountCircle sx={{ width: 50, height: 50, fontSize: 60, color: "#fff" }} />
+          )}
+        </Grid>
+      </Grid>
+
+      {/* Navigation ButtonGroup - Ocupa todo el ancho horizontal */}
+      <Box sx={{ mb: 4, mt: 2 }}>
+        <ButtonGroup
+          variant="outlined"
+          fullWidth
+          sx={{
+            "& .MuiButton-root": {
+              borderColor: "#F8820B",
+              color: "#F8820B",
+              fontWeight: "bold",
+              fontSize: "16px",
+              padding: "15px 24px",
+              backgroundColor: "transparent",
+              textTransform: "none",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                backgroundColor: "rgba(248, 130, 11, 0.1)",
+                color: "#F8820B",
+                borderColor: "#F8820B",
+                transform: "translateY(-1px)",
+                boxShadow: "0 2px 8px rgba(248, 130, 11, 0.3)",
+              },
+              "&.active": {
+                backgroundColor: "#ff4300",
+                color: "white",
+                borderColor: "#ff4300",
+                boxShadow: "0 2px 12px rgba(248, 130, 11, 0.4)",
+              },
+              "&.active:hover": {
+                backgroundColor: "#e6740a", // Un tono más oscuro del naranja
+                borderColor: "#e6740a",
+                transform: "none",
+              },
+            },
+          }}
+        >
+          <Button
+            startIcon={<InventoryIcon />}
+            onClick={() => setActiveTab("productos")}
+            className={activeTab === "productos" ? "active" : ""}
+          >
             Productos
-          </Typography>
-          <div className="products-actions">
-            <Button variant="contained" className="register-button">
-              Registrar un producto
-            </Button>
-            <Button variant="outlined" startIcon={<FilterListIcon />} className="filter-button">
-              Filtrar
-            </Button>
-            <Button variant="outlined" className="download-button">
-              Descargar todo
-            </Button>
-          </div>
-        </div>
+          </Button>
+          <Button
+            startIcon={<ReceiptIcon />}
+            onClick={() => setActiveTab("ventas")}
+            className={activeTab === "ventas" ? "active" : ""}
+          >
+            Historial de Ventas
+          </Button>
+          <Button
+            startIcon={<BusinessIcon />}
+            onClick={() => setActiveTab("proveedores")}
+            className={activeTab === "proveedores" ? "active" : ""}
+          >
+            Proveedores
+          </Button>
+        </ButtonGroup>
+      </Box>
 
-        <TableContainer>
-          <Table className="products-table">
-            <TableHead>
-              <TableRow>
-                <TableCell className="table-header">Nombre del Producto</TableCell>
-                <TableCell className="table-header">Precio</TableCell>
-                <TableCell className="table-header">Cantidad</TableCell>
-                <TableCell className="table-header">Categoría</TableCell>
-                <TableCell className="table-header">Código Producto</TableCell>
-                <TableCell className="table-header">Fecha de Compra</TableCell>
-                <TableCell className="table-header">Estatus</TableCell>
-                <TableCell className="table-header actions-header"></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id} className="table-row">
-                  <TableCell className="product-name">{product.name}</TableCell>
-                  <TableCell className="product-price">{product.price}</TableCell>
-                  <TableCell className="product-quantity">{product.quantity}</TableCell>
-                  <TableCell className="product-category">{product.category}</TableCell>
-                  <TableCell className="product-code">{product.code}</TableCell>
-                  <TableCell className="product-date">{product.purchaseDate}</TableCell>
-                  <TableCell className="product-status">
-                    <span className={`status-badge ${product.status.toLowerCase()}`}>{product.status}</span>
-                  </TableCell>
-                  <TableCell className="product-actions">
-                    <IconButton size="small" className="action-icon">
-                      <MoreVertIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+      {/* Contenido según la pestaña activa */}
+      {activeTab === "productos" && (
+        <CardProduct
+          collapsed={collapsed}
+          role={roleName}
+          products={products}
+          suppliers={suppliers}
+          onOpenModal={openEditModal}
+          onCreateModal={openCreateModal}
+          refreshProducts={fetchProducts}
+        />
+      )}
 
-        {/* Pagination */}
-        <div className="pagination-wrapper">
-          <div className="pagination-container">
-            <Button
-              className="pagination-nav-button"
-              startIcon={<KeyboardArrowLeftIcon />}
-              onClick={() => handlePageChange(null, Math.max(1, currentPage - 1))}
-            >
-              Anterior
-            </Button>
+      {activeTab === "ventas" && (
+        <TableVentas
+          collapsed={collapsed}
+          role={roleName}
+        />
+      )}
 
-            <Button
-              className={currentPage === 1 ? "pagination-button active" : "pagination-button"}
-              onClick={() => handlePageChange(null, 1)}
-            >
-              1
-            </Button>
+      {activeTab === "proveedores" && (
+        <CardProveedores
+          collapsed={collapsed}
+          role={roleName}
+          suppliers={suppliers}
+          refreshSuppliers={fetchSuppliers}
+        />
+      )}
 
-            <Button
-              className={currentPage === 2 ? "pagination-button active" : "pagination-button"}
-              onClick={() => handlePageChange(null, 2)}
-            >
-              2
-            </Button>
-
-            <Button
-              className={currentPage === 3 ? "pagination-button active" : "pagination-button"}
-              onClick={() => handlePageChange(null, 3)}
-            >
-              3
-            </Button>
-
-            <Button
-              className={currentPage === 4 ? "pagination-button active" : "pagination-button"}
-              onClick={() => handlePageChange(null, 4)}
-            >
-              4
-            </Button>
-
-            <Button
-              className={currentPage === 5 ? "pagination-button active" : "pagination-button"}
-              onClick={() => handlePageChange(null, 5)}
-            >
-              5
-            </Button>
-
-            <span className="pagination-ellipsis">...</span>
-
-            <Button
-              className={currentPage === 11 ? "pagination-button active" : "pagination-button"}
-              onClick={() => handlePageChange(null, 11)}
-            >
-              11
-            </Button>
-
-            <Button
-              className="pagination-nav-button"
-              endIcon={<KeyboardArrowRightIcon />}
-              onClick={() => handlePageChange(null, Math.min(11, currentPage + 1))}
-            >
-              Siguiente
-            </Button>
-          </div>
-        </div>
-      </Paper>
-    </div>
+      {/* Modal de Producto */}
+      <ModalProduct
+        open={modalOpen}
+        onClose={closeModal}
+        productId={selectedProductId}
+        role={roleName}
+        suppliers={suppliers}
+        refreshProducts={fetchProducts}
+      />
+    </>
   );
-};
+}
 
-export default InventoryControl;
+InventoryControl.propTypes = {
+  collapsed: PropTypes.bool.isRequired,
+};
