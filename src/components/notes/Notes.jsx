@@ -12,11 +12,17 @@ const Notes = ({ collapsed }) => {
   // ============================================================================
   const [notes, setNotes] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [modoEdicion, setModoEdicion] = useState(false);
   const [notaEditar, setNotaEditar] = useState(null);
   const [anchorElFilter, setAnchorElFilter] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // ============================================================================
+  // CONFIGURACIÓN DE API
+  // ============================================================================
+  const API = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem("token");
 
   // ============================================================================
   // DATOS DE USUARIO Y PERFIL
@@ -34,45 +40,41 @@ const Notes = ({ collapsed }) => {
   const usernameInitials = user?.username?.slice(0, 2).toUpperCase() || "";
 
   const colorMap = {
-  Rojo: "#e74c3c",
-  Azul: "#3498db",
-  Verde: "#2ecc71",
-  Amarillo: "#f1c40f",
-  Morado: "#9b59b6",
-  Naranja: "#e67e22",
-  Rosa: "#e91e63",
-  Durazno: "#ffb74d" ,
-  Turquesa: "#1abc9c",
-  RojoVino: "#880e4f" ,
-  Lima:"#cddc39",
-  Cian: "#00acc1",
-  Lavanda:"#9575cd",
-  Magenta: "#d81b60",
-  Coral: "#ff7043",
-};
+    Rojo: "#e74c3c",
+    Azul: "#3498db",
+    Verde: "#2ecc71",
+    Amarillo: "#f1c40f",
+    Morado: "#9b59b6",
+    Naranja: "#e67e22",
+    Rosa: "#e91e63",
+    Durazno: "#ffb74d",
+    Turquesa: "#1abc9c",
+    RojoVino: "#880e4f",
+    Lima: "#cddc39",
+    Cian: "#00acc1",
+    Lavanda: "#9575cd",
+    Magenta: "#d81b60",
+    Coral: "#ff7043",
+  };
 
-const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
+  const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
 
   // ============================================================================
   // FUNCIONES DE MANEJO
   // ============================================================================
   const abrirModalRegistro = () => {
-    setModoEdicion(false);
     setNotaEditar(null);
     setModalAbierto(true);
   };
 
   const abrirModalEdicion = (nota) => {
-    setModoEdicion(true);
     setNotaEditar(nota);
     setModalAbierto(true);
   };
 
   const cerrarModal = () => {
     setModalAbierto(false);
-    setModoEdicion(false);
     setNotaEditar(null);
-    fetchNotes(); // Refrescar las notas al cerrar
   };
 
   const handleFilterClick = (e) => setAnchorElFilter(e.currentTarget);
@@ -86,49 +88,96 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
   const handleSearch = (e) => setSearchTerm(e.target.value);
 
   // ============================================================================
-  // FUNCIONES DE NOTAS
+  // FUNCIONES DE API - BACKEND
   // ============================================================================
-  const fetchNotes = () => {
-    const savedNotes = localStorage.getItem("userNotes");
-    if (savedNotes) {
-      try {
-        const parsedNotes = JSON.parse(savedNotes);
-        setNotes(Array.isArray(parsedNotes) ? parsedNotes : []);
-      } catch {
-        setNotes([]);
-      }
-    } else {
+  const fetchNotes = async () => {
+    if (!token) {
+      console.warn("No hay token de autenticación");
       setNotes([]);
+      return;
     }
-  };
 
-  const handleSaveNote = (noteData) => {
-    if (modoEdicion) {
-      // Actualizar nota existente
-      const updatedNotes = notes.map((note) => (note.id === noteData.id ? noteData : note));
-      setNotes(updatedNotes);
-      localStorage.setItem("userNotes", JSON.stringify(updatedNotes));
-    } else {
-      // Crear nueva nota
-      const newNote = {
-        ...noteData,
-        id: Date.now(),
-        createdAt: new Date().toLocaleDateString("es-ES", {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API}/api/notes/all`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      // La respuesta incluye las notas en data.notes
+      const fetchedNotes = Array.isArray(data.notes) ? data.notes : [];
+      
+      // Mapear las notas del backend al formato esperado por el frontend
+      const mappedNotes = fetchedNotes.map(note => ({
+        id: note._id,
+        title: note.title,
+        content: note.content,
+        category: note.category,
+        createdAt: new Date(note.createdAt).toLocaleDateString("es-ES", {
           year: "numeric",
           month: "short",
           day: "numeric",
         }),
-      };
-      const updatedNotes = [newNote, ...notes];
-      setNotes(updatedNotes);
-      localStorage.setItem("userNotes", JSON.stringify(updatedNotes));
+        updatedAt: note.updatedAt,
+      }));
+
+      setNotes(mappedNotes);
+    } catch (error) {
+      console.error("Error al obtener las notas:", error);
+      setNotes([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteNote = (id) => {
-    const updatedNotes = notes.filter((note) => note.id !== id);
-    setNotes(updatedNotes);
-    localStorage.setItem("userNotes", JSON.stringify(updatedNotes));
+  const handleNoteSaved = async () => {
+  console.log("Nota guardada, refrescando lista...");
+  await fetchNotes();
+};
+
+  const handleDeleteNote = async (id) => {
+    if (!token) {
+      console.error("No hay token de autenticación");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API}/api/notes/delete`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Nota eliminada exitosamente:", data.message);
+      
+      // Refrescar las notas después de eliminar
+      await fetchNotes();
+      
+    } catch (error) {
+      console.error("Error al eliminar la nota:", error);
+      alert(`Error al eliminar la nota: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ============================================================================
@@ -157,7 +206,7 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
         arr.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
         break;
       case "date":
-        arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        arr.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
         break;
       default:
         break;
@@ -235,7 +284,7 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
           </Box>
           <IconButton sx={{ color: "#fff" }}>
             {usernameInitials ? (
-              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300", }}>{usernameInitials}</Avatar>
+              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300", color: "#fff", fontWeight: "bold" }}>{usernameInitials}</Avatar>
             ) : (
               <AccountCircle sx={{ width: 50, height: 50, fontSize: 60 }} />
             )}
@@ -266,6 +315,7 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
             }}
             onClick={abrirModalRegistro}
             startIcon={<AddIcon />}
+            disabled={loading}
           >
             AÑADIR NUEVA NOTA
           </Button>
@@ -286,6 +336,7 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
                 color: "white",
               },
             }}
+            disabled={loading}
           >
             Filtrar
           </Button>
@@ -301,7 +352,24 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
       {/* ========================================================================
           CONTENIDO DE NOTAS
           ======================================================================== */}
-      {notes.length === 0 ? (
+      {loading ? (
+        // ESTADO DE CARGA
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "400px",
+            textAlign: "center",
+            p: 4,
+          }}
+        >
+          <Typography variant="h6" sx={{ color: "#ccc", mb: 2 }}>
+            Cargando notas...
+          </Typography>
+        </Box>
+      ) : notes.length === 0 ? (
         // ESTADO VACÍO - Cuando no hay notas
         <Box
           sx={{
@@ -389,11 +457,10 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
           MODAL DE NOTAS
           ======================================================================== */}
       <ModalNote
-        open={modalAbierto}
-        onClose={cerrarModal}
-        modoEdicion={modoEdicion}
-        notaEditar={notaEditar}
-        onGuardadoExitoso={handleSaveNote}
+  open={modalAbierto}
+  onClose={cerrarModal}
+  noteId={notaEditar?.id} // ✅ Cambiar de modoEdicion/notaEditar a noteId
+  onGuardadoExitoso={handleNoteSaved} // ✅ Función simple que solo refresca
       />
     </Box>
   );

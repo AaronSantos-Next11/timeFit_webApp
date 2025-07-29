@@ -213,7 +213,7 @@ const CardNote = ({ note, onEdit, onDelete }) => {
                 WebkitBoxOrient: 'vertical',
                 wordBreak: 'break-word',
                 fontFamily: '"Inter", "Roboto", sans-serif',
-                overflowWrap: 'break-word', // This ensures long words are broken
+                overflowWrap: 'break-word',
               }}
             >
               {note.title || 'Sin título'}
@@ -407,7 +407,7 @@ const CardNote = ({ note, onEdit, onDelete }) => {
         }}
       >
         <DialogTitle 
-        sx={{ color: "#F8820B", fontWeight: "bold" }}
+          sx={{ color: "#F8820B", fontWeight: "bold" }}
         >
           ¿Eliminar nota?
         </DialogTitle>

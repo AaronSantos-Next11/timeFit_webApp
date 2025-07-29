@@ -36,6 +36,7 @@ import {
   Group as GroupIcon,
   Badge as BadgeIcon,
   Store as StoreIcon,
+  Delete as DeleteIcon,
 } from "@mui/icons-material";
 
 import ModalVenta from "./ModalVenta";
@@ -53,6 +54,8 @@ const TablaVentas = ({ collapsed = false }) => {
   const [ventas, setVentas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [ventaParaEliminar, setVentaParaEliminar] = useState(null);
+  const [openDeleteRecordDialog, setOpenDeleteRecordDialog] = useState(false);
   
   // Estados para paginación
   const [page, setPage] = useState(0);
@@ -60,6 +63,51 @@ const TablaVentas = ({ collapsed = false }) => {
 
   // Usar la misma estructura que CardProduct
   const API_URL = import.meta.env.VITE_API_URL;
+
+  const handleDeleteRecord = async () => {
+  if (!ventaParaEliminar) return;
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("No se encontró token de autenticación");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    
+    const response = await fetch(`${API_URL}/api/products_sales/delete`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        id: ventaParaEliminar._id,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+    }
+
+    // Cerrar diálogos y limpiar estados
+    setOpenDeleteRecordDialog(false);
+    setVentaParaEliminar(null);
+    setVentaSeleccionada(null);
+
+    // Recargar ventas
+    await fetchVentas();
+    alert("Registro eliminado exitosamente del historial");
+
+  } catch (err) {
+    console.error("Error eliminando registro:", err);
+    alert(`Error al eliminar el registro: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Obtener información del usuario del localStorage (igual que CardProduct)
   const getUserInfo = () => {
@@ -951,6 +999,24 @@ const TablaVentas = ({ collapsed = false }) => {
             Cancelar Venta
           </MenuItem>
         )}
+        {isAdmin && ventaSeleccionada?.sale_status === "Cancelada" && (
+  <MenuItem
+    onClick={() => {
+      setVentaParaEliminar(ventaSeleccionada);
+      setOpenDeleteRecordDialog(true);
+      handleMenuClose();
+    }}
+    sx={{
+      color: "white",
+      "&:hover": {
+        backgroundColor: "#353842",
+        color: "#DC143C",
+      },
+    }}
+  >
+    Eliminar Registro
+  </MenuItem>
+)}
       </Menu>
 
       {/* Modal de venta */}
@@ -1018,6 +1084,70 @@ const TablaVentas = ({ collapsed = false }) => {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Dialog de confirmación para eliminar registro */}
+<Dialog
+  open={openDeleteRecordDialog}
+  onClose={() => {
+    setOpenDeleteRecordDialog(false);
+    setVentaParaEliminar(null);
+  }}
+  PaperProps={{
+    sx: {
+      backgroundColor: "#2A2D31",
+      border: "1px solid #404040",
+      borderRadius: 3,
+      boxShadow: "0 12px 32px rgba(0,0,0,0.5)",
+    },
+  }}
+>
+  <DialogTitle sx={{ color: "#DC143C", fontWeight: "bold", display: "flex", alignItems: "center" }}>
+    <DeleteIcon sx={{ mr: 1 }} />
+    ¿Eliminar registro permanentemente?
+  </DialogTitle>
+  <DialogContent>
+    <Typography sx={{ color: "#ccc", mb: 2 }}>
+      ¿Estás seguro de que deseas eliminar permanentemente el registro de la venta <strong>"{ventaParaEliminar?.sale_code}"</strong>?
+    </Typography>
+    <Typography sx={{ color: "#ff9800", fontSize: "0.9rem", mb: 1, fontWeight: "bold" }}>
+      ⚠️ ADVERTENCIA:
+    </Typography>
+    <Typography sx={{ color: "#999", fontSize: "0.9rem" }}>
+      Esta acción eliminará completamente el registro del historial y NO se puede deshacer. 
+      El stock del producto ya fue restaurado cuando se canceló la venta.
+    </Typography>
+  </DialogContent>
+  <DialogActions sx={{ p: 2, gap: 1 }}>
+    <Button
+      onClick={() => {
+        setOpenDeleteRecordDialog(false);
+        setVentaParaEliminar(null);
+      }}
+      sx={{
+        color: "#ccc",
+        "&:hover": { backgroundColor: "#333" },
+      }}
+    >
+      Cancelar
+    </Button>
+    <Button
+      onClick={handleDeleteRecord}
+      variant="contained"
+      sx={{
+        backgroundColor: "#DC143C",
+        color: "#fff",
+        fontWeight: "bold",
+        boxShadow: "0 4px 12px rgba(220, 20, 60, 0.4)",
+        "&:hover": {
+          backgroundColor: "#B22222",
+          boxShadow: "0 6px 16px rgba(220, 20, 60, 0.6)",
+        },
+      }}
+    >
+      <DeleteIcon sx={{ mr: 1, fontSize: "16px" }} />
+      Eliminar Registro
+    </Button>
+  </DialogActions>
+</Dialog>
     </>
   );
 };
