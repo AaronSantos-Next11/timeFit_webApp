@@ -334,7 +334,7 @@ const ModalProduct = ({ open, onClose, productId, role, refreshProducts }) => {
     }
   };
 
-  const readonly = role !== "Administrador";
+  const readonly = role !== "Administrador" && !!productId;
 
   return (
     <Dialog 
@@ -931,7 +931,7 @@ const ModalProduct = ({ open, onClose, productId, role, refreshProducts }) => {
         >
           Cancelar
         </Button>
-        {role === "Administrador" && (
+        {(role === "Administrador" || !productId) && (
           <Button 
             onClick={handleSave} 
             variant="contained"

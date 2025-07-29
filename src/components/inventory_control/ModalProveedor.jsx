@@ -149,7 +149,7 @@ const ModalProveedor = ({ open, onClose, proveedor, role, refreshProveedores }) 
     }
   };
 
-  const readonly = role !== "Administrador";
+  const readonly = role !== "Administrador" && proveedor; 
 
   return (
     <Dialog
@@ -355,7 +355,7 @@ const ModalProveedor = ({ open, onClose, proveedor, role, refreshProveedores }) 
         >
           Cancelar
         </Button>
-        {role === "Administrador" && (
+        {(role === "Administrador" || !proveedor)&& (
           <>
             <Button
               onClick={handleSave}

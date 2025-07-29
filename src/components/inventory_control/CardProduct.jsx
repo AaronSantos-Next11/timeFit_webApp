@@ -39,16 +39,16 @@ import ModalProduct from "./ModalProduct";
 
 // Colores que coinciden exactamente con la base de datos
 const productColors = {
-  "Azul": "#2196F3",
-  "Verde": "#4CAF50", 
-  "Naranja": "#FF9800",
-  "Rojo": "#F44336",
-  "Morado": "#9C27B0",
-  "Turquesa": "#1abc9c",
-  "Rosa": "#E91E63",
-  "Amarillo": "#f1c40f",
-  "Cian": "#00acc1",
-  "Lima": "#cddc39"
+  Azul: "#2196F3",
+  Verde: "#4CAF50",
+  Naranja: "#FF9800",
+  Rojo: "#F44336",
+  Morado: "#9C27B0",
+  Turquesa: "#1abc9c",
+  Rosa: "#E91E63",
+  Amarillo: "#f1c40f",
+  Cian: "#00acc1",
+  Lima: "#cddc39",
 };
 
 const CardProduct = ({ collapsed = false, role = "Administrador" }) => {
@@ -231,19 +231,19 @@ const CardProduct = ({ collapsed = false, role = "Administrador" }) => {
     if (!Array.isArray(fetchedSuppliers) || fetchedSuppliers.length === 0) {
       return "Cargando proveedores...";
     }
-    
+
     // Si no hay supplierId, retornar mensaje apropiado
     if (!supplierId) {
       return "Sin proveedor asignado";
     }
-    
+
     // Buscar el proveedor por ID
     const supplier = fetchedSuppliers.find((s) => s._id === supplierId);
-    
+
     if (supplier) {
       return supplier.name || "Proveedor sin nombre";
     }
-    
+
     // Si no se encontró el proveedor pero hay un ID
     return "Proveedor no encontrado";
   };
@@ -254,7 +254,7 @@ const CardProduct = ({ collapsed = false, role = "Administrador" }) => {
     if (currentStatus === "Cancelado") {
       return "Cancelado";
     }
-    
+
     // Lógica automática basada en stock
     if (quantity === 0) {
       return "Agotado";
@@ -289,7 +289,7 @@ const CardProduct = ({ collapsed = false, role = "Administrador" }) => {
   const getStatusColor = (originalStatus, quantity) => {
     // Determinar el estado automático basado en stock
     const automaticStatus = getAutomaticStatus(quantity, originalStatus);
-    
+
     switch (automaticStatus) {
       case "Activo":
         return { label: "Activo", color: "#4CAF50" };
@@ -354,7 +354,7 @@ const CardProduct = ({ collapsed = false, role = "Administrador" }) => {
         </Grid>
 
         <Grid item sx={{ display: "flex", gap: 2 }}>
-          {role === "Administrador" && (
+          {(role === "Administrador" || role === "Colaborador") && (
             <Button
               onClick={openCreateModal}
               variant="contained"
@@ -510,17 +510,17 @@ const CardProduct = ({ collapsed = false, role = "Administrador" }) => {
             const color = getProductColor(product.cardColor);
             const stockQuantity = product.stock?.quantity || 0;
             const stockStatus = getStockStatus(stockQuantity);
-            
+
             // APLICAR NUEVA LÓGICA: Estado automático basado en stock
             const statusInfo = getStatusColor(product.status, stockQuantity);
-            
+
             const stockUnit = product.stock?.unit || "pieza";
             const price = product.price?.amount || 0;
             const currency = product.price?.currency || "MXN";
-            
+
             // 🆕 OBTENER VENTAS OBTENIDAS CON VALOR POR DEFECTO
             const salesObtained = Number(product.sales_obtained) || 0;
-            
+
             // CORRECCIÓN: Obtener el supplier_id correctamente
             const supplierId = product.supplier_id?._id || product.supplier_id;
             const supplierName = getSupplierName(supplierId);
@@ -606,24 +606,6 @@ const CardProduct = ({ collapsed = false, role = "Administrador" }) => {
                         boxShadow: `0 2px 8px ${stockStatus.color}40`,
                       }}
                     />
-
-                    {/* 🆕 Badge de ventas obtenidas */}
-                    {salesObtained > 0 && (
-                      <Chip
-                        label={`${formatSalesNumber(salesObtained)} vendidos`}
-                        size="small"
-                        sx={{
-                          position: "absolute",
-                          top: 50,
-                          left: 10,
-                          backgroundColor: "#4CAF50",
-                          color: "#fff",
-                          fontWeight: "bold",
-                          fontSize: "0.7rem",
-                          boxShadow: "0 2px 8px rgba(76, 175, 80, 0.4)",
-                        }}
-                      />
-                    )}
 
                     {/* Iconos de editar y eliminar */}
                     {role === "Administrador" && (
@@ -804,12 +786,12 @@ const CardProduct = ({ collapsed = false, role = "Administrador" }) => {
                           <Typography variant="caption" sx={{ color: "#999", fontSize: "0.7rem" }}>
                             Ventas Obtenidas
                           </Typography>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              fontWeight: "bold", 
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: "bold",
                               color: salesObtained > 0 ? "#fff" : "#fff",
-                              fontSize: "0.9rem"
+                              fontSize: "0.9rem",
                             }}
                           >
                             {formatSalesNumber(salesObtained)} {stockUnit}

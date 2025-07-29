@@ -215,7 +215,7 @@ const CardProveedores = ({ collapsed = false, role = "Administrador" }) => {
         </Grid>
 
         <Grid item sx={{ display: "flex", gap: 2 }}>
-          {role === "Administrador" && (
+          {(role === "Administrador" || role === "Colaborador") && (
             <Button
               onClick={openCreateModal}
               variant="contained"
