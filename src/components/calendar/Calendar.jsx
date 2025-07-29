@@ -180,8 +180,6 @@ export default function Calendar() {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al crear evento');
       }
-
-      const data = await response.json();
       showNotification('Evento creado exitosamente', 'success');
       
       // Recargar eventos
