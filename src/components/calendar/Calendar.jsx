@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { Search, MessageSquare, Bell, Plus, ChevronLeft, ChevronRight, X, Menu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, ChevronLeft, ChevronRight, X, Menu } from 'lucide-react';
+import {
+  Box,
+  Typography,
+  IconButton,
+  Grid,
+  Avatar,
+  Alert,
+  Snackbar
+} from '@mui/material';
+import AccountCircle from "@mui/icons-material/AccountCircle";
 import './Calendar.css';
 
 const months = [
@@ -19,6 +29,8 @@ export default function Calendar() {
   const [showEventsSidebar, setShowEventsSidebar] = useState(false);
   const [events, setEvents] = useState([]);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
   const [newEvent, setNewEvent] = useState({
     title: '',
     date: new Date(),
@@ -26,6 +38,251 @@ export default function Calendar() {
     endTime: '10:00',
     category: 'meetings'
   });
+
+  // Estados para notificaciones
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  // API URL y Token
+  const API = import.meta.env.VITE_API_URL;
+  const getToken = () => localStorage.getItem("token") || sessionStorage.getItem("token");
+
+  // Lectura segura del usuario
+  let admin = null;
+  try {
+    const adminDataString =
+      localStorage.getItem("user") || sessionStorage.getItem("user");
+    admin = adminDataString ? JSON.parse(adminDataString) : null;
+  } catch {
+    admin = null;
+  }
+
+  const colorMap = {
+    Rojo: "#e74c3c",
+    Azul: "#3498db",
+    Verde: "#2ecc71",
+    Amarillo: "#f1c40f",
+    Morado: "#9b59b6",
+    Naranja: "#e67e22",
+    Rosa: "#e91e63",
+    Durazno: "#ffb74d",
+    Turquesa: "#1abc9c",
+    RojoVino: "#880e4f",
+    Lima: "#cddc39",
+    Cian: "#00acc1",
+    Lavanda: "#9575cd",
+    Magenta: "#d81b60",
+    Coral: "#ff7043",
+  };
+
+  const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
+
+  const getInitials = (username) => {
+    if (!username) return "";
+    return username.slice(0, 2).toUpperCase();
+  };
+
+  const getFirstNameAndLastName = (name, last_name) => {
+    if (!name || !last_name) return "Usuario";
+    const firstName = name.split(" ")[0];
+    const firstLastName = last_name.split(" ")[0];
+    return `${firstName} ${firstLastName}`;
+  };
+
+  const displayName = admin ? getFirstNameAndLastName(admin.name, admin.last_name) : "Usuario";
+  const roleName = admin?.role?.role_name || "Rol desconocido";
+  const usernameInitials = admin ? getInitials(admin.username) : "";
+
+  // Funciones de notificación
+  const showNotification = (message, severity = 'success') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
+  };
+
+  // Función para cargar eventos del usuario
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const token = getToken();
+      if (!token) {
+        showNotification('No se encontró token de autenticación', 'error');
+        return;
+      }
+
+      const response = await fetch(`${API}/api/calendar/all`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al cargar eventos');
+      }
+
+      const data = await response.json();
+      
+      // Convertir los eventos del backend al formato del frontend
+      const formattedEvents = data.events.map(event => ({
+        id: event._id,
+        title: event.title,
+        date: new Date(event.event_date),
+        time: event.start_time,
+        endTime: event.end_time,
+        category: event.category
+      }));
+
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error('Error al cargar eventos:', error);
+      showNotification(error.message || 'Error al cargar eventos', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para crear evento
+  const createEvent = async (eventData) => {
+    try {
+      setLoading(true);
+      const token = getToken();
+      if (!token) {
+        showNotification('No se encontró token de autenticación', 'error');
+        return false;
+      }
+
+      const requestBody = {
+        title: eventData.title,
+        event_date: eventData.date.toISOString().split('T')[0],
+        start_time: eventData.time,
+        end_time: eventData.endTime,
+        category: eventData.category
+      };
+
+      const response = await fetch(`${API}/api/calendar/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al crear evento');
+      }
+
+      const data = await response.json();
+      showNotification('Evento creado exitosamente', 'success');
+      
+      // Recargar eventos
+      await fetchEvents();
+      return true;
+    } catch (error) {
+      console.error('Error al crear evento:', error);
+      showNotification(error.message || 'Error al crear evento', 'error');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para actualizar evento
+  const updateEvent = async (eventId, eventData) => {
+    try {
+      setLoading(true);
+      const token = getToken();
+      if (!token) {
+        showNotification('No se encontró token de autenticación', 'error');
+        return false;
+      }
+
+      const requestBody = {
+        title: eventData.title,
+        event_date: eventData.date.toISOString().split('T')[0],
+        start_time: eventData.time,
+        end_time: eventData.endTime,
+        category: eventData.category
+      };
+
+      const response = await fetch(`${API}/api/calendar/${eventId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al actualizar evento');
+      }
+
+      showNotification('Evento actualizado exitosamente', 'success');
+      
+      // Recargar eventos
+      await fetchEvents();
+      return true;
+    } catch (error) {
+      console.error('Error al actualizar evento:', error);
+      showNotification(error.message || 'Error al actualizar evento', 'error');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para eliminar evento
+  const deleteEvent = async (eventId) => {
+    try {
+      setLoading(true);
+      const token = getToken();
+      if (!token) {
+        showNotification('No se encontró token de autenticación', 'error');
+        return false;
+      }
+
+      const response = await fetch(`${API}/api/calendar/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al eliminar evento');
+      }
+
+      showNotification('Evento eliminado exitosamente', 'success');
+      
+      // Recargar eventos
+      await fetchEvents();
+      return true;
+    } catch (error) {
+      console.error('Error al eliminar evento:', error);
+      showNotification(error.message || 'Error al eliminar evento', 'error');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar eventos al montar el componente
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
   const formatDate = (date) => {
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -49,14 +306,9 @@ export default function Calendar() {
     const year = date.getFullYear();
     const month = date.getMonth();
     
-    // Obtener primer día del mes y último día del mes
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    
-    // Obtener días del mes actual
     const daysInMonth = lastDay.getDate();
-    
-    // Obtener día de la semana del primer día (0=Domingo, 6=Sábado)
     const startingDayOfWeek = firstDay.getDay();
     
     const days = [];
@@ -95,9 +347,8 @@ export default function Calendar() {
     const week = [];
     const startOfWeek = new Date(date);
     
-    // Ajustar al lunes de la semana actual
     const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Ajuste para que la semana empiece en lunes
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
     startOfWeek.setDate(diff);
 
     for (let i = 0; i < 7; i++) {
@@ -133,22 +384,21 @@ export default function Calendar() {
 
   const getCategoryColor = (category) => {
     const colors = {
-      'sales': '#FF8787',
-      'feedback': '#9775FA',
-      'reports': '#4DABF7',
-      'evaluation': '#FFD43B',
-      'maintenance': '#51CF66',
-      'training': '#FF922B',
-      'metrics': '#748FFC',
-      'special': '#F783AC',
-      'meetings': '#FAB005'
+      'sales': '#e74c3c',
+      'feedback': '#9b59b6',
+      'reports': '#880e4f',
+      'evaluation': '#2ecc7091',
+      'maintenance': '#e67d22e7',
+      'training': '#3477dbd5',
+      'metrics': '#e91e63',
+      'special': '#ccdc3975',
+      'meetings': '#00acc1'
     };
     return colors[category] || '#868E96';
   };
 
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
-    // Usar setFullYear para manejar correctamente el cambio de año
     newDate.setFullYear(
       newDate.getFullYear(),
       newDate.getMonth() + direction,
@@ -160,7 +410,6 @@ export default function Calendar() {
   const navigateWeek = (direction) => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() + (direction * 7));
-    // Verificar si cambiamos de año
     if (newDate.getFullYear() !== currentDate.getFullYear()) {
       setCurrentDate(new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()));
     } else {
@@ -171,7 +420,6 @@ export default function Calendar() {
   const navigateDay = (direction) => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() + direction);
-    // Verificar si cambiamos de mes o año
     if (newDate.getMonth() !== currentDate.getMonth() || 
         newDate.getFullYear() !== currentDate.getFullYear()) {
       setCurrentDate(new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()));
@@ -190,18 +438,7 @@ export default function Calendar() {
   };
 
   const handleAddEvent = () => {
-    setShowEventForm(true);
-  };
-
-  const handleEventSubmit = (e) => {
-    e.preventDefault();
-    const eventToAdd = {
-      ...newEvent,
-      id: Date.now(),
-      date: new Date(newEvent.date)
-    };
-    setEvents([...events, eventToAdd]);
-    setShowEventForm(false);
+    setEditingEvent(null);
     setNewEvent({
       title: '',
       date: selectedDate,
@@ -209,6 +446,42 @@ export default function Calendar() {
       endTime: '10:00',
       category: 'meetings'
     });
+    setShowEventForm(true);
+  };
+
+  const handleEditEvent = (event) => {
+    setEditingEvent(event);
+    setNewEvent({
+      title: event.title,
+      date: event.date,
+      time: event.time,
+      endTime: event.endTime,
+      category: event.category
+    });
+    setShowEventForm(true);
+  };
+
+  const handleEventSubmit = async (e) => {
+    e.preventDefault();
+    
+    let success = false;
+    if (editingEvent) {
+      success = await updateEvent(editingEvent.id, newEvent);
+    } else {
+      success = await createEvent(newEvent);
+    }
+
+    if (success) {
+      setShowEventForm(false);
+      setEditingEvent(null);
+      setNewEvent({
+        title: '',
+        date: selectedDate,
+        time: '09:00',
+        endTime: '10:00',
+        category: 'meetings'
+      });
+    }
   };
 
   const handleInputChange = (e) => {
@@ -216,8 +489,10 @@ export default function Calendar() {
     setNewEvent(prev => ({...prev, [name]: value}));
   };
 
-  const handleDeleteEvent = (id) => {
-    setEvents(events.filter(event => event.id !== id));
+  const handleDeleteEvent = async (eventId) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este evento?')) {
+      await deleteEvent(eventId);
+    }
   };
 
   const getEventPosition = (event) => {
@@ -444,33 +719,30 @@ export default function Calendar() {
           <div>
             <h1 className="header-title">Calendario</h1>
             <p className="header-subtitle">
-              Organiza y gestiona las actividades diarias del gimnasio
+              Organiza y gestiona tus actividades diarias dentro del gimnasio
             </p>
           </div>
         </div>
-        <div className="header-right">
-          <div className="search-container">
-            <Search className="search-icon" />
-            <input
-              type="text"
-              placeholder="Buscar un actividad, recordatorio, pendiente..."
-              className="search-input"
-            />
-          </div>
-          <button className="header-button">
-            <MessageSquare />
-          </button>
-          <button className="header-button">
-            <Bell />
-          </button>
-          <div className="user-info">
-            <div className="user-avatar">G</div>
-            <div>
-              <p className="user-name">Yair Guzman</p>
-              <p className="user-role">Administrador</p>
-            </div>
-          </div>
-        </div>
+        <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ textAlign: "right", marginLeft:"15px" }}>
+            <Typography sx={{ margin: 0, fontSize: "20px", color: "#F8820B", fontWeight: "bold" }}>{displayName}</Typography>
+            <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>
+              {roleName}
+            </Typography>
+          </Box>
+          <IconButton
+            aria-label="account of current user"
+            aria-controls="profile-menu"
+            aria-haspopup="true"
+            sx={{ color: "#fff" }}
+          >
+            {usernameInitials ? (
+              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(admin?.color) : "#ff4300", color: "#fff", fontWeight: "bold"  }}>{usernameInitials}</Avatar>
+            ) : (
+              <AccountCircle sx={{ fontSize: "60px" }} />
+            )}
+          </IconButton>
+        </Grid>
       </header>
 
       <div className="calendar-controls">
@@ -480,6 +752,7 @@ export default function Calendar() {
               key={viewType}
               onClick={() => setView(viewType)}
               className={`view-button ${view === viewType ? 'active' : ''}`}
+              disabled={loading}
             >
               {viewType === 'month' ? 'Mes' : viewType === 'week' ? 'Semana' : 'Día'}
             </button>
@@ -488,13 +761,13 @@ export default function Calendar() {
         
         <div className="navigation-controls">
           <div className="navigation-buttons">
-            <button onClick={() => handleNavigation(-1)} className="nav-button">
+            <button onClick={() => handleNavigation(-1)} className="nav-button" disabled={loading}>
               <ChevronLeft />
             </button>
             <div className="current-period">
               {getNavigationLabel()}
             </div>
-            <button onClick={() => handleNavigation(1)} className="nav-button">
+            <button onClick={() => handleNavigation(1)} className="nav-button" disabled={loading}>
               <ChevronRight />
             </button>
           </div>
@@ -507,6 +780,21 @@ export default function Calendar() {
 
       <div className="calendar-main">
         <div className="calendar-views">
+          {loading && (
+            <div style={{ 
+              position: 'absolute', 
+              top: '50%', 
+              left: '50%', 
+              transform: 'translate(-50%, -50%)', 
+              zIndex: 1000,
+              background: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              padding: '20px',
+              borderRadius: '8px'
+            }}>
+              Cargando...
+            </div>
+          )}
           {view === 'month' && renderMonthView()}
           {view === 'week' && renderWeekView()}
           {view === 'day' && renderDayView()}
@@ -535,9 +823,21 @@ export default function Calendar() {
                   <div className="sidebar-event-category">
                     {getCategoryLabel(event.category)}
                   </div>
-                  <button onClick={() => handleDeleteEvent(event.id)} className="sidebar-event-delete">
-                    <X />
-                  </button>
+                  <div className="sidebar-event-actions">
+                    <button 
+                      onClick={() => handleEditEvent(event)} 
+                      className="sidebar-event-edit"
+                      style={{ marginRight: '8px', backgroundColor: '#ff4300', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '12px'}}
+                    >
+                      Editar
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteEvent(event.id)} 
+                      className="sidebar-event-delete"
+                    >
+                      <X />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -550,7 +850,7 @@ export default function Calendar() {
           </div>
 
           <div className="sidebar-footer">
-            <button onClick={handleAddEvent} className="add-event-button">
+            <button onClick={handleAddEvent} className="add-event-button" disabled={loading}>
               <Plus />
             </button>
           </div>
@@ -560,7 +860,9 @@ export default function Calendar() {
           <div className="modal-overlay">
             <div className="modal-content">
               <div className="modal-header">
-                <h3 className="modal-title">Agregar nuevo evento</h3>
+                <h3 className="modal-title">
+                  {editingEvent ? 'Editar evento' : 'Agregar nuevo evento'}
+                </h3>
                 <button onClick={() => setShowEventForm(false)} className="modal-close">
                   <X />
                 </button>
@@ -575,6 +877,7 @@ export default function Calendar() {
                     onChange={handleInputChange}
                     required
                     className="form-input"
+                    disabled={loading}
                   />
                 </div>
                 <div className="form-group">
@@ -589,6 +892,7 @@ export default function Calendar() {
                     }}
                     required
                     className="form-input"
+                    disabled={loading}
                   />
                 </div>
                 <div className="form-group-row">
@@ -601,6 +905,7 @@ export default function Calendar() {
                       onChange={handleInputChange}
                       required
                       className="form-input"
+                      disabled={loading}
                     />
                   </div>
                   <div className="form-group">
@@ -612,6 +917,7 @@ export default function Calendar() {
                       onChange={handleInputChange}
                       required
                       className="form-input"
+                      disabled={loading}
                     />
                   </div>
                 </div>
@@ -622,6 +928,7 @@ export default function Calendar() {
                     value={newEvent.category}
                     onChange={handleInputChange}
                     className="form-input"
+                    disabled={loading}
                   >
                     <option value="meetings">Reuniones</option>
                     <option value="sales">Ventas</option>
@@ -639,11 +946,16 @@ export default function Calendar() {
                     type="button"
                     onClick={() => setShowEventForm(false)}
                     className="form-button secondary"
+                    disabled={loading}
                   >
                     Cancelar
                   </button>
-                  <button type="submit" className="form-button primary">
-                    Guardar Evento
+                  <button 
+                    type="submit" 
+                    className="form-button primary"
+                    disabled={loading}
+                  >
+                    {loading ? 'Guardando...' : (editingEvent ? 'Actualizar Evento' : 'Guardar Evento')}
                   </button>
                 </div>
               </form>
@@ -653,6 +965,22 @@ export default function Calendar() {
 
         {showEventsSidebar && <div className="sidebar-overlay" onClick={toggleSidebar} />}
       </div>
+
+      {/* Snackbar para notificaciones */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={closeNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={closeNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
