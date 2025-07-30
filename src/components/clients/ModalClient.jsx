@@ -14,7 +14,12 @@ import {
   Typography,
   Paper,
   Box,
+  Avatar,
 } from "@mui/material";
+
+import {
+  AccountCircle as UserIcon,
+} from '@mui/icons-material';
 
 // Estilos centralizados
 const styles = {
@@ -25,12 +30,11 @@ const styles = {
     },
   },
   header: {
-    background: "linear-gradient(135deg, #FF6600 0%, #F8820B 100%)",
-    color: "#fff",
-    fontWeight: 700,
-    fontSize: "1.4rem",
-    textAlign: "center",
-    p: 3,
+        bgcolor: 'linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%)',
+        color: '#fff',
+        p: 0,
+        position: 'relative',
+        overflow: 'hidden'
   },
   content: {
     backgroundColor: "#1d1c1c",
@@ -53,10 +57,10 @@ const styles = {
     gap: 1,
   },
   fieldLabel: {
-    color: "#fff",
-    fontWeight: 500,
+    color: "#F8820B",
+    fontWeight: 600,
     mb: 1,
-    fontSize: "0.9rem",
+    fontSize: "1rem",
   },
   textField: {
     bgcolor: "#fff",
@@ -130,6 +134,22 @@ const validatePhone = (phone) => {
 const validateEmail = (email) => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email.trim());
+};
+
+const validateAge = (birthDate) => {
+  if (!birthDate) return false;
+  
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  
+  // Ajustar la edad si aún no ha cumplido años este año
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  
+  return age >= 18;
 };
 
 // Subcomponente memoizado para evitar remontajes innecesarios
@@ -341,6 +361,8 @@ export default function ModalClient({
 
     if (!form.birth_date) {
       newErrors["birth_date"] = "La fecha de nacimiento es obligatoria";
+    } else if (!validateAge(form.birth_date)) {
+      newErrors["birth_date"] = "El cliente debe ser mayor de edad (18 años o más)";
     }
 
     // Validar email
@@ -368,6 +390,16 @@ export default function ModalClient({
 
     if (!form.start_date) {
       newErrors["start_date"] = "La fecha de inicio es obligatoria";
+    }
+
+    // Validar que la fecha de vencimiento no sea anterior a la fecha de inicio
+    if (form.start_date && form.end_date) {
+      const startDate = new Date(form.start_date);
+      const endDate = new Date(form.end_date);
+      
+      if (endDate < startDate) {
+        newErrors["end_date"] = "La fecha de vencimiento no puede ser anterior a la fecha de inicio";
+      }
     }
 
     if (!form.payment.amount || parseFloat(form.payment.amount) <= 0) {
@@ -437,7 +469,31 @@ export default function ModalClient({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth sx={styles.dialog}>
       <DialogTitle sx={styles.header}>
-        {modoEdicion ? "✏️ Editar Cliente" : "👤 Registrar Nuevo Cliente"}
+        <Box sx={{ 
+          background: '#FF6600',
+          p: 3,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          position: 'relative'
+        }}>
+        <Avatar sx={{ 
+            bgcolor: 'rgba(255,255,255,0.2)', 
+            color: 'rgba(14, 14, 14, 1)',
+            width: 48,
+            height: 48
+          }}>
+            <UserIcon />
+        </Avatar>
+        <Box sx={{ flex: 1 }}>
+        <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'black' }}>
+        {modoEdicion ? "✏️ Editar Cliente" : "Registrar Nuevo Cliente"}
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'rgba(3, 3, 3, 0.8)', fontWeight: 'bold' }}>
+                      {modoEdicion ? 'Modificar los datos del cliente' : 'Registra un nuevo cliente con los datos importantes dentro tu gimnasio'}
+        </Typography>
+        </Box>
+        </Box>
       </DialogTitle>
       <DialogContent dividers sx={styles.content}>
         {/* Datos Personales */}
@@ -562,6 +618,8 @@ export default function ModalClient({
               onChange={handleChange("end_date")}
               xs={12}
               sm={4}
+              error={!!errors["end_date"]}
+              helperText={errors["end_date"]}
             />
           </Grid>
         </Paper>

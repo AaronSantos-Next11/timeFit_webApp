@@ -1,50 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, X, Menu } from 'lucide-react';
-import {
-  Box,
-  Typography,
-  IconButton,
-  Grid,
-  Avatar,
-  Alert,
-  Snackbar
-} from '@mui/material';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Box, Typography, IconButton, Grid, Avatar, Alert, Snackbar, MenuItem, Menu } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import './Calendar.css';
+import { Menu as MenuIcon } from "@mui/icons-material";
+import "./Calendar.css";
 
 const months = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
 ];
 
-const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const daysOfWeekShort = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM'];
+const daysOfWeek = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+const daysOfWeekShort = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
 
-const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+const hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, "0")}:00`);
 
 export default function Calendar() {
+  const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [view, setView] = useState('month');
+  const [view, setView] = useState("month");
   const [showEventsSidebar, setShowEventsSidebar] = useState(false);
   const [events, setEvents] = useState([]);
   const [showEventForm, setShowEventForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [newEvent, setNewEvent] = useState({
-    title: '',
+    title: "",
     date: new Date(),
-    time: '09:00',
-    endTime: '10:00',
-    category: 'meetings'
+    time: "09:00",
+    endTime: "10:00",
+    category: "meetings",
   });
 
   // Estados para notificaciones
   const [notification, setNotification] = useState({
     open: false,
-    message: '',
-    severity: 'success'
+    message: "",
+    severity: "success",
   });
+
+  const handleProfileMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  // Función para navegar al perfil
+  const handleProfileClick = () => {
+    navigate("/user_profile");
+    handleMenuClose();
+  };
+
+  // Función para navegar al logout
+  const handleLogoutClick = () => {
+    navigate("/logout-confirm", { state: { from: location.pathname } });
+    handleMenuClose();
+  };
+
+  const renderMenu = (
+    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+      <MenuItem onClick={handleProfileClick}>Mi Perfil</MenuItem>
+      <MenuItem onClick={handleLogoutClick}>Cerrar sesión</MenuItem>
+    </Menu>
+  );
 
   // API URL y Token
   const API = import.meta.env.VITE_API_URL;
@@ -53,8 +81,7 @@ export default function Calendar() {
   // Lectura segura del usuario
   let admin = null;
   try {
-    const adminDataString =
-      localStorage.getItem("user") || sessionStorage.getItem("user");
+    const adminDataString = localStorage.getItem("user") || sessionStorage.getItem("user");
     admin = adminDataString ? JSON.parse(adminDataString) : null;
   } catch {
     admin = null;
@@ -97,12 +124,12 @@ export default function Calendar() {
   const usernameInitials = admin ? getInitials(admin.username) : "";
 
   // Funciones de notificación
-  const showNotification = (message, severity = 'success') => {
+  const showNotification = (message, severity = "success") => {
     setNotification({ open: true, message, severity });
   };
 
   const closeNotification = () => {
-    setNotification(prev => ({ ...prev, open: false }));
+    setNotification((prev) => ({ ...prev, open: false }));
   };
 
   // Función para cargar eventos del usuario
@@ -111,39 +138,39 @@ export default function Calendar() {
       setLoading(true);
       const token = getToken();
       if (!token) {
-        showNotification('No se encontró token de autenticación', 'error');
+        showNotification("No se encontró token de autenticación", "error");
         return;
       }
 
       const response = await fetch(`${API}/api/calendar/all`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al cargar eventos');
+        throw new Error(errorData.message || "Error al cargar eventos");
       }
 
       const data = await response.json();
-      
+
       // Convertir los eventos del backend al formato del frontend
-      const formattedEvents = data.events.map(event => ({
+      const formattedEvents = data.events.map((event) => ({
         id: event._id,
         title: event.title,
         date: new Date(event.event_date),
         time: event.start_time,
         endTime: event.end_time,
-        category: event.category
+        category: event.category,
       }));
 
       setEvents(formattedEvents);
     } catch (error) {
-      console.error('Error al cargar eventos:', error);
-      showNotification(error.message || 'Error al cargar eventos', 'error');
+      console.error("Error al cargar eventos:", error);
+      showNotification(error.message || "Error al cargar eventos", "error");
     } finally {
       setLoading(false);
     }
@@ -155,39 +182,39 @@ export default function Calendar() {
       setLoading(true);
       const token = getToken();
       if (!token) {
-        showNotification('No se encontró token de autenticación', 'error');
+        showNotification("No se encontró token de autenticación", "error");
         return false;
       }
 
       const requestBody = {
         title: eventData.title,
-        event_date: eventData.date.toISOString().split('T')[0],
+        event_date: eventData.date.toISOString().split("T")[0],
         start_time: eventData.time,
         end_time: eventData.endTime,
-        category: eventData.category
+        category: eventData.category,
       };
 
       const response = await fetch(`${API}/api/calendar/create`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al crear evento');
+        throw new Error(errorData.message || "Error al crear evento");
       }
-      showNotification('Evento creado exitosamente', 'success');
-      
+      showNotification("Evento creado exitosamente", "success");
+
       // Recargar eventos
       await fetchEvents();
       return true;
     } catch (error) {
-      console.error('Error al crear evento:', error);
-      showNotification(error.message || 'Error al crear evento', 'error');
+      console.error("Error al crear evento:", error);
+      showNotification(error.message || "Error al crear evento", "error");
       return false;
     } finally {
       setLoading(false);
@@ -200,40 +227,40 @@ export default function Calendar() {
       setLoading(true);
       const token = getToken();
       if (!token) {
-        showNotification('No se encontró token de autenticación', 'error');
+        showNotification("No se encontró token de autenticación", "error");
         return false;
       }
 
       const requestBody = {
         title: eventData.title,
-        event_date: eventData.date.toISOString().split('T')[0],
+        event_date: eventData.date.toISOString().split("T")[0],
         start_time: eventData.time,
         end_time: eventData.endTime,
-        category: eventData.category
+        category: eventData.category,
       };
 
       const response = await fetch(`${API}/api/calendar/${eventId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al actualizar evento');
+        throw new Error(errorData.message || "Error al actualizar evento");
       }
 
-      showNotification('Evento actualizado exitosamente', 'success');
-      
+      showNotification("Evento actualizado exitosamente", "success");
+
       // Recargar eventos
       await fetchEvents();
       return true;
     } catch (error) {
-      console.error('Error al actualizar evento:', error);
-      showNotification(error.message || 'Error al actualizar evento', 'error');
+      console.error("Error al actualizar evento:", error);
+      showNotification(error.message || "Error al actualizar evento", "error");
       return false;
     } finally {
       setLoading(false);
@@ -246,31 +273,31 @@ export default function Calendar() {
       setLoading(true);
       const token = getToken();
       if (!token) {
-        showNotification('No se encontró token de autenticación', 'error');
+        showNotification("No se encontró token de autenticación", "error");
         return false;
       }
 
       const response = await fetch(`${API}/api/calendar/${eventId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al eliminar evento');
+        throw new Error(errorData.message || "Error al eliminar evento");
       }
 
-      showNotification('Evento eliminado exitosamente', 'success');
-      
+      showNotification("Evento eliminado exitosamente", "success");
+
       // Recargar eventos
       await fetchEvents();
       return true;
     } catch (error) {
-      console.error('Error al eliminar evento:', error);
-      showNotification(error.message || 'Error al eliminar evento', 'error');
+      console.error("Error al eliminar evento:", error);
+      showNotification(error.message || "Error al eliminar evento", "error");
       return false;
     } finally {
       setLoading(false);
@@ -283,68 +310,83 @@ export default function Calendar() {
   }, []);
 
   const formatDate = (date) => {
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
   };
 
   const formatFullDate = (date) => {
-    const days = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const days = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+    const months = [
+      "enero",
+      "febrero",
+      "marzo",
+      "abril",
+      "mayo",
+      "junio",
+      "julio",
+      "agosto",
+      "septiembre",
+      "octubre",
+      "noviembre",
+      "diciembre",
+    ];
     return `${days[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
   };
 
   const isSameDay = (date1, date2) => {
-    return date1.getDate() === date2.getDate() && 
-           date1.getMonth() === date2.getMonth() && 
-           date1.getFullYear() === date2.getFullYear();
+    return (
+      date1.getDate() === date2.getDate() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getFullYear() === date2.getFullYear()
+    );
   };
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
-    
+
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
-    
+
     const days = [];
-    
+
     // Días del mes anterior
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     for (let i = startingDayOfWeek; i > 0; i--) {
       days.push({
         date: new Date(year, month - 1, prevMonthLastDay - i + 1),
-        isCurrentMonth: false
+        isCurrentMonth: false,
       });
     }
-    
+
     // Días del mes actual
     for (let day = 1; day <= daysInMonth; day++) {
       days.push({
         date: new Date(year, month, day),
-        isCurrentMonth: true
+        isCurrentMonth: true,
       });
     }
-    
+
     // Días del próximo mes para completar la cuadrícula
     const totalCells = 42; // 6 semanas x 7 días
     const remaining = totalCells - days.length;
     for (let day = 1; day <= remaining; day++) {
       days.push({
         date: new Date(year, month + 1, day),
-        isCurrentMonth: false
+        isCurrentMonth: false,
       });
     }
-    
+
     return days;
   };
 
   const getWeekDays = (date) => {
     const week = [];
     const startOfWeek = new Date(date);
-    
+
     const day = startOfWeek.getDay();
     const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
     startOfWeek.setDate(diff);
@@ -358,56 +400,52 @@ export default function Calendar() {
   };
 
   const getEventsForDate = (date) => {
-    return events.filter(event => isSameDay(event.date, date));
+    return events.filter((event) => isSameDay(event.date, date));
   };
 
   const getEventsForSelectedDate = () => {
-    return events.filter(event => isSameDay(event.date, selectedDate));
+    return events.filter((event) => isSameDay(event.date, selectedDate));
   };
 
   const getCategoryLabel = (category) => {
     const labels = {
-      'sales': 'Ventas',
-      'feedback': 'Feedback',
-      'reports': 'Reportes',
-      'evaluation': 'Evaluación',
-      'maintenance': 'Mantenimiento',
-      'training': 'Capacitación',
-      'metrics': 'Métricas',
-      'special': 'Especial',
-      'meetings': 'Reuniones'
+      sales: "Ventas",
+      feedback: "Feedback",
+      reports: "Reportes",
+      evaluation: "Evaluación",
+      maintenance: "Mantenimiento",
+      training: "Capacitación",
+      metrics: "Métricas",
+      special: "Especial",
+      meetings: "Reuniones",
     };
-    return labels[category] || 'General';
+    return labels[category] || "General";
   };
 
   const getCategoryColor = (category) => {
     const colors = {
-      'sales': '#e74c3c',
-      'feedback': '#9b59b6',
-      'reports': '#880e4f',
-      'evaluation': '#2ecc7091',
-      'maintenance': '#e67d22e7',
-      'training': '#3477dbd5',
-      'metrics': '#e91e63',
-      'special': '#ccdc3975',
-      'meetings': '#00acc1'
+      sales: "#e74c3c",
+      feedback: "#9b59b6",
+      reports: "#880e4f",
+      evaluation: "#2ecc7091",
+      maintenance: "#e67d22e7",
+      training: "#3477dbd5",
+      metrics: "#e91e63",
+      special: "#ccdc3975",
+      meetings: "#00acc1",
     };
-    return colors[category] || '#868E96';
+    return colors[category] || "#868E96";
   };
 
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
-    newDate.setFullYear(
-      newDate.getFullYear(),
-      newDate.getMonth() + direction,
-      newDate.getDate()
-    );
+    newDate.setFullYear(newDate.getFullYear(), newDate.getMonth() + direction, newDate.getDate());
     setCurrentDate(newDate);
   };
 
   const navigateWeek = (direction) => {
     const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() + (direction * 7));
+    newDate.setDate(newDate.getDate() + direction * 7);
     if (newDate.getFullYear() !== currentDate.getFullYear()) {
       setCurrentDate(new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()));
     } else {
@@ -418,8 +456,7 @@ export default function Calendar() {
   const navigateDay = (direction) => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() + direction);
-    if (newDate.getMonth() !== currentDate.getMonth() || 
-        newDate.getFullYear() !== currentDate.getFullYear()) {
+    if (newDate.getMonth() !== currentDate.getMonth() || newDate.getFullYear() !== currentDate.getFullYear()) {
       setCurrentDate(new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()));
     } else {
       setCurrentDate(newDate);
@@ -428,7 +465,7 @@ export default function Calendar() {
 
   const handleDateClick = (date) => {
     setSelectedDate(date);
-    setNewEvent(prev => ({...prev, date: date}));
+    setNewEvent((prev) => ({ ...prev, date: date }));
   };
 
   const toggleSidebar = () => {
@@ -438,11 +475,11 @@ export default function Calendar() {
   const handleAddEvent = () => {
     setEditingEvent(null);
     setNewEvent({
-      title: '',
+      title: "",
       date: selectedDate,
-      time: '09:00',
-      endTime: '10:00',
-      category: 'meetings'
+      time: "09:00",
+      endTime: "10:00",
+      category: "meetings",
     });
     setShowEventForm(true);
   };
@@ -454,14 +491,14 @@ export default function Calendar() {
       date: event.date,
       time: event.time,
       endTime: event.endTime,
-      category: event.category
+      category: event.category,
     });
     setShowEventForm(true);
   };
 
   const handleEventSubmit = async (e) => {
     e.preventDefault();
-    
+
     let success = false;
     if (editingEvent) {
       success = await updateEvent(editingEvent.id, newEvent);
@@ -473,38 +510,38 @@ export default function Calendar() {
       setShowEventForm(false);
       setEditingEvent(null);
       setNewEvent({
-        title: '',
+        title: "",
         date: selectedDate,
-        time: '09:00',
-        endTime: '10:00',
-        category: 'meetings'
+        time: "09:00",
+        endTime: "10:00",
+        category: "meetings",
       });
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewEvent(prev => ({...prev, [name]: value}));
+    setNewEvent((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleDeleteEvent = async (eventId) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este evento?')) {
+    if (window.confirm("¿Estás seguro de que deseas eliminar este evento?")) {
       await deleteEvent(eventId);
     }
   };
 
   const getEventPosition = (event) => {
-    const startHour = parseInt(event.time.split(':')[0]);
-    const startMinute = parseInt(event.time.split(':')[1]);
-    const endHour = parseInt(event.endTime.split(':')[0]);
-    const endMinute = parseInt(event.endTime.split(':')[1]);
-    
+    const startHour = parseInt(event.time.split(":")[0]);
+    const startMinute = parseInt(event.time.split(":")[1]);
+    const endHour = parseInt(event.endTime.split(":")[0]);
+    const endMinute = parseInt(event.endTime.split(":")[1]);
+
     const startPosition = (startHour * 60 + startMinute) / 60;
-    const duration = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) / 60;
-    
+    const duration = (endHour * 60 + endMinute - (startHour * 60 + startMinute)) / 60;
+
     return {
       top: `${startPosition * 50}px`,
-      height: `${Math.max(duration * 50, 30)}px`
+      height: `${Math.max(duration * 50, 30)}px`,
     };
   };
 
@@ -529,23 +566,23 @@ export default function Calendar() {
           return (
             <div
               key={index}
-              className={`month-day ${!day.isCurrentMonth ? 'not-current-month' : ''} ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
+              className={`month-day ${!day.isCurrentMonth ? "not-current-month" : ""} ${isSelected ? "selected" : ""} ${
+                isToday ? "today" : ""
+              }`}
               onClick={() => {
                 handleDateClick(day.date);
                 setShowEventsSidebar(true);
               }}
             >
-              <div className="day-number">
-                {day.date.getDate()}
-              </div>
+              <div className="day-number">{day.date.getDate()}</div>
               <div className="day-events">
                 {dayEvents.slice(0, 3).map((event, eventIndex) => (
-                  <div 
-                    key={event.id} 
+                  <div
+                    key={event.id}
                     className="day-event"
-                    style={{ 
+                    style={{
                       backgroundColor: getCategoryColor(event.category),
-                      marginTop: eventIndex > 0 ? '2px' : '0'
+                      marginTop: eventIndex > 0 ? "2px" : "0",
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -557,7 +594,7 @@ export default function Calendar() {
                   </div>
                 ))}
                 {dayEvents.length > 3 && (
-                  <div 
+                  <div
                     className="day-events-more"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -584,17 +621,13 @@ export default function Calendar() {
           const isToday = isSameDay(day, new Date());
           const isSelected = isSameDay(day, selectedDate);
           return (
-            <div 
-              key={index} 
-              className={`week-header-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`}
+            <div
+              key={index}
+              className={`week-header-day ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}`}
               onClick={() => handleDateClick(day)}
             >
-              <div className="week-day-name">
-                {daysOfWeekShort[index]}
-              </div>
-              <div className="week-day-number">
-                {day.getDate()}
-              </div>
+              <div className="week-day-name">{daysOfWeekShort[index]}</div>
+              <div className="week-day-number">{day.getDate()}</div>
             </div>
           );
         })}
@@ -618,16 +651,14 @@ export default function Calendar() {
                 className="week-event"
                 style={{
                   backgroundColor: getCategoryColor(event.category),
-                  ...getEventPosition(event)
+                  ...getEventPosition(event),
                 }}
                 onClick={() => {
                   handleDateClick(day);
                   setShowEventsSidebar(true);
                 }}
               >
-                <div className="week-event-title">
-                  {event.title}
-                </div>
+                <div className="week-event-title">{event.title}</div>
                 <div className="week-event-time">
                   {event.time} - {event.endTime}
                 </div>
@@ -664,16 +695,14 @@ export default function Calendar() {
               className="day-event"
               style={{
                 backgroundColor: getCategoryColor(event.category),
-                ...getEventPosition(event)
+                ...getEventPosition(event),
               }}
               onClick={() => {
                 setSelectedDate(currentDate);
                 setShowEventsSidebar(true);
               }}
             >
-              <div className="day-event-title">
-                {event.title}
-              </div>
+              <div className="day-event-title">{event.title}</div>
               <div className="day-event-time">
                 {event.time} - {event.endTime}
               </div>
@@ -685,15 +714,17 @@ export default function Calendar() {
   );
 
   const getNavigationLabel = () => {
-    if (view === 'month') {
+    if (view === "month") {
       return `${months[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-    } else if (view === 'week') {
+    } else if (view === "week") {
       const weekStart = getWeekDays(currentDate)[0];
       const weekEnd = getWeekDays(currentDate)[6];
       if (weekStart.getMonth() === weekEnd.getMonth()) {
         return `Semana del ${weekStart.getDate()} al ${weekEnd.getDate()} ${months[weekStart.getMonth()]}`;
       } else {
-        return `Semana del ${weekStart.getDate()} ${months[weekStart.getMonth()]} al ${weekEnd.getDate()} ${months[weekEnd.getMonth()]}`;
+        return `Semana del ${weekStart.getDate()} ${months[weekStart.getMonth()]} al ${weekEnd.getDate()} ${
+          months[weekEnd.getMonth()]
+        }`;
       }
     } else {
       return `${daysOfWeek[currentDate.getDay()]} ${currentDate.getDate()} ${months[currentDate.getMonth()]}`;
@@ -701,9 +732,9 @@ export default function Calendar() {
   };
 
   const handleNavigation = (direction) => {
-    if (view === 'month') {
+    if (view === "month") {
       navigateMonth(direction);
-    } else if (view === 'week') {
+    } else if (view === "week") {
       navigateWeek(direction);
     } else {
       navigateDay(direction);
@@ -716,14 +747,14 @@ export default function Calendar() {
         <div className="header-left">
           <div>
             <h1 className="header-title">Calendario</h1>
-            <p className="header-subtitle">
-              Organiza y gestiona tus actividades diarias dentro del gimnasio
-            </p>
+            <p className="header-subtitle">Organiza y gestiona tus actividades diarias dentro del gimnasio</p>
           </div>
         </div>
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ textAlign: "right", marginLeft:"15px" }}>
-            <Typography sx={{ margin: 0, fontSize: "20px", color: "#F8820B", fontWeight: "bold" }}>{displayName}</Typography>
+          <Box sx={{ textAlign: "right", marginLeft: "15px" }}>
+            <Typography sx={{ margin: 0, fontSize: "20px", color: "#F8820B", fontWeight: "bold" }}>
+              {displayName}
+            </Typography>
             <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>
               {roleName}
             </Typography>
@@ -732,46 +763,60 @@ export default function Calendar() {
             aria-label="account of current user"
             aria-controls="profile-menu"
             aria-haspopup="true"
+            onClick={handleProfileMenuOpen}
             sx={{ color: "#fff" }}
           >
             {usernameInitials ? (
-              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(admin?.color) : "#ff4300", color: "#fff", fontWeight: "bold"  }}>{usernameInitials}</Avatar>
+              <Avatar
+                sx={{
+                  width: 50,
+                  height: 50,
+                  bgcolor: roleName === "Colaborador" ? getMappedColor(admin?.color) : "#ff4300",
+                  color: "#fff",
+                  fontWeight: "bold",
+                }}
+              >
+                {usernameInitials}
+              </Avatar>
             ) : (
               <AccountCircle sx={{ fontSize: "60px" }} />
             )}
           </IconButton>
+          {renderMenu}
         </Grid>
       </header>
 
       <div className="calendar-controls">
         <div className="view-buttons">
-          {['month', 'week', 'day'].map((viewType) => (
+          {["month", "week", "day"].map((viewType) => (
             <button
               key={viewType}
               onClick={() => setView(viewType)}
-              className={`view-button ${view === viewType ? 'active' : ''}`}
+              className={`view-button ${view === viewType ? "active" : ""}`}
               disabled={loading}
             >
-              {viewType === 'month' ? 'Mes' : viewType === 'week' ? 'Semana' : 'Día'}
+              {viewType === "month" ? "Mes" : viewType === "week" ? "Semana" : "Día"}
             </button>
           ))}
         </div>
-        
+
         <div className="navigation-controls">
           <div className="navigation-buttons">
             <button onClick={() => handleNavigation(-1)} className="nav-button" disabled={loading}>
               <ChevronLeft />
             </button>
-            <div className="current-period">
-              {getNavigationLabel()}
-            </div>
+            <div className="current-period">{getNavigationLabel()}</div>
             <button onClick={() => handleNavigation(1)} className="nav-button" disabled={loading}>
               <ChevronRight />
             </button>
           </div>
-          
-          <button onClick={toggleSidebar} className="sidebar-toggle" title={showEventsSidebar ? "Ocultar eventos" : "Mostrar eventos"}>
-            <Menu />
+
+          <button
+            onClick={toggleSidebar}
+            className="sidebar-toggle"
+            title={showEventsSidebar ? "Ocultar eventos" : "Mostrar eventos"}
+          >
+            <MenuIcon />
           </button>
         </div>
       </div>
@@ -779,30 +824,30 @@ export default function Calendar() {
       <div className="calendar-main">
         <div className="calendar-views">
           {loading && (
-            <div style={{ 
-              position: 'absolute', 
-              top: '50%', 
-              left: '50%', 
-              transform: 'translate(-50%, -50%)', 
-              zIndex: 1000,
-              background: 'rgba(0,0,0,0.7)',
-              color: 'white',
-              padding: '20px',
-              borderRadius: '8px'
-            }}>
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1000,
+                background: "rgba(0,0,0,0.7)",
+                color: "white",
+                padding: "20px",
+                borderRadius: "8px",
+              }}
+            >
               Cargando...
             </div>
           )}
-          {view === 'month' && renderMonthView()}
-          {view === 'week' && renderWeekView()}
-          {view === 'day' && renderDayView()}
+          {view === "month" && renderMonthView()}
+          {view === "week" && renderWeekView()}
+          {view === "day" && renderDayView()}
         </div>
 
-        <div className={`events-sidebar ${showEventsSidebar ? 'visible' : ''}`}>
+        <div className={`events-sidebar ${showEventsSidebar ? "visible" : ""}`}>
           <div className="sidebar-header">
-            <h2 className="sidebar-title">
-              {formatDate(selectedDate)}
-            </h2>
+            <h2 className="sidebar-title">{formatDate(selectedDate)}</h2>
             <button onClick={toggleSidebar} className="sidebar-close">
               <X />
             </button>
@@ -815,31 +860,32 @@ export default function Calendar() {
                   <div className="sidebar-event-time">
                     {event.time} - {event.endTime}
                   </div>
-                  <div className="sidebar-event-title">
-                    {event.title}
-                  </div>
-                  <div className="sidebar-event-category">
-                    {getCategoryLabel(event.category)}
-                  </div>
+                  <div className="sidebar-event-title">{event.title}</div>
+                  <div className="sidebar-event-category">{getCategoryLabel(event.category)}</div>
                   <div className="sidebar-event-actions">
-                    <button 
-                      onClick={() => handleEditEvent(event)} 
+                    <button
+                      onClick={() => handleEditEvent(event)}
                       className="sidebar-event-edit"
-                      style={{ marginRight: '8px', backgroundColor: '#ff4300', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '12px'}}
+                      style={{
+                        marginRight: "8px",
+                        backgroundColor: "#ff4300",
+                        color: "white",
+                        border: "none",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                      }}
                     >
                       Editar
                     </button>
-                    <button 
-                      onClick={() => handleDeleteEvent(event.id)} 
-                      className="sidebar-event-delete"
-                    >
+                    <button onClick={() => handleDeleteEvent(event.id)} className="sidebar-event-delete">
                       <X />
                     </button>
                   </div>
                 </div>
               </div>
             ))}
-            
+
             {getEventsForSelectedDate().length === 0 && (
               <div className="sidebar-empty">
                 <p>No hay eventos programados para este día</p>
@@ -858,9 +904,7 @@ export default function Calendar() {
           <div className="modal-overlay">
             <div className="modal-content">
               <div className="modal-header">
-                <h3 className="modal-title">
-                  {editingEvent ? 'Editar evento' : 'Agregar nuevo evento'}
-                </h3>
+                <h3 className="modal-title">{editingEvent ? "Editar evento" : "Agregar nuevo evento"}</h3>
                 <button onClick={() => setShowEventForm(false)} className="modal-close">
                   <X />
                 </button>
@@ -883,10 +927,10 @@ export default function Calendar() {
                   <input
                     type="date"
                     name="date"
-                    value={newEvent.date.toISOString().split('T')[0]}
+                    value={newEvent.date.toISOString().split("T")[0]}
                     onChange={(e) => {
                       const date = new Date(e.target.value);
-                      setNewEvent(prev => ({...prev, date}));
+                      setNewEvent((prev) => ({ ...prev, date }));
                     }}
                     required
                     className="form-input"
@@ -948,12 +992,8 @@ export default function Calendar() {
                   >
                     Cancelar
                   </button>
-                  <button 
-                    type="submit" 
-                    className="form-button primary"
-                    disabled={loading}
-                  >
-                    {loading ? 'Guardando...' : (editingEvent ? 'Actualizar Evento' : 'Guardar Evento')}
+                  <button type="submit" className="form-button primary" disabled={loading}>
+                    {loading ? "Guardando..." : editingEvent ? "Actualizar Evento" : "Guardar Evento"}
                   </button>
                 </div>
               </form>
@@ -969,13 +1009,9 @@ export default function Calendar() {
         open={notification.open}
         autoHideDuration={4000}
         onClose={closeNotification}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert 
-          onClose={closeNotification} 
-          severity={notification.severity}
-          sx={{ width: '100%' }}
-        >
+        <Alert onClose={closeNotification} severity={notification.severity} sx={{ width: "100%" }}>
           {notification.message}
         </Alert>
       </Snackbar>

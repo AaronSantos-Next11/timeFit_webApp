@@ -1,28 +1,47 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import CardProduct from "./CardProduct";
 import ModalProduct from "./ModalProduct";
 import TableVentas from "./TableVentas";
 import CardProveedores from "./CardProveedores";
-import { 
-  Grid, 
-  Typography, 
-  Box, 
-  Avatar, 
-  ButtonGroup,
-  Button
-} from "@mui/material";
+import { Grid, Typography, Box, Avatar, ButtonGroup, Button, Menu, MenuItem, IconButton } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import BusinessIcon from "@mui/icons-material/Business";
 
 export default function InventoryControl({ collapsed }) {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [activeTab, setActiveTab] = useState("productos"); // productos, ventas, proveedores
+
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleProfileMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  // Función para navegar al perfil
+  const handleProfileClick = () => {
+    navigate("/user_profile");
+    handleMenuClose();
+  };
+
+  // Función para navegar al logout
+  const handleLogoutClick = () => {
+    navigate("/logout-confirm", { state: { from: location.pathname } });
+    handleMenuClose();
+  };
+
+  const renderMenu = (
+    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+      <MenuItem onClick={handleProfileClick}>Mi Perfil</MenuItem>
+      <MenuItem onClick={handleLogoutClick}>Cerrar sesión</MenuItem>
+    </Menu>
+  );
 
   const API = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
@@ -151,19 +170,22 @@ export default function InventoryControl({ collapsed }) {
               {roleName}
             </Typography>
           </Box>
-          {usernameInitials ? (
-            <Avatar 
-              sx={{ 
-                width: 50, 
-                height: 50, 
-                bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300", 
-              }}
-            >
-              {usernameInitials}
-            </Avatar>
-          ) : (
-            <AccountCircle sx={{ width: 50, height: 50, fontSize: 60, color: "#fff" }} />
-          )}
+          <IconButton onClick={handleProfileMenuOpen} sx={{ color: "#fff", fontWeight: "bold" }}>
+            {usernameInitials ? (
+              <Avatar
+                sx={{
+                  width: 50,
+                  height: 50,
+                  bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300",
+                }}
+              >
+                {usernameInitials}
+              </Avatar>
+            ) : (
+              <AccountCircle sx={{ width: 50, height: 50, fontSize: 60, color: "#fff" }} />
+            )}
+          </IconButton>
+          {renderMenu}
         </Grid>
       </Grid>
 
@@ -240,12 +262,7 @@ export default function InventoryControl({ collapsed }) {
         />
       )}
 
-      {activeTab === "ventas" && (
-        <TableVentas
-          collapsed={collapsed}
-          role={roleName}
-        />
-      )}
+      {activeTab === "ventas" && <TableVentas collapsed={collapsed} role={roleName} />}
 
       {activeTab === "proveedores" && (
         <CardProveedores

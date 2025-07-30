@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import CardMembership from "./CardMembership";
 import ModalMembership from "./ModalMembership";
@@ -9,6 +10,7 @@ import AddIcon from "@mui/icons-material/Add";
 import FilterIcon from "@mui/icons-material/FilterList";
 
 export default function Membership({ collapsed }) {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [memberships, setMemberships] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -32,25 +34,25 @@ export default function Membership({ collapsed }) {
   const displayName = `${user?.name?.split(" ")[0] || ""} ${user?.last_name?.split(" ")[0] || ""}`.trim();
   const usernameInitials = user?.username?.slice(0, 2).toUpperCase() || "";
 
-const colorMap = {
-  Rojo: "#e74c3c",
-  Azul: "#3498db",
-  Verde: "#2ecc71",
-  Amarillo: "#f1c40f",
-  Morado: "#9b59b6",
-  Naranja: "#e67e22",
-  Rosa: "#e91e63",
-  Durazno: "#ffb74d" ,
-  Turquesa: "#1abc9c",
-  RojoVino: "#880e4f" ,
-  Lima:"#cddc39",
-  Cian: "#00acc1",
-  Lavanda:"#9575cd",
-  Magenta: "#d81b60",
-  Coral: "#ff7043",
-};
+  const colorMap = {
+    Rojo: "#e74c3c",
+    Azul: "#3498db",
+    Verde: "#2ecc71",
+    Amarillo: "#f1c40f",
+    Morado: "#9b59b6",
+    Naranja: "#e67e22",
+    Rosa: "#e91e63",
+    Durazno: "#ffb74d",
+    Turquesa: "#1abc9c",
+    RojoVino: "#880e4f",
+    Lima: "#cddc39",
+    Cian: "#00acc1",
+    Lavanda: "#9575cd",
+    Magenta: "#d81b60",
+    Coral: "#ff7043",
+  };
 
-const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
+  const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
 
   // --- Fetch memberships con fallback a [] ---
   const fetchMemberships = async () => {
@@ -140,10 +142,21 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
   // --- Menú de perfil ---
   const handleProfileMenuOpen = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
+  const handleProfileClick = () => {
+    navigate("/user_profile");
+    handleMenuClose();
+  };
+
+  // Función para navegar al logout
+  const handleLogoutClick = () => {
+    navigate("/logout-confirm", { state: { from: location.pathname } });
+    handleMenuClose();
+  };
+
   const renderMenu = (
     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-      <MenuItem onClick={handleMenuClose}>Perfil</MenuItem>
-      <MenuItem onClick={handleMenuClose}>Mi cuenta</MenuItem>
+      <MenuItem onClick={handleProfileClick}>Mi Perfil</MenuItem>
+      <MenuItem onClick={handleLogoutClick}>Cerrar sesión</MenuItem>
     </Menu>
   );
 
@@ -163,7 +176,7 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
           <Typography variant="h4" fontWeight="bold">
             Membresías
           </Typography>
-          <Typography sx={{fontSize: "16px"}} color="#aaa" mt={1}>
+          <Typography sx={{ fontSize: "16px" }} color="#aaa" mt={1}>
             {roleName === "Administrador"
               ? "Crea y administra tus propias membresías"
               : "Consulta las membresías disponibles"}
@@ -209,7 +222,17 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
           </Box>
           <IconButton onClick={handleProfileMenuOpen} sx={{ color: "#fff" }}>
             {usernameInitials ? (
-              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300", color: "#fff", fontWeight: "bold" }}>{usernameInitials}</Avatar>
+              <Avatar
+                sx={{
+                  width: 50,
+                  height: 50,
+                  bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300",
+                  color: "#fff",
+                  fontWeight: "bold",
+                }}
+              >
+                {usernameInitials}
+              </Avatar>
             ) : (
               <AccountCircle sx={{ width: 50, height: 50, fontSize: 60 }} />
             )}

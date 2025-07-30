@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import {
   Grid,
@@ -19,6 +20,7 @@ import {
   Divider,
   Card,
   CardContent,
+  TablePagination,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -34,6 +36,8 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import ModalColaborador from "./ModalColaborador";
 
 const Collaborators = ({ collapsed }) => {
+  const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [colaboradorEditar, setColaboradorEditar] = useState(null);
@@ -44,7 +48,33 @@ const Collaborators = ({ collapsed }) => {
   const [sortBy, setSortBy] = useState("");
   const [collaborators, setCollaborators] = useState([]);
 
+  // Estados para paginación
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(7);
+
   const API = import.meta.env.VITE_API_URL;
+
+  const handleProfileMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuCloseProfile = () => setAnchorEl(null);
+
+  // Función para navegar al perfil
+  const handleProfileClick = () => {
+    navigate("/user_profile");
+    handleMenuCloseProfile();
+  };
+
+  // Función para navegar al logout
+  const handleLogoutClick = () => {
+    navigate("/logout-confirm", { state: { from: location.pathname } });
+    handleMenuCloseProfile();
+  };
+
+  const renderMenu = (
+    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuCloseProfile}>
+      <MenuItem onClick={handleProfileClick}>Mi Perfil</MenuItem>
+      <MenuItem onClick={handleLogoutClick}>Cerrar sesión</MenuItem>
+    </Menu>
+  );
 
   const abrirModalRegistro = () => {
     setModoEdicion(false);
@@ -59,6 +89,7 @@ const Collaborators = ({ collapsed }) => {
   };
 
   const cerrarModal = () => setModalAbierto(false);
+
   // --- Lectura segura del usuario (admin o colaborador) ---
   let user = null;
   try {
@@ -80,6 +111,7 @@ const Collaborators = ({ collapsed }) => {
   const handleFilterClose = () => setAnchorElFilter(null);
   const handleSort = (criterion) => {
     setSortBy(criterion);
+    setPage(0); // Reset a la primera página cuando se ordena
     handleFilterClose();
   };
   const handleSearch = (e) => setSearchTerm(e.target.value);
@@ -114,18 +146,40 @@ const Collaborators = ({ collapsed }) => {
   }, []);
 
   const displayed = useMemo(() => {
-let arr = collaborators.filter(
-  (c) =>
-    (c.name && c.last_name && `${c.name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (c.colaborator_code && (c.colaborator_code || "").toLowerCase().includes(searchTerm.toLowerCase()))
-);
+    let arr = collaborators.filter(
+      (c) =>
+        (c.name && c.last_name && `${c.name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (c.colaborator_code && (c.colaborator_code || "").toLowerCase().includes(searchTerm.toLowerCase()))
+    );
 
     if (sortBy === "name") arr.sort((a, b) => a.name.localeCompare(b.name));
     if (sortBy === "role") arr.sort((a, b) => a.colaborator_code.localeCompare(b.colaborator_code));
     if (sortBy === "date") arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     return arr;
   }, [searchTerm, sortBy, collaborators]);
+
+  // Datos paginados
+  const paginatedData = useMemo(() => {
+    const startIndex = page * rowsPerPage;
+    return displayed.slice(startIndex, startIndex + rowsPerPage);
+  }, [displayed, page, rowsPerPage]);
+
+  // Reset página cuando cambia el filtro de búsqueda
+  useEffect(() => {
+    setPage(0);
+  }, [searchTerm]);
+
+  // Manejar cambio de página
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Manejar cambio de filas por página
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
@@ -156,26 +210,26 @@ let arr = collaborators.filter(
   };
 
   const colorMap = {
-  Rojo: "#e74c3c",
-  Azul: "#3498db",
-  Verde: "#2ecc71",
-  Amarillo: "#f1c40f",
-  Morado: "#9b59b6",
-  Naranja: "#e67e22",
-  Rosa: "#e91e63",
-  Durazno: "#ffb74d" ,
-  Turquesa: "#1abc9c",
-  RojoVino: "#880e4f" ,
-  Lima:"#cddc39",
-  Cian: "#00acc1",
-  Lavanda:"#9575cd",
-  Magenta: "#d81b60",
-  Coral: "#ff7043",
-};
+    Rojo: "#e74c3c",
+    Azul: "#3498db",
+    Verde: "#2ecc71",
+    Amarillo: "#f1c40f",
+    Morado: "#9b59b6",
+    Naranja: "#e67e22",
+    Rosa: "#e91e63",
+    Durazno: "#ffb74d",
+    Turquesa: "#1abc9c",
+    RojoVino: "#880e4f",
+    Lima: "#cddc39",
+    Cian: "#00acc1",
+    Lavanda: "#9575cd",
+    Magenta: "#d81b60",
+    Coral: "#ff7043",
+  };
 
-const getMappedColor = (colorName) => {
-  return colorMap[colorName] || "#888"; // color por defecto si no existe
-};
+  const getMappedColor = (colorName) => {
+    return colorMap[colorName] || "#888"; // color por defecto si no existe
+  };
 
   return (
     <>
@@ -196,7 +250,7 @@ const getMappedColor = (colorName) => {
               display: "flex",
               alignItems: "center",
               padding: "8px 20px",
-              borderRadius: "30px", 
+              borderRadius: "30px",
               boxShadow: 3,
               width: collapsed ? "420px" : "700px",
               maxWidth: "100%",
@@ -223,7 +277,7 @@ const getMappedColor = (colorName) => {
               {roleName}
             </Typography>
           </Box>
-          <IconButton sx={{ color: "#fff" }}>
+          <IconButton onClick={handleProfileMenuOpen} sx={{ color: "#fff" }}>
             {usernameInitials ? (
               <Avatar sx={{ width: 50, height: 50, bgcolor: "#ff4300", color: "#fff", fontWeight: "bold" }}>
                 {usernameInitials}
@@ -232,10 +286,11 @@ const getMappedColor = (colorName) => {
               <AccountCircle sx={{ fontSize: "60px" }} />
             )}
           </IconButton>
+          {renderMenu}
         </Grid>
       </Grid>
 
-      <Grid container justifyContent="flex-end" spacing={2} sx={{ mb: 5, marginTop: "5px"}}>
+      <Grid container justifyContent="flex-end" spacing={2} sx={{ mb: 5, marginTop: "5px" }}>
         <Grid item>
           <Button
             sx={{
@@ -258,7 +313,6 @@ const getMappedColor = (colorName) => {
             REGISTRAR COLABORADOR
             <AddIcon />
           </Button>
-          
         </Grid>
         <Grid item>
           <Button
@@ -287,33 +341,56 @@ const getMappedColor = (colorName) => {
         </Grid>
       </Grid>
 
+      {/* Contador de resultados */}
+      <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="body2" sx={{ color: "#ccc" }}>
+          Mostrando {Math.min(paginatedData.length, rowsPerPage)} de {displayed.length} colaboradores
+          {displayed.length !== collaborators.length && ` (${collaborators.length} total)`}
+        </Typography>
+        {(searchTerm || sortBy) && (
+          <Chip
+            label="Filtros activos"
+            size="small"
+            sx={{
+              bgcolor: "#F8820B",
+              color: "#000",
+              fontWeight: "bold",
+            }}
+          />
+        )}
+      </Box>
+
       {/* TABLA MEJORADA */}
       <Grid item xs={12}>
-        <Card 
-          sx={{ 
-            backgroundColor: "#2A2D31", 
-            borderRadius: "16px", 
+        <Card
+          sx={{
+            backgroundColor: "#2A2D31",
+            borderRadius: "16px",
             overflow: "hidden",
             boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-            border: "1px solid #404040"
+            border: "1px solid #404040",
           }}
         >
           {/* Header de la tabla */}
-          <Box sx={{ 
-            background: "#4d4a49ff",
-            padding: "20px 24px",
-            position: "relative",
-            overflow: "hidden"
-          }}>
-            <Box sx={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "rgba(255,255,255,0.1)",
-              backdropFilter: "blur(10px)"
-            }} />
+          <Box
+            sx={{
+              background: "#4d4a49ff",
+              padding: "20px 24px",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: "rgba(255,255,255,0.1)",
+                backdropFilter: "blur(10px)",
+              }}
+            />
             <Grid container spacing={2} sx={{ position: "relative", zIndex: 1 }}>
               <Grid item xs={1}>
                 <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px" }}>
@@ -345,7 +422,15 @@ const getMappedColor = (colorName) => {
                 </Typography>
               </Grid>
               <Grid item xs={1}>
-                <Typography sx={{ fontWeight: "700", color: "#fff", fontSize: "14px", letterSpacing: "0.5px", textAlign: "center" }}>
+                <Typography
+                  sx={{
+                    fontWeight: "700",
+                    color: "#fff",
+                    fontSize: "14px",
+                    letterSpacing: "0.5px",
+                    textAlign: "center",
+                  }}
+                >
                   ACCIONES
                 </Typography>
               </Grid>
@@ -354,94 +439,107 @@ const getMappedColor = (colorName) => {
 
           {/* Contenido de la tabla */}
           <CardContent sx={{ p: 0 }}>
-            <Box sx={{ maxHeight: "500px", overflowY: "auto" }}>
-              {displayed.length === 0 ? (
-                <Box sx={{ 
-                  textAlign: "center", 
-                  padding: "60px 20px", 
-                  color: "#888", 
-                  fontSize: "16px"
-                }}>
+            <Box sx={{ maxHeight: "400px", overflowY: "auto" }}>
+              {paginatedData.length === 0 ? (
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    padding: "60px 20px",
+                    color: "#888",
+                    fontSize: "16px",
+                  }}
+                >
                   <PersonIcon sx={{ fontSize: "48px", color: "#555", mb: 2 }} />
                   <Typography variant="h6" sx={{ color: "#ccc", mb: 1 }}>
-                    No se encontraron colaboradores
+                    {displayed.length === 0 ? "No hay colaboradores registrados" : "No se encontraron colaboradores"}
                   </Typography>
                   <Typography variant="body2" sx={{ color: "#888" }}>
-                    Intenta con otros términos de búsqueda
+                    {displayed.length === 0
+                      ? "Registra tu primer colaborador"
+                      : "Intenta con otros términos de búsqueda"}
                   </Typography>
                 </Box>
               ) : (
-                displayed.map((c, idx) => (
+                paginatedData.map((c, idx) => (
                   <Box key={c._id}>
-                    <Box sx={{
-                      padding: "20px 24px",
-                      transition: "all 0.2s ease",
-                      position: "relative",
-                      "&:hover": {
-                        backgroundColor: "#353842",
-                        transform: "translateX(4px)",
-                        boxShadow: "inset 4px 0 0 #F8820B"
-                      }
-                    }}>
+                    <Box
+                      sx={{
+                        padding: "20px 24px",
+                        transition: "all 0.2s ease",
+                        position: "relative",
+                        "&:hover": {
+                          backgroundColor: "#353842",
+                          transform: "translateX(4px)",
+                          boxShadow: "inset 4px 0 0 #F8820B",
+                        },
+                      }}
+                    >
                       <Grid container spacing={2} alignItems="center">
                         <Grid item xs={1}>
                           <Chip
-                            label={`#${idx + 1}`}
+                            label={`#${page * rowsPerPage + idx + 1}`}
                             size="small"
                             sx={{
                               backgroundColor: "#f0420dff",
                               color: "#fff",
                               fontWeight: "600",
                               fontSize: "12px",
-                              height: "24px"
+                              height: "24px",
                             }}
                           />
                         </Grid>
-                        
+
                         <Grid item xs={2}>
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <Avatar 
-                              sx={{ 
-                                width: 40, 
-                                height: 40, 
+                            <Avatar
+                              sx={{
+                                width: 40,
+                                height: 40,
                                 bgcolor: getMappedColor(c.color),
                                 color: "#fff",
                                 fontWeight: "600",
-                                fontSize: "14px"
+                                fontSize: "14px",
                               }}
                             >
-                              {c.name.charAt(0).toUpperCase()}{c.last_name.charAt(0).toUpperCase()}
+                              {c.name.charAt(0).toUpperCase()}
+                              {c.last_name.charAt(0).toUpperCase()}
                             </Avatar>
                             <Box>
-                              <Typography sx={{ 
-                                color: "#fff", 
-                                fontSize: "14px", 
-                                fontWeight: "600",
-                                lineHeight: 1.2
-                              }}>
+                              <Typography
+                                sx={{
+                                  color: "#fff",
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  lineHeight: 1.2,
+                                }}
+                              >
                                 {c.name}
                               </Typography>
-                              <Typography sx={{ 
-                                color: "#aaa", 
-                                fontSize: "12px",
-                                lineHeight: 1.2
-                              }}>
+                              <Typography
+                                sx={{
+                                  color: "#aaa",
+                                  fontSize: "12px",
+                                  lineHeight: 1.2,
+                                }}
+                              >
                                 {c.last_name}
                               </Typography>
                             </Box>
                           </Box>
                         </Grid>
-                        
+
                         <Grid item xs={2.5}>
-                          <Typography sx={{ 
-                            color: "#ccc", 
-                            fontSize: "14px",
-                            wordBreak: "break-word"
-                          }}>
+                          <Typography
+                            sx={{
+                              color: "#ccc",
+                              fontSize: "14px",
+                              wordBreak: "break-word",
+                            }}
+                          >
                             {c.email}
                           </Typography>
                         </Grid>
-                        
+
                         <Grid item xs={3}>
                           <Chip
                             label={c.colaborator_code}
@@ -451,11 +549,11 @@ const getMappedColor = (colorName) => {
                               borderColor: "#F8820B",
                               color: "#F8820B",
                               fontSize: "12px",
-                              fontWeight: "500"
+                              fontWeight: "500",
                             }}
                           />
                         </Grid>
-                        
+
                         <Grid item xs={2.5}>
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             <ScheduleIcon sx={{ fontSize: "16px", color: "#F8820B" }} />
@@ -464,10 +562,10 @@ const getMappedColor = (colorName) => {
                             </Typography>
                           </Box>
                         </Grid>
-                        
+
                         <Grid item xs={1}>
                           <Box sx={{ display: "flex", justifyContent: "center" }}>
-                            <IconButton 
+                            <IconButton
                               onClick={(e) => handleMenuOpen(e, c)}
                               sx={{
                                 color: "#F8820B",
@@ -476,8 +574,8 @@ const getMappedColor = (colorName) => {
                                 padding: "8px",
                                 "&:hover": {
                                   backgroundColor: "rgba(248, 130, 11, 0.2)",
-                                  transform: "scale(1.1)"
-                                }
+                                  transform: "scale(1.1)",
+                                },
                               }}
                             >
                               <MoreVertIcon sx={{ fontSize: "20px" }} />
@@ -486,15 +584,62 @@ const getMappedColor = (colorName) => {
                         </Grid>
                       </Grid>
                     </Box>
-                    
-                    {idx < displayed.length - 1 && (
-                      <Divider sx={{ borderColor: "#404040", mx: 3 }} />
-                    )}
+
+                    {idx < paginatedData.length - 1 && <Divider sx={{ borderColor: "#404040", mx: 3 }} />}
                   </Box>
                 ))
               )}
             </Box>
           </CardContent>
+
+          {/* Paginación */}
+          {displayed.length > 0 && (
+            <Box
+              sx={{
+                borderTop: "1px solid #404040",
+                backgroundColor: "#2A2D31",
+                px: 2,
+              }}
+            >
+              <TablePagination
+                component="div"
+                count={displayed.length}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={[7, 14, 21, 50]}
+                labelRowsPerPage="Filas por página:"
+                labelDisplayedRows={({ from, to, count }) =>
+                  `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+                }
+                sx={{
+                  color: "#fff",
+                  "& .MuiTablePagination-toolbar": {
+                    color: "#fff",
+                  },
+                  "& .MuiTablePagination-select": {
+                    color: "#fff",
+                  },
+                  "& .MuiTablePagination-selectIcon": {
+                    color: "#fff",
+                  },
+                  "& .MuiTablePagination-actions button": {
+                    color: "#F8820B",
+                    "&:hover": {
+                      backgroundColor: "rgba(248, 130, 11, 0.1)",
+                    },
+                    "&.Mui-disabled": {
+                      color: "#666",
+                    },
+                  },
+                  "& .MuiTablePagination-displayedRows": {
+                    color: "#ccc",
+                  },
+                }}
+              />
+            </Box>
+          )}
         </Card>
       </Grid>
 
@@ -508,8 +653,8 @@ const getMappedColor = (colorName) => {
           sx: {
             backgroundColor: "#4d4a49ff",
             border: "1px solid #404040",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
-          }
+            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+          },
         }}
       >
         <MenuItem
@@ -521,8 +666,8 @@ const getMappedColor = (colorName) => {
             color: "white",
             "&:hover": {
               backgroundColor: "#353842",
-              color: "#F8820B"
-            }
+              color: "#F8820B",
+            },
           }}
         >
           Editar
@@ -536,8 +681,8 @@ const getMappedColor = (colorName) => {
             color: "white",
             "&:hover": {
               backgroundColor: "#353842",
-              color: "#FF3B30"
-            }
+              color: "#FF3B30",
+            },
           }}
         >
           Eliminar
@@ -554,15 +699,15 @@ const getMappedColor = (colorName) => {
           fetchCollaborators();
         }}
       />
-      
-      <Dialog 
-        open={openDeleteDialog} 
+
+      <Dialog
+        open={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
         PaperProps={{
           sx: {
             backgroundColor: "#2A2D31",
-            border: "1px solid #404040"
-          }
+            border: "1px solid #404040",
+          },
         }}
       >
         <DialogTitle sx={{ color: "#fff" }}>¿Eliminar colaborador?</DialogTitle>
@@ -572,10 +717,7 @@ const getMappedColor = (colorName) => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={() => setOpenDeleteDialog(false)} 
-            sx={{ color: "#ccc" }}
-          >
+          <Button onClick={() => setOpenDeleteDialog(false)} sx={{ color: "#ccc" }}>
             Cancelar
           </Button>
           <Button

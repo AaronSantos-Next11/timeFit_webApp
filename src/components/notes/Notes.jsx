@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { Grid, Paper, Box, InputBase, IconButton, Typography, Button, Avatar, Menu, MenuItem } from "@mui/material";
 import { Search as SearchIcon, Add as AddIcon, FilterList as FilterIcon, StickyNote2 } from "@mui/icons-material";
@@ -10,6 +11,8 @@ const Notes = ({ collapsed }) => {
   // ============================================================================
   // ESTADOS DEL COMPONENTE
   // ============================================================================
+  const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = useState(null);
   const [notes, setNotes] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [notaEditar, setNotaEditar] = useState(null);
@@ -17,6 +20,28 @@ const Notes = ({ collapsed }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleProfileMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  // Función para navegar al perfil
+  const handleProfileClick = () => {
+    navigate("/user_profile");
+    handleMenuClose();
+  };
+
+  // Función para navegar al logout
+  const handleLogoutClick = () => {
+    navigate("/logout-confirm", { state: { from: location.pathname } });
+    handleMenuClose();
+  };
+
+  const renderMenu = (
+    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+      <MenuItem onClick={handleProfileClick}>Mi Perfil</MenuItem>
+      <MenuItem onClick={handleLogoutClick}>Cerrar sesión</MenuItem>
+    </Menu>
+  );
 
   // ============================================================================
   // CONFIGURACIÓN DE API
@@ -102,7 +127,7 @@ const Notes = ({ collapsed }) => {
       const response = await fetch(`${API}/api/notes/all`, {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
@@ -112,12 +137,12 @@ const Notes = ({ collapsed }) => {
       }
 
       const data = await response.json();
-      
+
       // La respuesta incluye las notas en data.notes
       const fetchedNotes = Array.isArray(data.notes) ? data.notes : [];
-      
+
       // Mapear las notas del backend al formato esperado por el frontend
-      const mappedNotes = fetchedNotes.map(note => ({
+      const mappedNotes = fetchedNotes.map((note) => ({
         id: note._id,
         title: note.title,
         content: note.content,
@@ -140,9 +165,9 @@ const Notes = ({ collapsed }) => {
   };
 
   const handleNoteSaved = async () => {
-  console.log("Nota guardada, refrescando lista...");
-  await fetchNotes();
-};
+    console.log("Nota guardada, refrescando lista...");
+    await fetchNotes();
+  };
 
   const handleDeleteNote = async (id) => {
     if (!token) {
@@ -155,7 +180,7 @@ const Notes = ({ collapsed }) => {
       const response = await fetch(`${API}/api/notes/delete`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ id }),
@@ -168,10 +193,9 @@ const Notes = ({ collapsed }) => {
 
       const data = await response.json();
       console.log("Nota eliminada exitosamente:", data.message);
-      
+
       // Refrescar las notas después de eliminar
       await fetchNotes();
-      
     } catch (error) {
       console.error("Error al eliminar la nota:", error);
       alert(`Error al eliminar la nota: ${error.message}`);
@@ -282,13 +306,24 @@ const Notes = ({ collapsed }) => {
               {roleName}
             </Typography>
           </Box>
-          <IconButton sx={{ color: "#fff" }}>
+          <IconButton onClick={handleProfileMenuOpen} sx={{ color: "#fff" }}>
             {usernameInitials ? (
-              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300", color: "#fff", fontWeight: "bold" }}>{usernameInitials}</Avatar>
+              <Avatar
+                sx={{
+                  width: 50,
+                  height: 50,
+                  bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300",
+                  color: "#fff",
+                  fontWeight: "bold",
+                }}
+              >
+                {usernameInitials}
+              </Avatar>
             ) : (
               <AccountCircle sx={{ width: 50, height: 50, fontSize: 60 }} />
             )}
           </IconButton>
+          {renderMenu}
         </Grid>
       </Grid>
 
@@ -457,10 +492,10 @@ const Notes = ({ collapsed }) => {
           MODAL DE NOTAS
           ======================================================================== */}
       <ModalNote
-  open={modalAbierto}
-  onClose={cerrarModal}
-  noteId={notaEditar?.id} // ✅ Cambiar de modoEdicion/notaEditar a noteId
-  onGuardadoExitoso={handleNoteSaved} // ✅ Función simple que solo refresca
+        open={modalAbierto}
+        onClose={cerrarModal}
+        noteId={notaEditar?.id} // ✅ Cambiar de modoEdicion/notaEditar a noteId
+        onGuardadoExitoso={handleNoteSaved} // ✅ Función simple que solo refresca
       />
     </Box>
   );

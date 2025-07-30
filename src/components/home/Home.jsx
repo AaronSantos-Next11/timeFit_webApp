@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -56,41 +57,152 @@ export default function Home() {
   // Para las notas
   const label = { inputProps: { "aria-label": "Checkbox demo" } };
 
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
+  // Estados separados para cada menú
+  const [profileAnchorEl, setProfileAnchorEl] = useState(null);
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
 
-  const handleProfileMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+  const profileMenuOpen = Boolean(profileAnchorEl);
+  const filterMenuOpen = Boolean(filterAnchorEl);
+
+  const navigate = useNavigate();
+
+  // Manejadores para el menú del perfil
+  const handleProfileMenuOpen = (e) => setProfileAnchorEl(e.currentTarget);
+  const handleProfileMenuClose = () => setProfileAnchorEl(null);
+
+  // Manejadores para los menús de filtros
+  const handleFilterClick = (event) => {
+    setFilterAnchorEl(event.currentTarget);
   };
 
-    const colorMap = {
-  Rojo: "#e74c3c",
-  Azul: "#3498db",
-  Verde: "#2ecc71",
-  Amarillo: "#f1c40f",
-  Morado: "#9b59b6",
-  Naranja: "#e67e22",
-  Rosa: "#e91e63",
-  Durazno: "#ffb74d" ,
-  Turquesa: "#1abc9c",
-  RojoVino: "#880e4f" ,
-  Lima:"#cddc39",
-  Cian: "#00acc1",
-  Lavanda:"#9575cd",
-  Magenta: "#d81b60",
-  Coral: "#ff7043",
-};
+  const handleFilterClose = () => {
+    setFilterAnchorEl(null);
+  };
 
-const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
+  // Función para navegar al perfil
+  const handleProfileClick = () => {
+    navigate("/user_profile");
+    handleProfileMenuClose();
+  };
 
-// Buscar admin tanto en localStorage como en sessionStorage
-let admin = null;
-try {
-  const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
-  admin = raw ? JSON.parse(raw) : null;
-} catch {
-  admin = null;
-}
+  // Función para navegar al logout
+  const handleLogoutClick = () => {
+    navigate("/logout-confirm", { state: { from: location.pathname } });
+    handleProfileMenuClose();
+  };
+
+  // Menú del perfil
+  const renderProfileMenu = (
+    <Menu anchorEl={profileAnchorEl} open={profileMenuOpen} onClose={handleProfileMenuClose}>
+      <MenuItem onClick={handleProfileClick}>Mi Perfil</MenuItem>
+      <MenuItem onClick={handleLogoutClick}>Cerrar sesión</MenuItem>
+    </Menu>
+  );
+
+  // Menú de filtros (para reutilizar en todos los widgets)
+  const renderFilterMenu = (
+    <Menu
+      id="menu-opciones"
+      anchorEl={filterAnchorEl}
+      open={filterMenuOpen}
+      onClose={handleFilterClose}
+      MenuListProps={{
+        "aria-labelledby": "boton-menu",
+        sx: {
+          padding: 0,
+        },
+      }}
+      PaperProps={{
+        sx: {
+          backgroundColor: "#f8820b",
+          color: "Black",
+          borderRadius: "20px",
+        },
+      }}
+    >
+      <MenuItem
+        sx={{
+          justifyContent: "center",
+          textAlign: "center",
+          "&:hover": {
+            backgroundColor: "#272829",
+            color: "#f8820b",
+          },
+        }}
+        onClick={handleFilterClose}
+      >
+        Hoy
+      </MenuItem>
+      <MenuItem
+        sx={{
+          justifyContent: "center",
+          textAlign: "center",
+          "&:hover": {
+            backgroundColor: "#272829",
+            color: "#f8820b",
+          },
+        }}
+        onClick={handleFilterClose}
+      >
+        Esta Semana
+      </MenuItem>
+      <MenuItem
+        sx={{
+          justifyContent: "center",
+          textAlign: "center",
+          "&:hover": {
+            backgroundColor: "#272829",
+            color: "#f8820b",
+          },
+        }}
+        onClick={handleFilterClose}
+      >
+        Este Mes
+      </MenuItem>
+      <MenuItem
+        sx={{
+          justifyContent: "center",
+          textAlign: "center",
+          "&:hover": {
+            backgroundColor: "#272829",
+            color: "#f8820b",
+          },
+        }}
+        onClick={handleFilterClose}
+      >
+        Este Año
+      </MenuItem>
+    </Menu>
+  );
+
+  const colorMap = {
+    Rojo: "#e74c3c",
+    Azul: "#3498db",
+    Verde: "#2ecc71",
+    Amarillo: "#f1c40f",
+    Morado: "#9b59b6",
+    Naranja: "#e67e22",
+    Rosa: "#e91e63",
+    Durazno: "#ffb74d",
+    Turquesa: "#1abc9c",
+    RojoVino: "#880e4f",
+    Lima: "#cddc39",
+    Cian: "#00acc1",
+    Lavanda: "#9575cd",
+    Magenta: "#d81b60",
+    Coral: "#ff7043",
+  };
+
+  const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
+
+  // Buscar admin tanto en localStorage como en sessionStorage
+  let admin = null;
+  try {
+    const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+    admin = raw ? JSON.parse(raw) : null;
+  } catch {
+    admin = null;
+  }
 
   // Función para obtener las iniciales del username (máximo 2 letras)
   const getInitials = (username) => {
@@ -108,20 +220,9 @@ try {
     return `${firstName} ${firstLastName}`;
   };
 
-
   const usernameInitials = admin ? getInitials(admin.username) : "";
   const displayName = admin ? getFirstNameAndLastName(admin.name, admin.last_name) : "Usuario";
   const roleName = admin?.role?.role_name || "Rol desconocido";
-
-
-  // Manejadores para el menú
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
 
   // Para el inventario
   const data = [
@@ -363,11 +464,11 @@ try {
 
                         <div style={{ marginLeft: "auto" }}>
                           <IconButton
-                            aria-label="más opciones"
-                            aria-controls={open ? "menu-opciones" : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={open ? "true" : undefined}
-                            onClick={handleClick}
+aria-label="más opciones"
+        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
+        aria-haspopup="true"
+        aria-expanded={filterMenuOpen ? "true" : undefined}
+        onClick={handleFilterClick} 
                             sx={{
                               backgroundColor: "#FF8C00",
                               borderRadius: "15px",
@@ -382,78 +483,6 @@ try {
                           >
                             <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
                           </IconButton>
-                          <Menu
-                            id="menu-opciones"
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
-                            MenuListProps={{
-                              "aria-labelledby": "boton-menu",
-                              sx: {
-                                padding: 0,
-                              },
-                            }}
-                            PaperProps={{
-                              sx: {
-                                backgroundColor: "#f8820b",
-                                color: "Black",
-                                borderRadius: "20px",
-                              },
-                            }}
-                          >
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Hoy
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Esta Semana
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Mes
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Año
-                            </MenuItem>
-                          </Menu>
                         </div>
                       </Box>
                       <Typography
@@ -481,11 +510,11 @@ try {
 
                         <div style={{ marginLeft: "auto" }}>
                           <IconButton
-                            aria-label="más opciones"
-                            aria-controls={open ? "menu-opciones" : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={open ? "true" : undefined}
-                            onClick={handleClick}
+        aria-label="más opciones"
+        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
+        aria-haspopup="true"
+        aria-expanded={filterMenuOpen ? "true" : undefined}
+        onClick={handleFilterClick}
                             sx={{
                               backgroundColor: "#FF8C00",
                               borderRadius: "15px",
@@ -500,78 +529,6 @@ try {
                           >
                             <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
                           </IconButton>
-                          <Menu
-                            id="menu-opciones"
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
-                            MenuListProps={{
-                              "aria-labelledby": "boton-menu",
-                              sx: {
-                                padding: 0,
-                              },
-                            }}
-                            PaperProps={{
-                              sx: {
-                                backgroundColor: "#f8820b",
-                                color: "Black",
-                                borderRadius: "20px",
-                              },
-                            }}
-                          >
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Hoy
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Esta Semana
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Mes
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Año
-                            </MenuItem>
-                          </Menu>
                         </div>
                       </Box>
                       <Typography
@@ -601,11 +558,11 @@ try {
 
                         <div style={{ marginLeft: "auto" }}>
                           <IconButton
-                            aria-label="más opciones"
-                            aria-controls={open ? "menu-opciones" : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={open ? "true" : undefined}
-                            onClick={handleClick}
+        aria-label="más opciones"
+        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
+        aria-haspopup="true"
+        aria-expanded={filterMenuOpen ? "true" : undefined}
+        onClick={handleFilterClick}
                             sx={{
                               backgroundColor: "#FF8C00",
                               borderRadius: "15px",
@@ -620,78 +577,6 @@ try {
                           >
                             <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
                           </IconButton>
-                          <Menu
-                            id="menu-opciones"
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
-                            MenuListProps={{
-                              "aria-labelledby": "boton-menu",
-                              sx: {
-                                padding: 0,
-                              },
-                            }}
-                            PaperProps={{
-                              sx: {
-                                backgroundColor: "#f8820b",
-                                color: "Black",
-                                borderRadius: "20px",
-                              },
-                            }}
-                          >
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Hoy
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Esta Semana
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Mes
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Año
-                            </MenuItem>
-                          </Menu>
                         </div>
                       </Box>
 
@@ -754,11 +639,11 @@ try {
 
                         <div style={{ marginLeft: "auto" }}>
                           <IconButton
-                            aria-label="más opciones"
-                            aria-controls={open ? "menu-opciones" : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={open ? "true" : undefined}
-                            onClick={handleClick}
+        aria-label="más opciones"
+        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
+        aria-haspopup="true"
+        aria-expanded={filterMenuOpen ? "true" : undefined}
+        onClick={handleFilterClick}
                             sx={{
                               backgroundColor: "#FF8C00",
                               borderRadius: "15px",
@@ -773,78 +658,6 @@ try {
                           >
                             <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
                           </IconButton>
-                          <Menu
-                            id="menu-opciones"
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
-                            MenuListProps={{
-                              "aria-labelledby": "boton-menu",
-                              sx: {
-                                padding: 0,
-                              },
-                            }}
-                            PaperProps={{
-                              sx: {
-                                backgroundColor: "#f8820b",
-                                color: "Black",
-                                borderRadius: "20px",
-                              },
-                            }}
-                          >
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Hoy
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Esta Semana
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Mes
-                            </MenuItem>
-                            <MenuItem
-                              sx={{
-                                justifyContent: "center",
-                                textAlign: "center",
-                                "&:hover": {
-                                  backgroundColor: "#272829",
-                                  color: "#f8820b",
-                                },
-                              }}
-                              onClick={handleClose}
-                            >
-                              Este Año
-                            </MenuItem>
-                          </Menu>
                         </div>
                       </Box>
                       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -1036,11 +849,11 @@ try {
 
                       <div style={{ marginLeft: "auto" }}>
                         <IconButton
-                          aria-label="más opciones"
-                          aria-controls={open ? "menu-opciones" : undefined}
-                          aria-haspopup="true"
-                          aria-expanded={open ? "true" : undefined}
-                          onClick={handleClick}
+        aria-label="más opciones"
+        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
+        aria-haspopup="true"
+        aria-expanded={filterMenuOpen ? "true" : undefined}
+        onClick={handleFilterClick}
                           sx={{
                             backgroundColor: "#FF8C00",
                             borderRadius: "15px",
@@ -1055,78 +868,6 @@ try {
                         >
                           <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
                         </IconButton>
-                        <Menu
-                          id="menu-opciones"
-                          anchorEl={anchorEl}
-                          open={open}
-                          onClose={handleClose}
-                          MenuListProps={{
-                            "aria-labelledby": "boton-menu",
-                            sx: {
-                              padding: 0,
-                            },
-                          }}
-                          PaperProps={{
-                            sx: {
-                              backgroundColor: "#f8820b",
-                              color: "Black",
-                              borderRadius: "20px",
-                            },
-                          }}
-                        >
-                          <MenuItem
-                            sx={{
-                              justifyContent: "center",
-                              textAlign: "center",
-                              "&:hover": {
-                                backgroundColor: "#272829",
-                                color: "#f8820b",
-                              },
-                            }}
-                            onClick={handleClose}
-                          >
-                            Hoy
-                          </MenuItem>
-                          <MenuItem
-                            sx={{
-                              justifyContent: "center",
-                              textAlign: "center",
-                              "&:hover": {
-                                backgroundColor: "#272829",
-                                color: "#f8820b",
-                              },
-                            }}
-                            onClick={handleClose}
-                          >
-                            Esta Semana
-                          </MenuItem>
-                          <MenuItem
-                            sx={{
-                              justifyContent: "center",
-                              textAlign: "center",
-                              "&:hover": {
-                                backgroundColor: "#272829",
-                                color: "#f8820b",
-                              },
-                            }}
-                            onClick={handleClose}
-                          >
-                            Este Mes
-                          </MenuItem>
-                          <MenuItem
-                            sx={{
-                              justifyContent: "center",
-                              textAlign: "center",
-                              "&:hover": {
-                                backgroundColor: "#272829",
-                                color: "#f8820b",
-                              },
-                            }}
-                            onClick={handleClose}
-                          >
-                            Este Año
-                          </MenuItem>
-                        </Menu>
                       </div>
                     </Box>
                     <Grid container display="flex" direction="row" sx={{ marginTop: 1 }}>
@@ -1281,11 +1022,11 @@ try {
 
                       <div style={{ marginLeft: "auto" }}>
                         <IconButton
-                          aria-label="más opciones"
-                          aria-controls={open ? "menu-opciones" : undefined}
-                          aria-haspopup="true"
-                          aria-expanded={open ? "true" : undefined}
-                          onClick={handleClick}
+        aria-label="más opciones"
+        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
+        aria-haspopup="true"
+        aria-expanded={filterMenuOpen ? "true" : undefined}
+        onClick={handleFilterClick}
                           sx={{
                             backgroundColor: "#FF8C00",
                             borderRadius: "15px",
@@ -1300,78 +1041,6 @@ try {
                         >
                           <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
                         </IconButton>
-                        <Menu
-                          id="menu-opciones"
-                          anchorEl={anchorEl}
-                          open={open}
-                          onClose={handleClose}
-                          MenuListProps={{
-                            "aria-labelledby": "boton-menu",
-                            sx: {
-                              padding: 0,
-                            },
-                          }}
-                          PaperProps={{
-                            sx: {
-                              backgroundColor: "#f8820b",
-                              color: "Black",
-                              borderRadius: "20px",
-                            },
-                          }}
-                        >
-                          <MenuItem
-                            sx={{
-                              justifyContent: "center",
-                              textAlign: "center",
-                              "&:hover": {
-                                backgroundColor: "#272829",
-                                color: "#f8820b",
-                              },
-                            }}
-                            onClick={handleClose}
-                          >
-                            Hoy
-                          </MenuItem>
-                          <MenuItem
-                            sx={{
-                              justifyContent: "center",
-                              textAlign: "center",
-                              "&:hover": {
-                                backgroundColor: "#272829",
-                                color: "#f8820b",
-                              },
-                            }}
-                            onClick={handleClose}
-                          >
-                            Esta Semana
-                          </MenuItem>
-                          <MenuItem
-                            sx={{
-                              justifyContent: "center",
-                              textAlign: "center",
-                              "&:hover": {
-                                backgroundColor: "#272829",
-                                color: "#f8820b",
-                              },
-                            }}
-                            onClick={handleClose}
-                          >
-                            Este Mes
-                          </MenuItem>
-                          <MenuItem
-                            sx={{
-                              justifyContent: "center",
-                              textAlign: "center",
-                              "&:hover": {
-                                backgroundColor: "#272829",
-                                color: "#f8820b",
-                              },
-                            }}
-                            onClick={handleClose}
-                          >
-                            Este Año
-                          </MenuItem>
-                        </Menu>
                       </div>
                     </Box>
 
@@ -1428,6 +1097,8 @@ try {
             ! SIGUE USANDO EL GRID ANIDADO, UNA COLUMNA DENTRO DE OTRA Y TODO DENTRO DE UN CONTENEDOR PRINCIPAL
           */}
       </Grid>
+          {renderProfileMenu}
+    {renderFilterMenu}
     </div>
   );
 }

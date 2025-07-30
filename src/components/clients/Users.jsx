@@ -1,6 +1,7 @@
 // src/components/clients/Users.jsx
 
 import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import {
   Grid,
@@ -21,6 +22,7 @@ import {
   Card,
   CardContent,
   Chip,
+  TablePagination,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -33,6 +35,7 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import ModalClient from "./ModalClient";
 
 export default function Users({ collapsed }) {
+  const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -43,7 +46,12 @@ export default function Users({ collapsed }) {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   // Estados para filtros
   const [anchorElFilter, setAnchorElFilter] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
   const [sortBy, setSortBy] = useState("");
+
+  // Estados para paginación
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(7);
 
   const API = import.meta.env.VITE_API_URL;
   const rawUser = localStorage.getItem("user") || sessionStorage.getItem("user");
@@ -71,9 +79,9 @@ export default function Users({ collapsed }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ 
-          id: clientId, 
-          status: "Vencido" 
+        body: JSON.stringify({
+          id: clientId,
+          status: "Vencido",
         }),
       });
       if (!res.ok) throw await res.json();
@@ -89,17 +97,17 @@ export default function Users({ collapsed }) {
       const membershipRes = await fetch(`${API}/api/memberships/${membershipType}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (!membershipRes.ok) return;
-      
+
       const membershipData = await membershipRes.json();
       const durationDays = membershipData.duration_days || 30; // Por defecto 30 días
-      
+
       // Calcular nueva fecha de vencimiento
       const start = new Date(startDate);
       const newEndDate = new Date(start);
       newEndDate.setDate(start.getDate() + durationDays);
-      
+
       // Actualizar fecha de vencimiento en la base de datos
       const updateRes = await fetch(`${API}/api/clients/updated`, {
         method: "POST",
@@ -107,17 +115,16 @@ export default function Users({ collapsed }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ 
-          id: clientId, 
-          end_date: newEndDate.toISOString() 
+        body: JSON.stringify({
+          id: clientId,
+          end_date: newEndDate.toISOString(),
         }),
       });
-      
+
       if (!updateRes.ok) throw await updateRes.json();
-      
+
       // Refrescar la lista de clientes después de la actualización
       fetchClients();
-      
     } catch (err) {
       console.error("Error recalculando fecha de vencimiento:", err);
     }
@@ -127,10 +134,9 @@ export default function Users({ collapsed }) {
   const updateClientEndDatesForMembership = async (membershipId, newDurationDays) => {
     try {
       // Obtener todos los clientes que tienen esta membresía
-      const clientsWithMembership = clients.filter(client => {
-        const clientMembershipId = typeof client.membership_id === 'object' 
-          ? client.membership_id._id 
-          : client.membership_id;
+      const clientsWithMembership = clients.filter((client) => {
+        const clientMembershipId =
+          typeof client.membership_id === "object" ? client.membership_id._id : client.membership_id;
         return clientMembershipId === membershipId;
       });
 
@@ -147,21 +153,22 @@ export default function Users({ collapsed }) {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ 
-              id: client._id, 
-              end_date: newEndDate.toISOString() 
+            body: JSON.stringify({
+              id: client._id,
+              end_date: newEndDate.toISOString(),
             }),
           });
         }
       });
 
       await Promise.all(updatePromises.filter(Boolean));
-      
+
       // Refrescar la lista de clientes
       fetchClients();
-      
-      alert(`Actualizadas las fechas de vencimiento de ${clientsWithMembership.length} clientes para la membresía modificada`);
-      
+
+      alert(
+        `Actualizadas las fechas de vencimiento de ${clientsWithMembership.length} clientes para la membresía modificada`
+      );
     } catch (err) {
       console.error("Error actualizando fechas de clientes para membresía modificada:", err);
     }
@@ -174,29 +181,32 @@ export default function Users({ collapsed }) {
       const membershipRes = await fetch(`${API}/api/memberships`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (!membershipRes.ok) return;
-      
+
       const currentMemberships = await membershipRes.json();
-      
+
       // Verificar si hay clientes y membresías cargadas
       if (clients.length > 0 && currentMemberships.length > 0) {
         // Obtener las membresías únicas de los clientes actuales
-        const uniqueMembershipIds = [...new Set(clients.map(client => {
-          return typeof client.membership_id === 'object' 
-            ? client.membership_id._id 
-            : client.membership_id;
-        }).filter(Boolean))];
+        const uniqueMembershipIds = [
+          ...new Set(
+            clients
+              .map((client) => {
+                return typeof client.membership_id === "object" ? client.membership_id._id : client.membership_id;
+              })
+              .filter(Boolean)
+          ),
+        ];
 
         // Para cada membresía única, verificar si necesita actualización de fechas
         for (const membershipId of uniqueMembershipIds) {
-          const membership = currentMemberships.find(m => m._id === membershipId);
+          const membership = currentMemberships.find((m) => m._id === membershipId);
           if (membership) {
             // Verificar si algún cliente tiene una fecha de vencimiento incorrecta
-            const clientsWithThisMembership = clients.filter(client => {
-              const clientMembershipId = typeof client.membership_id === 'object' 
-                ? client.membership_id._id 
-                : client.membership_id;
+            const clientsWithThisMembership = clients.filter((client) => {
+              const clientMembershipId =
+                typeof client.membership_id === "object" ? client.membership_id._id : client.membership_id;
               return clientMembershipId === membershipId;
             });
 
@@ -208,10 +218,14 @@ export default function Users({ collapsed }) {
                 calculatedEndDate.setDate(startDate.getDate() + membership.duration_days);
 
                 // Comparar fechas (ignorando diferencias de milisegundos)
-                const daysDifference = Math.abs(currentEndDate.getTime() - calculatedEndDate.getTime()) / (1000 * 60 * 60 * 24);
-                
-                if (daysDifference > 1) { // Si hay más de 1 día de diferencia
-                  console.log(`Detectado cambio en membresía ${membership.name_membership}, actualizando fechas de clientes...`);
+                const daysDifference =
+                  Math.abs(currentEndDate.getTime() - calculatedEndDate.getTime()) / (1000 * 60 * 60 * 24);
+
+                if (daysDifference > 1) {
+                  // Si hay más de 1 día de diferencia
+                  console.log(
+                    `Detectado cambio en membresía ${membership.name_membership}, actualizando fechas de clientes...`
+                  );
                   await updateClientEndDatesForMembership(membershipId, membership.duration_days);
                   break; // Solo necesitamos detectar un cliente con fecha incorrecta para actualizar todos
                 }
@@ -233,13 +247,9 @@ export default function Users({ collapsed }) {
       });
       if (!res.ok) throw await res.json();
       const clientsData = await res.json();
-      
+
       // Filtrar elementos nulos o inválidos y asegurarse de que tengan estructura válida
-      const validClients = clientsData.filter(client => 
-        client && 
-        typeof client === 'object' && 
-        client._id
-      );
+      const validClients = clientsData.filter((client) => client && typeof client === "object" && client._id);
 
       // Verificar clientes vencidos y actualizar su estado
       const updatedClients = await Promise.all(
@@ -261,17 +271,17 @@ export default function Users({ collapsed }) {
 
   useEffect(() => {
     fetchClients();
-    
+
     // Verificar clientes vencidos cada hora
     const expiredClientsInterval = setInterval(() => {
       fetchClients();
     }, 3600000); // 1 hora en milisegundos
-    
+
     // Verificar cambios en membresías cada 5 minutos
     const membershipChangesInterval = setInterval(() => {
       checkMembershipUpdates();
     }, 300000); // 5 minutos en milisegundos
-    
+
     return () => {
       clearInterval(expiredClientsInterval);
       clearInterval(membershipChangesInterval);
@@ -291,70 +301,110 @@ export default function Users({ collapsed }) {
 
   // Helper function to get full name with null safety
   const getFullName = (client) => {
-    if (!client || !client.full_name || typeof client.full_name !== 'object') {
+    if (!client || !client.full_name || typeof client.full_name !== "object") {
       return "N/A";
     }
-    
+
     const { first = "", last_father = "", last_mother = "" } = client.full_name;
-    
+
     // Asegurarse de que todos los valores sean strings
-    const firstName = typeof first === 'string' ? first : "";
-    const lastFather = typeof last_father === 'string' ? last_father : "";
-    const lastMother = typeof last_mother === 'string' ? last_mother : "";
-    
+    const firstName = typeof first === "string" ? first : "";
+    const lastFather = typeof last_father === "string" ? last_father : "";
+    const lastMother = typeof last_mother === "string" ? last_mother : "";
+
     const fullName = `${firstName} ${lastFather} ${lastMother}`.trim();
     return fullName || "N/A";
   };
 
-  // Filtered and sorted clients with null safety
-  const displayed = useMemo(
-    () => {
-      let filtered = clients.filter((c) => {
-        // Verificación completa de seguridad antes de acceder a propiedades
-        if (!c || typeof c !== 'object') return false;
-        
-        const nombre = getFullName(c).toLowerCase();
-        const email = c.email || "";
-        const phone = c.phone || "";
-        
-        return (
-          nombre.includes(searchTerm.toLowerCase()) ||
-          email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          phone.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      });
+  const handleProfileMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
-      // Aplicar ordenamiento con verificaciones de seguridad
-      if (sortBy === "name-asc") {
-        filtered.sort((a, b) => {
-          const nameA = getFullName(a);
-          const nameB = getFullName(b);
-          return nameA.localeCompare(nameB);
-        });
-      } else if (sortBy === "name-desc") {
-        filtered.sort((a, b) => {
-          const nameA = getFullName(a);
-          const nameB = getFullName(b);
-          return nameB.localeCompare(nameA);
-        });
-      } else if (sortBy === "email") {
-        filtered.sort((a, b) => (a.email || "").localeCompare(b.email || ""));
-      } else if (sortBy === "membership") {
-        filtered.sort((a, b) => (a.membership_type || "").localeCompare(b.membership_type || ""));
-      } else if (sortBy === "start-date") {
-        filtered.sort((a, b) => new Date(a.start_date || 0) - new Date(b.start_date || 0));
-      } else if (sortBy === "end-date") {
-        filtered.sort((a, b) => new Date(a.end_date || 0) - new Date(b.end_date || 0));
-      } else if (sortBy === "payment") {
-        filtered.sort((a, b) => (a.payment?.amount || 0) - (b.payment?.amount || 0));
-      } else if (sortBy === "status") {
-        filtered.sort((a, b) => (a.status || "").localeCompare(b.status || ""));
-      }
+  // Función para navegar al perfil
+  const handleProfileClick = () => {
+    navigate("/user_profile");
+    handleMenuClose();
+  };
 
-      return filtered;
-    },
-    [searchTerm, clients, sortBy]
+  // Función para navegar al logout
+  const handleLogoutClick = () => {
+    navigate("/logout-confirm", { state: { from: location.pathname } });
+    handleMenuClose();
+  };
+
+  const renderMenu = (
+    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+      <MenuItem onClick={handleProfileClick}>Mi Perfil</MenuItem>
+      <MenuItem onClick={handleLogoutClick}>Cerrar sesión</MenuItem>
+    </Menu>
   );
+  // Filtered and sorted clients with null safety
+  const filteredAndSorted = useMemo(() => {
+    let filtered = clients.filter((c) => {
+      // Verificación completa de seguridad antes de acceder a propiedades
+      if (!c || typeof c !== "object") return false;
+
+      const nombre = getFullName(c).toLowerCase();
+      const email = c.email || "";
+      const phone = c.phone || "";
+
+      return (
+        nombre.includes(searchTerm.toLowerCase()) ||
+        email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        phone.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+
+    // Aplicar ordenamiento con verificaciones de seguridad
+    if (sortBy === "name-asc") {
+      filtered.sort((a, b) => {
+        const nameA = getFullName(a);
+        const nameB = getFullName(b);
+        return nameA.localeCompare(nameB);
+      });
+    } else if (sortBy === "name-desc") {
+      filtered.sort((a, b) => {
+        const nameA = getFullName(a);
+        const nameB = getFullName(b);
+        return nameB.localeCompare(nameA);
+      });
+    } else if (sortBy === "email") {
+      filtered.sort((a, b) => (a.email || "").localeCompare(b.email || ""));
+    } else if (sortBy === "membership") {
+      filtered.sort((a, b) => (a.membership_type || "").localeCompare(b.membership_type || ""));
+    } else if (sortBy === "start-date") {
+      filtered.sort((a, b) => new Date(a.start_date || 0) - new Date(b.start_date || 0));
+    } else if (sortBy === "end-date") {
+      filtered.sort((a, b) => new Date(a.end_date || 0) - new Date(b.end_date || 0));
+    } else if (sortBy === "payment") {
+      filtered.sort((a, b) => (a.payment?.amount || 0) - (b.payment?.amount || 0));
+    } else if (sortBy === "status") {
+      filtered.sort((a, b) => (a.status || "").localeCompare(b.status || ""));
+    }
+
+    return filtered;
+  }, [searchTerm, clients, sortBy]);
+
+  // Datos paginados
+  const paginatedData = useMemo(() => {
+    const startIndex = page * rowsPerPage;
+    return filteredAndSorted.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredAndSorted, page, rowsPerPage]);
+
+  // Reset página cuando cambia el filtro de búsqueda
+  useEffect(() => {
+    setPage(0);
+  }, [searchTerm]);
+
+  // Manejar cambio de página
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Manejar cambio de filas por página
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   // Handlers
   const abrirRegistro = () => {
@@ -362,14 +412,14 @@ export default function Users({ collapsed }) {
     setClientEditar(null);
     setModalOpen(true);
   };
-  
+
   const abrirEdicion = (c) => {
     setModoEdicion(true);
     setClientEditar(c);
     setModalOpen(true);
     setAnchorElMenu(null);
   };
-  
+
   const handleDelete = async () => {
     try {
       const res = await fetch(`${API}/api/clients/delete`, {
@@ -398,10 +448,8 @@ export default function Users({ collapsed }) {
   // Función para manejar la actualización de membresía y recalcular fecha de vencimiento
   const handleRecalculateMembership = async (client) => {
     if (client.membership_id && client.start_date) {
-      const membershipId = typeof client.membership_id === 'object' 
-        ? client.membership_id._id 
-        : client.membership_id;
-      
+      const membershipId = typeof client.membership_id === "object" ? client.membership_id._id : client.membership_id;
+
       await recalculateEndDate(client._id, membershipId, client.start_date);
     }
   };
@@ -411,8 +459,10 @@ export default function Users({ collapsed }) {
   const handleFilterClose = () => setAnchorElFilter(null);
   const handleSort = (criterion) => {
     setSortBy(criterion);
+    setPage(0); // Reset a la primera página cuando se ordena
     handleFilterClose();
   };
+
   // Helper function to safely format date
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -434,16 +484,15 @@ export default function Users({ collapsed }) {
   // Helper function to get status color and format
   const getStatusDisplay = (status) => {
     const statusMap = {
-      "Activo": { color: "#4caf50", icon: "🟢" },
-      "Inactivo": { color: "#f44336", icon: "🔴" },
-      "Pendiente": { color: "#ff9800", icon: "🟡" },
-      "Vencido": { color: "#ff5722", icon: "🟠" },
-      "Cancelado": { color: "#9e9e9e", icon: "⚫" },
-      "Debe": { color: "#2196f3", icon: "🔵" },
+      Activo: { color: "#4caf50", icon: "🟢" },
+      Inactivo: { color: "#9e9e9e", icon: "⚫" },
+      Pendiente: { color: "#ff9800", icon: "🟡" },
+      Vencido: { color: "#ff5722", icon: "🟠" },
+      Cancelado: { color: "#f44336", icon: "🔴" },
     };
 
     const statusInfo = statusMap[status] || { color: "#9e9e9e", icon: "⚫" };
-    
+
     return (
       <Chip
         label={`${statusInfo.icon} ${status || "N/A"}`}
@@ -456,7 +505,7 @@ export default function Users({ collapsed }) {
           height: "24px",
           "& .MuiChip-label": {
             padding: "0 8px",
-          }
+          },
         }}
       />
     );
@@ -473,9 +522,9 @@ export default function Users({ collapsed }) {
     Durazno: "#ffb74d",
     Turquesa: "#1abc9c",
     RojoVino: "#880e4f",
-    Lima:"#cddc39",
+    Lima: "#cddc39",
     Cian: "#00acc1",
-    Lavanda:"#9575cd",
+    Lavanda: "#9575cd",
     Magenta: "#d81b60",
     Coral: "#ff7043",
   };
@@ -505,7 +554,7 @@ export default function Users({ collapsed }) {
               p: 1,
               borderRadius: "30px",
               boxShadow: 3,
-              width: collapsed ? "420px" : "700px",
+              width: collapsed ? "4620px" : "700px",
               maxWidth: "100%",
               height: 48,
               bgcolor: "#fff",
@@ -526,22 +575,28 @@ export default function Users({ collapsed }) {
         </Grid>
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box sx={{ textAlign: "right", ml: 2 }}>
-            <Typography sx={{ fontSize: 20, color: "#F8820B", fontWeight: "bold" }}>
-              {displayName}
-            </Typography>
+            <Typography sx={{ fontSize: 20, color: "#F8820B", fontWeight: "bold" }}>{displayName}</Typography>
             <Typography variant="body2" sx={{ fontSize: 15, color: "#ccc" }}>
               {roleName}
             </Typography>
           </Box>
-          <IconButton sx={{ color: "#fff" }}>
+          <IconButton onClick={handleProfileMenuOpen} sx={{ color: "#fff" }}>
             {usernameInitials ? (
-              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300", fontWeight: "bold" }}>
+              <Avatar
+                sx={{
+                  width: 50,
+                  height: 50,
+                  bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300",
+                  fontWeight: "bold",
+                }}
+              >
                 {usernameInitials}
               </Avatar>
             ) : (
               <AccountCircle sx={{ fontSize: 60 }} />
             )}
           </IconButton>
+          {renderMenu}
         </Grid>
       </Grid>
 
@@ -575,229 +630,294 @@ export default function Users({ collapsed }) {
           <Button
             startIcon={<FilterIcon />}
             onClick={handleFilterClick}
-          sx={{
-            color: "#F8820B",
-            fontWeight: "Bold",
-            borderRadius: "8px",
-            padding: "10px 20px",
-            border: "1px solid #F8820B",
-            "&:hover": {
-              backgroundColor: "#FF6600",
-              border: "1px solid #FF6600",
-              color: "white",
-            },
-          }}
+            sx={{
+              color: "#F8820B",
+              fontWeight: "Bold",
+              borderRadius: "8px",
+              padding: "10px 20px",
+              border: "1px solid #F8820B",
+              "&:hover": {
+                backgroundColor: "#FF6600",
+                border: "1px solid #FF6600",
+                color: "white",
+              },
+            }}
           >
             Filtrar
           </Button>
         </Grid>
       </Grid>
 
+      {/* Contador de resultados */}
+      <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="body2" sx={{ color: "#ccc" }}>
+          Mostrando {Math.min(paginatedData.length, rowsPerPage)} de {filteredAndSorted.length} clientes
+          {filteredAndSorted.length !== clients.length && ` (${clients.length} total)`}
+        </Typography>
+        {(searchTerm || sortBy) && (
+          <Chip
+            label="Filtros activos"
+            size="small"
+            sx={{
+              bgcolor: "#F8820B",
+              color: "#000",
+              fontWeight: "bold",
+            }}
+          />
+        )}
+      </Box>
+
       {/* Menú de filtros */}
-      <Menu 
-        anchorEl={anchorElFilter} 
-        open={Boolean(anchorElFilter)} 
-        onClose={handleFilterClose}
-        PaperProps={{
-          sx: {
-            bgcolor: "#4d4a49",
-            border: "1px solid #404040",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
-          }
-        }}
-      >
-        <MenuItem 
-          onClick={() => handleSort("name-asc")}
-          sx={{ 
-            color: sortBy === "name-asc" ? "#F8820B" : "#fff", 
-            "&:hover": { bgcolor: "#353842", color: "#F8820B" } 
-          }}
-        >
-          Ordenar por Nombre (A-Z)
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSort("name-desc")}
-          sx={{ 
-            color: sortBy === "name-desc" ? "#F8820B" : "#fff", 
-            "&:hover": { bgcolor: "#353842", color: "#F8820B" } 
-          }}
-        >
-          Ordenar por Nombre (Z-A)
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSort("email")}
-          sx={{ 
-            color: sortBy === "email" ? "#F8820B" : "#fff", 
-            "&:hover": { bgcolor: "#353842", color: "#F8820B" } 
-          }}
-        >
-          Ordenar por Correo
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSort("membership")}
-          sx={{ 
-            color: sortBy === "membership" ? "#F8820B" : "#fff", 
-            "&:hover": { bgcolor: "#353842", color: "#F8820B" } 
-          }}
-        >
-          Ordenar por Tipo de Membresía
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSort("start-date")}
-          sx={{ 
-            color: sortBy === "start-date" ? "#F8820B" : "#fff", 
-            "&:hover": { bgcolor: "#353842", color: "#F8820B" } 
-          }}
-        >
-          Ordenar por Fecha de Inicio
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSort("end-date")}
-          sx={{ 
-            color: sortBy === "end-date" ? "#F8820B" : "#fff", 
-            "&:hover": { bgcolor: "#353842", color: "#F8820B" } 
-          }}
-        >
-          Ordenar por Fecha de Vencimiento
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSort("payment")}
-          sx={{ 
-            color: sortBy === "payment" ? "#F8820B" : "#fff", 
-            "&:hover": { bgcolor: "#353842", color: "#F8820B" } 
-          }}
-        >
-          Ordenar por Total de Pago
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSort("status")}
-          sx={{ 
-            color: sortBy === "status" ? "#F8820B" : "#fff", 
-            "&:hover": { bgcolor: "#353842", color: "#F8820B" } 
-          }}
-        >
-          Ordenar por Estado
-        </MenuItem>
+      <Menu anchorEl={anchorElFilter} open={Boolean(anchorElFilter)} onClose={handleFilterClose}>
+        <MenuItem onClick={() => handleSort("name-asc")}>Ordenar por Nombre (A-Z)</MenuItem>
+        <MenuItem onClick={() => handleSort("name-desc")}>Ordenar por Nombre (Z-A)</MenuItem>
+        <MenuItem onClick={() => handleSort("email")}>Ordenar por Correo</MenuItem>
+        <MenuItem onClick={() => handleSort("membership")}>Ordenar por Tipo de Membresía</MenuItem>
+        <MenuItem>Ordenar por Fecha de Inicio</MenuItem>
+        <MenuItem onClick={() => handleSort("end-date")}>Ordenar por Fecha de Vencimiento</MenuItem>
+        <MenuItem>Ordenar por Total de Pago</MenuItem>
+        <MenuItem onClick={() => handleSort("status")}>Ordenar por Estado</MenuItem>
       </Menu>
 
-      {/* Listado */}
-      <Card sx={{ bgcolor: "#2A2D31", borderRadius: 2, boxShadow: "0 8px 32px rgba(0,0,0,0.3)", border: "1px solid #404040", overflowX: "auto" }}>
-        {/* Header tabla */}
-        <Box sx={{ bgcolor: "#4d4a49", p: 2, position: "relative", minWidth: "1300px" }}>
-          <Box sx={{ position: "absolute", inset: 0, bgcolor: "rgba(255,255,255,0.1)", backdropFilter: "blur(10px)" }} />
-          <Grid container spacing={1} sx={{ position: "relative", zIndex: 1 }}>
-            <Grid item xs={0.5}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>ID</Typography></Grid>
-            <Grid item xs={1.6}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>NOMBRE COMPLETO</Typography></Grid>
-            <Grid item xs={1.6}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>EMAIL</Typography></Grid>
-            <Grid item xs={1.1}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>TELÉFONO</Typography></Grid>
-            <Grid item xs={1.1}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>TIPO MEMBRESÍA</Typography></Grid>
-            <Grid item xs={0.9}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>FECHA INICIO</Typography></Grid>
-            <Grid item xs={1.2}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>FECHA VENCIMIENTO</Typography></Grid>
-            <Grid item xs={1}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>MÉTODO PAGO</Typography></Grid>
-            <Grid item xs={1}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>TOTAL PAGO</Typography></Grid>
-            <Grid item xs={0.9}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>ESTADO</Typography></Grid>
-            <Grid item xs={0.5}><Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px", textAlign: "center" }}>ACCIONES</Typography></Grid>
-          </Grid>
-        </Box>
-        <CardContent sx={{ p: 0, maxHeight: 500, overflowY: "auto", minWidth: "1300px" }}>
-          {displayed.length === 0 ? (
-            <Box sx={{ textAlign: "center", py: 6, color: "#888" }}>
-              <GroupIcon sx={{ fontSize: 48, mb: 2 }} />
-              <Typography variant="h6" sx={{ color: "#ccc" }}>No se encontraron clientes</Typography>
-              <Typography>Intenta con otros términos de búsqueda</Typography>
-            </Box>
-          ) : (
-            displayed.map((c, idx) => (
-              <Box key={c._id || idx} sx={{
-                transition: "all 0.2s",
-                "&:hover": { bgcolor: "#353842", transform: "translateX(4px)", boxShadow: "inset 4px 0 0 #F8820B" }
-              }}>
-                <Grid container alignItems="center" spacing={1} sx={{ p: 1.5, minHeight: "60px" }}>
-                  <Grid item xs={0.5}>
-                    <Chip
-                      label={`#${idx + 1}`}
-                      size="small"
-                      sx={{
-                        backgroundColor: "#f0420dff",
-                        color: "#fff",
-                        fontWeight: "600",
-                        fontSize: "12px",
-                        height: "24px"
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={1.6}>
-                    <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: "13px", lineHeight: 1.2 }}>
-                      {getFullName(c)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={1.6}>
-                    <Typography sx={{ color: "#ccc", fontSize: "13px", wordBreak: "break-all", lineHeight: 1.2 }}>
-                      {c.email || "N/A"}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={1.1}>
-                    <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
-                      {c.phone || "N/A"}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={1.1}>
-                    <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
-                      {c.membership_type || "N/A"}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={0.9}>
-                    <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
-                      {formatDate(c.start_date)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={1.2}>
-                    <Typography sx={{ 
-                      color: isClientExpired(c.end_date) ? "#ff5722" : "#ccc", 
-                      fontSize: "13px", 
-                      lineHeight: 1.2,
-                      fontWeight: isClientExpired(c.end_date) ? "600" : "400"
-                    }}>
-                      {formatDate(c.end_date)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={1}>
-                    <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
-                      {c.payment?.method || "N/A"}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={0.9}>
-                    <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
-                      {formatPayment(c)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={1}>
-                    {getStatusDisplay(c.status)}
-                  </Grid>
-                  <Grid item xs={0.5} textAlign="center">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        setAnchorElMenu(e.currentTarget);
-                        setClientSeleccionado(c);
-                      }}
-                      sx={{
-                        bgcolor: "rgba(248,130,11,0.1)",
-                        color: "#F8820B",
-                        "&:hover": { bgcolor: "rgba(248,130,11,0.2)" },
-                        width: 32,
-                        height: 32
-                      }}
+      {/* TABLA DE CLIENTES - CORREGIDA SIN BARRAS DUPLICADAS */}
+      <Card
+        sx={{
+          bgcolor: "#2A2D31",
+          borderRadius: 2,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+          border: "1px solid #404040",
+        }}
+      >
+        {/* Contenedor con scroll horizontal único */}
+        <Box
+          sx={{
+            overflowX: "auto",
+            overflowY: "hidden",
+          }}
+        >
+          {/* Header tabla que se mueve con el scroll */}
+          <Box sx={{ bgcolor: "#4d4a49", p: 2, position: "relative", minWidth: "1300px" }}>
+            <Box
+              sx={{ position: "absolute", inset: 0, bgcolor: "rgba(255,255,255,0.1)", backdropFilter: "blur(10px)" }}
+            />
+            <Grid container spacing={1} sx={{ position: "relative", zIndex: 1, minWidth: "1300px" }}>
+              <Grid item xs={0.5}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>ID</Typography>
+              </Grid>
+              <Grid item xs={2}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>NOMBRE COMPLETO</Typography>
+              </Grid>
+              <Grid item xs={1.1}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>EMAIL</Typography>
+              </Grid>
+              <Grid item xs={1}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>TELÉFONO</Typography>
+              </Grid>
+              <Grid item xs={1.3}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>TIPO MEMBRESÍA</Typography>
+              </Grid>
+              <Grid item xs={0.9}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>FECHA INICIO</Typography>
+              </Grid>
+              <Grid item xs={1.3}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>FECHA VENCIMIENTO</Typography>
+              </Grid>
+              <Grid item xs={1}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>MÉTODO PAGO</Typography>
+              </Grid>
+              <Grid item xs={1}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>TOTAL PAGO</Typography>
+              </Grid>
+              <Grid item xs={0.9}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px" }}>ESTADO</Typography>
+              </Grid>
+              <Grid item xs={0.5}>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "12px", textAlign: "center" }}>
+                  ACCIONES
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* Contenido de la tabla que se mueve con el header */}
+          <CardContent sx={{ p: 0 }}>
+            <Box
+              sx={{
+                maxHeight: "400px", // Altura fija para la tabla
+                overflowY: "auto",
+                overflowX: "hidden", // Eliminar scroll horizontal aquí
+                minWidth: "1300px",
+              }}
+            >
+              {paginatedData.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 6, color: "#888", minWidth: "1300px" }}>
+                  <GroupIcon sx={{ fontSize: 48, mb: 2 }} />
+                  <Typography variant="h6" sx={{ color: "#ccc" }}>
+                    {filteredAndSorted.length === 0 ? "No hay clientes registrados" : "No se encontraron clientes"}
+                  </Typography>
+                  <Typography>
+                    {filteredAndSorted.length === 0
+                      ? "Registra tu primer cliente"
+                      : "Intenta con otros términos de búsqueda"}
+                  </Typography>
+                </Box>
+              ) : (
+                paginatedData.map((c, idx) => (
+                  <Box
+                    key={c._id || idx}
+                    sx={{
+                      transition: "all 0.2s",
+                      position: "relative",
+                      minWidth: "1300px",
+                      "&:hover": {
+                        bgcolor: "#353842",
+                        transform: "translateX(4px)",
+                        boxShadow: "inset 4px 0 0 #F8820B",
+                      },
+                    }}
+                  >
+                    <Grid
+                      container
+                      alignItems="center"
+                      spacing={1}
+                      sx={{ p: 1.5, minHeight: "60px", minWidth: "1300px" }}
                     >
-                      <MoreVertIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-                {idx < displayed.length - 1 && <Divider sx={{ borderColor: "#404040", mx: 3 }} />}
-              </Box>
-            ))
-          )}
-        </CardContent>
+                      <Grid item xs={0.5}>
+                        <Chip
+                          label={`#${page * rowsPerPage + idx + 1}`}
+                          size="small"
+                          sx={{
+                            backgroundColor: "#f0420dff",
+                            color: "#fff",
+                            fontWeight: "600",
+                            fontSize: "12px",
+                            height: "24px",
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={1.6}>
+                        <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: "13px", lineHeight: 1.2 }}>
+                          {getFullName(c)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={1.6}>
+                        <Typography sx={{ color: "#ccc", fontSize: "13px", wordBreak: "break-all", lineHeight: 1.2 }}>
+                          {c.email || "N/A"}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={1}>
+                        <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
+                          {c.phone || "N/A"}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={1.4}>
+                        <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
+                          {c.membership_type || "N/A"}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={1.1}>
+                        <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
+                          {formatDate(c.start_date)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={1.2}>
+                        <Typography
+                          sx={{
+                            color: isClientExpired(c.end_date) ? "#ff5722" : "#ccc",
+                            fontSize: "13px",
+                            lineHeight: 1.2,
+                            fontWeight: isClientExpired(c.end_date) ? "600" : "400",
+                          }}
+                        >
+                          {formatDate(c.end_date)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={0.9}>
+                        <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
+                          {c.payment?.method || "N/A"}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={0.9}>
+                        <Typography sx={{ color: "#ccc", fontSize: "13px", lineHeight: 1.2 }}>
+                          {formatPayment(c)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={1.1}>
+                        {getStatusDisplay(c.status)}
+                      </Grid>
+                      <Grid item xs={0.5} textAlign="center">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            setAnchorElMenu(e.currentTarget);
+                            setClientSeleccionado(c);
+                          }}
+                          sx={{
+                            bgcolor: "rgba(248,130,11,0.1)",
+                            color: "#F8820B",
+                            "&:hover": { bgcolor: "rgba(248,130,11,0.2)" },
+                            width: 32,
+                            height: 32,
+                          }}
+                        >
+                          <MoreVertIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                    {idx < paginatedData.length - 1 && <Divider sx={{ borderColor: "#404040", mx: 3 }} />}
+                  </Box>
+                ))
+              )}
+            </Box>
+          </CardContent>
+        </Box>
+
+        {/* Paginación */}
+        {filteredAndSorted.length > 0 && (
+          <Box
+            sx={{
+              borderTop: "1px solid #404040",
+              backgroundColor: "#2A2D31",
+              px: 2,
+            }}
+          >
+            <TablePagination
+              component="div"
+              count={filteredAndSorted.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[7, 14, 21, 50]}
+              labelRowsPerPage="Filas por página:"
+              labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
+              sx={{
+                color: "#fff",
+                "& .MuiTablePagination-toolbar": {
+                  color: "#fff",
+                },
+                "& .MuiTablePagination-select": {
+                  color: "#fff",
+                },
+                "& .MuiTablePagination-selectIcon": {
+                  color: "#fff",
+                },
+                "& .MuiTablePagination-actions button": {
+                  color: "#F8820B",
+                  "&:hover": {
+                    backgroundColor: "rgba(248, 130, 11, 0.1)",
+                  },
+                  "&.Mui-disabled": {
+                    color: "#666",
+                  },
+                },
+                "& .MuiTablePagination-displayedRows": {
+                  color: "#ccc",
+                },
+              }}
+            />
+          </Box>
+        )}
       </Card>
 
       {/* Menú acciones */}
@@ -807,19 +927,34 @@ export default function Users({ collapsed }) {
         onClose={() => setAnchorElMenu(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
-        PaperProps={{ sx: { bgcolor: "#4d4a49", border: "1px solid #404040", boxShadow: "0 8px 32px rgba(0,0,0,0.3)" } }}
+        PaperProps={{
+          sx: { bgcolor: "#4d4a49", border: "1px solid #404040", boxShadow: "0 8px 32px rgba(0,0,0,0.3)" },
+        }}
       >
-        <MenuItem onClick={() => abrirEdicion(clientSeleccionado)} sx={{ color: "#fff", "&:hover": { color: "#F8820B" } }}>Editar</MenuItem>
-        <MenuItem 
-          onClick={() => { 
-            handleRecalculateMembership(clientSeleccionado); 
-            setAnchorElMenu(null); 
-          }} 
+        <MenuItem
+          onClick={() => abrirEdicion(clientSeleccionado)}
+          sx={{ color: "#fff", "&:hover": { color: "#F8820B" } }}
+        >
+          Editar
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleRecalculateMembership(clientSeleccionado);
+            setAnchorElMenu(null);
+          }}
           sx={{ color: "#fff", "&:hover": { color: "#4caf50" } }}
         >
           Recalcular Vencimiento
         </MenuItem>
-        <MenuItem onClick={() => { setOpenDeleteDialog(true); setAnchorElMenu(null); }} sx={{ color: "#fff", "&:hover": { color: "#FF3B30" } }}>Eliminar</MenuItem>
+        <MenuItem
+          onClick={() => {
+            setOpenDeleteDialog(true);
+            setAnchorElMenu(null);
+          }}
+          sx={{ color: "#fff", "&:hover": { color: "#FF3B30" } }}
+        >
+          Eliminar
+        </MenuItem>
       </Menu>
 
       {/* Modal crear/editar */}
@@ -832,12 +967,24 @@ export default function Users({ collapsed }) {
       />
 
       {/* Confirm delete */}
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)} PaperProps={{ sx: { bgcolor: "#2A2D31", border: "1px solid #404040" } }}>
+      <Dialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+        PaperProps={{ sx: { bgcolor: "#2A2D31", border: "1px solid #404040" } }}
+      >
         <DialogTitle sx={{ color: "#fff" }}>¿Eliminar cliente?</DialogTitle>
-        <DialogContent><Typography sx={{ color: "#ccc" }}>¿Estás seguro de eliminar este cliente? Esta acción no se puede deshacer.</Typography></DialogContent>
+        <DialogContent>
+          <Typography sx={{ color: "#ccc" }}>
+            ¿Estás seguro de eliminar este cliente? Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
         <DialogActions>
-          <Button sx={{ color: "#ccc" }} onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
-          <Button sx={{ bgcolor: "#FF3B30", color: "#fff", "&:hover": { bgcolor: "#D32F2F" } }} onClick={handleDelete}>Eliminar</Button>
+          <Button sx={{ color: "#ccc" }} onClick={() => setOpenDeleteDialog(false)}>
+            Cancelar
+          </Button>
+          <Button sx={{ bgcolor: "#FF3B30", color: "#fff", "&:hover": { bgcolor: "#D32F2F" } }} onClick={handleDelete}>
+            Eliminar
+          </Button>
         </DialogActions>
       </Dialog>
     </>
