@@ -22,6 +22,7 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout, collapsed }) => {
   console.log("Ruta actual:", location.pathname);
 
   const [roleName, setRoleName] = useState("");
+  const [roleLoaded, setRoleLoaded] = useState(false);
 
   useEffect(() => {
     // CORRECCIÓN: Solo actualizar el rol si el usuario está autenticado
@@ -34,9 +35,11 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout, collapsed }) => {
         user = null;
       }
       setRoleName(user?.role?.role_name || "");
+      setRoleLoaded(true);
     } else {
       // Si no está autenticado, limpiar el rol
       setRoleName("");
+      setRoleLoaded(false);
     }
   }, [isAuthenticated]);
 
@@ -49,6 +52,21 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout, collapsed }) => {
     if (isColab) return "/users";
     return "/login";
   };
+
+  // CORRECCIÓN: No renderizar rutas protegidas hasta que el rol esté cargado
+  if (isAuthenticated && !roleLoaded) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '50vh',
+        color: '#ffffff'
+      }}>
+        <div>Cargando perfil...</div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -72,26 +90,28 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout, collapsed }) => {
       
       <Route path="/logout" element={<Logout onLogout={onLogout} />} />
 
-      {/* CORRECCIÓN: Rutas protegidas - verificar autenticación primero */}
+      {/* CORRECCIÓN: Rutas protegidas - crear todas las rutas sin condiciones de rol */}
       <Route path="/*" element={
         isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
       }>
         {/* Rutas solo para ADMINISTRADOR */}
-        {isAdmin && (
-          <>
-            <Route path="home" element={<Home collapsed={collapsed} />} />
-            <Route path="collaborators" element={<Collaborators collapsed={collapsed} />} />
-            <Route path="revenue" element={<Revenue collapsed={collapsed} />} />
-          </>
-        )}
+        <Route path="home" element={
+          isAdmin ? <Home collapsed={collapsed} /> : <Navigate to={getDefaultRoute()} replace />
+        } />
+        <Route path="collaborators" element={
+          isAdmin ? <Collaborators collapsed={collapsed} /> : <Navigate to={getDefaultRoute()} replace />
+        } />
+        <Route path="revenue" element={
+          isAdmin ? <Revenue collapsed={collapsed} /> : <Navigate to={getDefaultRoute()} replace />
+        } />
 
         {/* Rutas comunes para ADMINISTRADOR y COLABORADOR */}
-        {(isAdmin || isColab) && (
-          <>
-            <Route path="users" element={<Users collapsed={collapsed} />} />
-            <Route path="inventorycontrol" element={<InventoryControl collapsed={collapsed} />} />
-          </>
-        )}
+        <Route path="users" element={
+          (isAdmin || isColab) ? <Users collapsed={collapsed} /> : <Navigate to={getDefaultRoute()} replace />
+        } />
+        <Route path="inventorycontrol" element={
+          (isAdmin || isColab) ? <InventoryControl collapsed={collapsed} /> : <Navigate to={getDefaultRoute()} replace />
+        } />
 
         {/* Rutas comunes para todos los usuarios autenticados */}
         <Route path="memberships" element={<Memberships collapsed={collapsed} />} />
