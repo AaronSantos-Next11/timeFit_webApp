@@ -1,6 +1,6 @@
 // src/App.jsx
 import { useState, useEffect } from 'react';
-import { HashRouter as Router } from 'react-router-dom';
+import { HashRouter as Router, useLocation } from 'react-router-dom';
 import { Layout } from 'antd';
 
 import Logo from "./components/sidebar_menu/Logo";
@@ -13,21 +13,40 @@ import { getStoredToken, isTokenExpired, clearSession } from './utils/token';
 
 const { Sider, Content } = Layout;
 
-export default function App() {
+// Componente interno para manejar la lógica del Router
+function AppContent() {
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState(() => {
+    const path = location.pathname.substring(1) || 'home';
+    return path;
+  });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // CORRECCIÓN: Agregar estado de loading para evitar redirecciones prematuras
+  const [isLoading, setIsLoading] = useState(true);
 
   // Al iniciar la app, revisa token y expiración
   useEffect(() => {
-    const token = getStoredToken();
-    if (token && !isTokenExpired(token)) {
-      setIsAuthenticated(true);
-    } else {
-      clearSession();
-      setIsAuthenticated(false);
-    }
+    const checkAuth = () => {
+      const token = getStoredToken();
+      if (token && !isTokenExpired(token)) {
+        setIsAuthenticated(true);
+      } else {
+        clearSession();
+        setIsAuthenticated(false);
+      }
+      // CORRECCIÓN: Marcar como completada la verificación de autenticación
+      setIsLoading(false);
+    };
+
+    checkAuth();
   }, []);
+
+  // Actualizar currentPage cuando cambie la URL
+  useEffect(() => {
+    const path = location.pathname.substring(1) || 'home';
+    setCurrentPage(path);
+  }, [location.pathname]);
 
   const handleLogin = () => {
     setIsAuthenticated(true);
@@ -38,8 +57,24 @@ export default function App() {
     clearSession();
   };
 
+  // CORRECCIÓN: Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        backgroundColor: '#272829',
+        color: '#ffffff'
+      }}>
+        <div>Cargando...</div>
+      </div>
+    );
+  }
+
   return (
-    <Router>
+    <>
       {isAuthenticated ? (
         <Layout>
           <Sider
@@ -91,6 +126,7 @@ export default function App() {
                 isAuthenticated={isAuthenticated}
                 onLogin={handleLogin}
                 onLogout={handleLogout}
+                collapsed={collapsed}
               />
             </Content>
           </Layout>
@@ -103,6 +139,14 @@ export default function App() {
           onLogout={handleLogout}
         />
       )}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

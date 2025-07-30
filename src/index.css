@@ -130,14 +130,21 @@
     color: #fff !important;
 }
 
+/* AQUÍ ESTÁ LA CORRECCIÓN - Colores diferentes para hover y selección */
 .ant-menu-item:hover,
 .ant-menu-item-active {
-    background-color: #f8820b !important;
-    color: #000000 !important;
+    background-color: #c8621f !important; /* Hover: naranja más oscuro que el fondo */
+    color: #fff !important; /* Texto blanco en hover */
 }
 
 .ant-menu-item-selected {
-    background-color: #f8820b !important;
+    background-color: #f8820b !important; /* Seleccionado: naranja sólido */
+    color: #000000 !important; /* Texto negro en seleccionado */
+}
+
+/* Hover del elemento seleccionado (para mayor distinción) */
+.ant-menu-item-selected:hover {
+    background-color: #e6750a !important; /* Naranja más oscuro para hover del seleccionado */
     color: #000000 !important;
 }
 
@@ -151,8 +158,8 @@
 
 .ant-menu-submenu-title:hover,
 .ant-menu-submenu-active > .ant-menu-submenu-title {
-    background-color: #f8820b !important;
-    color: #000000 !important;
+    background-color: #c8621f !important; /* Consistente con los items */
+    color: #fff !important;
 }
 
 .ant-menu-submenu-open > .ant-menu-submenu-title {

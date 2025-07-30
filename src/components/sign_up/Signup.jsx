@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import timefitLogo from "../../assets/timefit.svg";
 
 import "./SignUp.css";
@@ -8,7 +8,6 @@ import "./SignUp.css";
 export default function SignUp({ onSignUp }) {
   const [error, setError] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const navigate = useNavigate();
   const API = import.meta.env.VITE_API_URL;
 
   const validateUsername = (u) => u.length >= 3;
@@ -38,8 +37,6 @@ function generarMatriculaProfesional(nombre, apellidos) {
 
   return `ADM-${parteNombre}${parteApellido}${fechaStr}-${aleatorio}`;
 }
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,8 +106,7 @@ function generarMatriculaProfesional(nombre, apellidos) {
       localStorage.setItem("token", data.token);
 
       setError("");
-      onSignUp(); // disparar la función de callback
-      navigate("/home"); // redireccionar al dashboard
+      onSignUp(); // Solo ejecutar el callback, AppRoutes manejará la redirección
     } catch (err) {
       console.error(err);
       setError("Error al registrarse. Intente nuevamente.");

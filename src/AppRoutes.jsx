@@ -11,83 +11,99 @@ import Revenue from './components/revenue/Revenue';
 import Calendar from './components/calendar/Calendar';
 import Notes from './components/notes/Notes';
 import Gym from './components/gimnasio/Gym';
-import SupportAndHelp from './components/support_and_help/Support_and_help';
 import UserProfile from './components/user_profile/User_profile';
 import Logout from './components/log_out/Logout';
 import Login from './components/log_in/Login';
 import Signup from './components/sign_up/Signup'; 
 import LogoutModal from './components/log_out/LogoutModal';
 
-const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
+const AppRoutes = ({ isAuthenticated, onLogin, onLogout, collapsed }) => {
   const location = useLocation();
   console.log("Ruta actual:", location.pathname);
 
   const [roleName, setRoleName] = useState("");
 
-  // Actualiza el rol cuando cambia isAuthenticated o cuando cambia localStorage "user"
   useEffect(() => {
-    let user = null;
-    try {
-      const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
-      user = raw ? JSON.parse(raw) : null;
-    } catch {
-      user = null;
+    // CORRECCIÓN: Solo actualizar el rol si el usuario está autenticado
+    if (isAuthenticated) {
+      let user = null;
+      try {
+        const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+        user = raw ? JSON.parse(raw) : null;
+      } catch {
+        user = null;
+      }
+      setRoleName(user?.role?.role_name || "");
+    } else {
+      // Si no está autenticado, limpiar el rol
+      setRoleName("");
     }
-    setRoleName(user?.role?.role_name || "");
-  }, [isAuthenticated]); // Se vuelve a ejecutar cada vez que isAuthenticated cambie
+  }, [isAuthenticated]);
 
   const isAdmin = roleName === "Administrador";
   const isColab = roleName === "Colaborador";
 
+  // Función para determinar la ruta por defecto según el rol
+  const getDefaultRoute = () => {
+    if (isAdmin) return "/home";
+    if (isColab) return "/users";
+    return "/login";
+  };
+
   return (
     <Routes>
-      {/* Rutas públicas */}
+      {/* Ruta raíz - solo redirige si está en "/" exactamente */}
       <Route path="/" element={
-        isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />
+        isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Navigate to="/login" replace />
       } />
+      
+      {/* Rutas públicas - sin redirecciones automáticas */}
       <Route path="/login" element={
-        isAuthenticated ? <Navigate to="/home" replace /> : <Login onLogin={onLogin} />
+        isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Login onLogin={onLogin} />
       } />
+      
       <Route path="/sign_up" element={
-        isAuthenticated ? <Navigate to="/home" replace /> : <Signup onSignUp={onLogin} />
+        isAuthenticated ? <Navigate to={getDefaultRoute()} replace /> : <Signup onSignUp={onLogin} />
       } />
+      
       <Route path="/logout-confirm" element={
         isAuthenticated ? <LogoutModal /> : <Navigate to="/login" replace />
       } />
+      
       <Route path="/logout" element={<Logout onLogout={onLogout} />} />
 
-      {/* Rutas protegidas */}
+      {/* CORRECCIÓN: Rutas protegidas - verificar autenticación primero */}
       <Route path="/*" element={
         isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
       }>
-        {/* Rutas comunes */}
-        <Route path="home" element={<Home />} />
-        <Route path="users" element={<Users />} />
-        <Route path="memberships" element={<Memberships />} />
-        <Route path="calendar" element={<Calendar />} />
-        <Route path="notes" element={<Notes />} />
-        <Route path="gimnasio" element={<Gym />} />
-        <Route path="user_profile" element={<UserProfile />} />
-
-        {/* Rutas ADMINISTRADOR */}
+        {/* Rutas solo para ADMINISTRADOR */}
         {isAdmin && (
           <>
-            <Route path="collaborators" element={<Collaborators />} />
-            <Route path="inventorycontrol" element={<InventoryControl />} />
-            <Route path="revenue" element={<Revenue />} />
-            <Route path="support_and_help" element={<SupportAndHelp />} />
+            <Route path="home" element={<Home collapsed={collapsed} />} />
+            <Route path="collaborators" element={<Collaborators collapsed={collapsed} />} />
+            <Route path="revenue" element={<Revenue collapsed={collapsed} />} />
           </>
         )}
 
-        {/* Rutas COLABORADOR */}
-        {isColab && !isAdmin && (
+        {/* Rutas comunes para ADMINISTRADOR y COLABORADOR */}
+        {(isAdmin || isColab) && (
           <>
-            <Route path="inventorycontrol" element={<InventoryControl />} />
+            <Route path="users" element={<Users collapsed={collapsed} />} />
+            <Route path="inventorycontrol" element={<InventoryControl collapsed={collapsed} />} />
           </>
         )}
 
-        {/* Ruta comodín */}
-        <Route path="*" element={<Navigate to="/home" replace />} />
+        {/* Rutas comunes para todos los usuarios autenticados */}
+        <Route path="memberships" element={<Memberships collapsed={collapsed} />} />
+        <Route path="calendar" element={<Calendar collapsed={collapsed} />} />
+        <Route path="notes" element={<Notes collapsed={collapsed} />} />
+        <Route path="gimnasio" element={<Gym collapsed={collapsed} />} />
+        <Route path="user_profile" element={<UserProfile collapsed={collapsed} />} />
+
+        {/* CORRECCIÓN: Wildcard mejorado - solo redirige rutas que realmente no existen */}
+        <Route path="*" element={
+          <Navigate to={getDefaultRoute()} replace />
+        } />
       </Route>
     </Routes>
   );
@@ -96,7 +112,8 @@ const AppRoutes = ({ isAuthenticated, onLogin, onLogout }) => {
 AppRoutes.propTypes = {
   isAuthenticated: PropTypes.bool.isRequired,
   onLogin: PropTypes.func.isRequired,
-  onLogout: PropTypes.func.isRequired
+  onLogout: PropTypes.func.isRequired,
+  collapsed: PropTypes.bool
 };
 
 export default AppRoutes;

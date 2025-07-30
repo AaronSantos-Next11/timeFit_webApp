@@ -1,7 +1,7 @@
 // LoginPage.jsx
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import timefitLogo from "../../assets/timefit.svg";
 import "./Login.css";
@@ -10,7 +10,6 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState("");
 
   const API = import.meta.env.VITE_API_URL;
-  const navigate = useNavigate();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleSubmit = async (e) => {
@@ -40,8 +39,7 @@ export default function Login({ onLogin }) {
         // El servidor devuelve `token` y `admin`
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.admin));
-        onLogin();
-        navigate("/home");
+        onLogin(); // Solo ejecutar el callback, AppRoutes manejará la redirección
         return;
       }
 
@@ -57,8 +55,7 @@ export default function Login({ onLogin }) {
         // El servidor devuelve `token` y `colaborator`
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.colaborator));
-        onLogin();
-        navigate("/home");
+        onLogin(); // Solo ejecutar el callback, AppRoutes manejará la redirección
         return;
       }
 

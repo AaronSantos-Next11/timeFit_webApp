@@ -209,7 +209,7 @@ const getMappedColor = (colorName) => colorMap[colorName] || "#ff4300";
           </Box>
           <IconButton onClick={handleProfileMenuOpen} sx={{ color: "#fff" }}>
             {usernameInitials ? (
-              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300", }}>{usernameInitials}</Avatar>
+              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(user?.color) : "#ff4300", color: "#fff", fontWeight: "bold" }}>{usernameInitials}</Avatar>
             ) : (
               <AccountCircle sx={{ width: 50, height: 50, fontSize: 60 }} />
             )}
