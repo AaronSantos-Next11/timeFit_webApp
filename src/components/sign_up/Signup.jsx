@@ -7,7 +7,6 @@ import "./SignUp.css";
 
 export default function SignUp({ onSignUp }) {
   const [error, setError] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const API = import.meta.env.VITE_API_URL;
 
   const validateUsername = (u) => u.length >= 3;
@@ -71,10 +70,6 @@ function generarMatriculaProfesional(nombre, apellidos) {
     }
     if (password !== confirm) {
       setError("Las contraseñas no coinciden");
-      return;
-    }
-    if (!termsAccepted) {
-      setError("Debes aceptar los Términos y Condiciones");
       return;
     }
 
@@ -183,18 +178,6 @@ function generarMatriculaProfesional(nombre, apellidos) {
                 placeholder="Repite tu contraseña"
                 required
               />
-            </div>
-
-            <div className="terms-container">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-              />
-              <label htmlFor="terms">
-                Acepto los <a href="/Condiction">Términos y Condiciones</a>
-              </label>
             </div>
 
             {error && <p className="error-message">{error}</p>}
