@@ -1,12 +1,9 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import { fontGrid } from "@mui/material/styles/cssUtils";
-// import { Row } from 'antd';
 import {
   Box,
   Table,
@@ -19,6 +16,8 @@ import {
   MenuItem,
   IconButton,
   Button,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 
 // Icons
@@ -48,12 +47,31 @@ import Checkbox from "@mui/material/Checkbox";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
 // Para las ventas obtenidas
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Cell,
+} from "recharts";
 import BarChartIcon from "@mui/icons-material/BarChart";
 
-fontGrid;
-
 export default function Home() {
+  // Estados para datos de la API
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [inventoryData, setInventoryData] = useState([]);
+  const [usersCount, setUsersCount] = useState(0);
+  const [colaboratorsCount, setColaboratorsCount] = useState(0);
+  const [membershipsCount, setMembershipsCount] = useState(0);
+  const [ageDistribution, setAgeDistribution] = useState([]);
+  const [salesData, setSalesData] = useState([]);
+  const [totalSales, setTotalSales] = useState(0);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [notesData, setNotesData] = useState([]);
+
   // Para las notas
   const label = { inputProps: { "aria-label": "Checkbox demo" } };
 
@@ -91,9 +109,412 @@ export default function Home() {
     handleProfileMenuClose();
   };
 
+  // Función para obtener token
+  const getAuthToken = () => {
+    return localStorage.getItem("token") || sessionStorage.getItem("token");
+  };
+
+  // Función mejorada para hacer peticiones a la API
+  const apiRequest = async (endpoint) => {
+    try {
+      const token = getAuthToken();
+
+      if (!token) {
+        throw new Error("Token de autenticación no encontrado");
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}${endpoint}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Error HTTP: ${response.status} - ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error(`Error fetching ${endpoint}:`, error);
+      return {
+        success: false,
+        error: error.message || "Error desconocido",
+      };
+    }
+  };
+
+  // Función para calcular distribución de edades
+  // Función mejorada para calcular distribución de edades
+  const calculateAgeDistribution = (clients) => {
+    const ranges = {
+      "14-17": 0,
+      "18-25": 0,
+      "26-35": 0,
+      "36-45": 0,
+      "46-55": 0,
+      "56-65": 0,
+      "65+": 0,
+    };
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    const currentDay = today.getDate();
+
+    clients.forEach((client) => {
+      if (client.birth_date) {
+        try {
+          const birthDate = new Date(client.birth_date);
+          // Validar que la fecha sea válida
+          if (isNaN(birthDate.getTime())) return;
+
+          const birthYear = birthDate.getFullYear();
+          const birthMonth = birthDate.getMonth();
+          const birthDay = birthDate.getDate();
+
+          // Calcular edad exacta
+          let age = currentYear - birthYear;
+
+          // Ajustar si el cumpleaños aún no ha ocurrido este año
+          if (
+            birthMonth > currentMonth ||
+            (birthMonth === currentMonth && birthDay > currentDay)
+          ) {
+            age--;
+          }
+
+          // Asignar al rango correspondiente
+          if (age >= 14 && age <= 17) ranges["14-17"]++;
+          else if (age >= 18 && age <= 25) ranges["18-25"]++;
+          else if (age >= 26 && age <= 35) ranges["26-35"]++;
+          else if (age >= 36 && age <= 45) ranges["36-45"]++;
+          else if (age >= 46 && age <= 55) ranges["46-55"]++;
+          else if (age >= 56 && age <= 65) ranges["56-65"]++;
+          else if (age > 65) ranges["65+"]++;
+        } catch (error) {
+          console.error("Error procesando fecha de nacimiento:", error);
+        }
+      }
+    });
+
+    const total = Object.values(ranges).reduce((sum, count) => sum + count, 0);
+
+    return [
+      {
+        id: 0,
+        value: total > 0 ? Math.round((ranges["14-17"] / total) * 100) : 0,
+        label: "14 - 17 años",
+        color: "#FF6384",
+      },
+      {
+        id: 1,
+        value: total > 0 ? Math.round((ranges["18-25"] / total) * 100) : 0,
+        label: "18 - 25 años",
+        color: "#36A2EB",
+      },
+      {
+        id: 2,
+        value: total > 0 ? Math.round((ranges["26-35"] / total) * 100) : 0,
+        label: "26 - 35 años",
+        color: "#FFCE56",
+      },
+      {
+        id: 3,
+        value: total > 0 ? Math.round((ranges["36-45"] / total) * 100) : 0,
+        label: "36 - 45 años",
+        color: "#4BC0C0",
+      },
+      {
+        id: 4,
+        value: total > 0 ? Math.round((ranges["46-55"] / total) * 100) : 0,
+        label: "46 - 55 años",
+        color: "#9966FF",
+      },
+      {
+        id: 5,
+        value: total > 0 ? Math.round((ranges["56-65"] / total) * 100) : 0,
+        label: "56 - 65 años",
+        color: "#FF9F40",
+      },
+      {
+        id: 6,
+        value: total > 0 ? Math.round((ranges["65+"] / total) * 100) : 0,
+        label: "Más de 65 años",
+        color: "#C9CBCF",
+      },
+    ];
+  };
+
+  // const calculateAgeDistribution = (clients) => {
+  //   const ranges = {
+  //     "14-17": 0,
+  //     "18-25": 0,
+  //     "26-35": 0,
+  //     "36-45": 0,
+  //     "46-55": 0,
+  //     "56-65": 0,
+  //     "65+": 0,
+  //   };
+
+  //   clients.forEach(client => {
+  //     if (client.birth_date) {
+  //       const age = new Date().getFullYear() - new Date(client.birth_date).getFullYear();
+
+  //       if (age >= 14 && age <= 17) ranges["14-17"]++;
+  //       else if (age >= 18 && age <= 25) ranges["18-25"]++;
+  //       else if (age >= 26 && age <= 35) ranges["26-35"]++;
+  //       else if (age >= 36 && age <= 45) ranges["36-45"]++;
+  //       else if (age >= 46 && age <= 55) ranges["46-55"]++;
+  //       else if (age >= 56 && age <= 65) ranges["56-65"]++;
+  //       else if (age > 65) ranges["65+"]++;
+  //     }
+  //   });
+
+  //   const total = Object.values(ranges).reduce((sum, count) => sum + count, 0);
+
+  //   return [
+  //     { id: 0, value: total > 0 ? Math.round((ranges["14-17"] / total) * 100) : 0, label: "14 - 17 años", color: "#FF6384" },
+  //     { id: 1, value: total > 0 ? Math.round((ranges["18-25"] / total) * 100) : 0, label: "18 - 25 años", color: "#36A2EB" },
+  //     { id: 2, value: total > 0 ? Math.round((ranges["26-35"] / total) * 100) : 0, label: "26 - 35 años", color: "#FFCE56" },
+  //     { id: 3, value: total > 0 ? Math.round((ranges["36-45"] / total) * 100) : 0, label: "36 - 45 años", color: "#4BC0C0" },
+  //     { id: 4, value: total > 0 ? Math.round((ranges["46-55"] / total) * 100) : 0, label: "46 - 55 años", color: "#9966FF" },
+  //     { id: 5, value: total > 0 ? Math.round((ranges["56-65"] / total) * 100) : 0, label: "56 - 65 años", color: "#FF9F40" },
+  //     { id: 6, value: total > 0 ? Math.round((ranges["65+"] / total) * 100) : 0, label: "Más de 65 años", color: "#C9CBCF" },
+  //   ];
+  // };
+
+  // Función para procesar datos de ventas para el gráfico
+  const processSalesData = (sales) => {
+    const categories = {};
+    let total = 0;
+
+    sales.forEach((sale) => {
+      if (sale.sale_status === "Exitosa") {
+        total += sale.total_sale;
+
+        const category = getProductCategory(sale.product_name);
+        if (!categories[category]) {
+          categories[category] = { total: 0, count: 0 };
+        }
+        categories[category].total += sale.total_sale;
+        categories[category].count += 1;
+      }
+    });
+
+    const chartData = Object.entries(categories).map(
+      ([category, data], index) => ({
+        id: index,
+        value: Math.round(data.total),
+        label: category,
+        color: getCategoryColor(category),
+      })
+    );
+
+    return { chartData, total };
+  };
+
+  // Función auxiliar para determinar categoría del producto
+  const getProductCategory = (productName) => {
+    const name = productName.toLowerCase();
+    if (name.includes("membresía") || name.includes("membership"))
+      return "Membresía";
+    if (name.includes("entrenamiento") || name.includes("training"))
+      return "Entrenamiento";
+    if (name.includes("nutrición") || name.includes("suplemento"))
+      return "Nutrición";
+    if (
+      name.includes("equipo") ||
+      name.includes("pesa") ||
+      name.includes("mancuerna")
+    )
+      return "Equipamiento";
+    if (name.includes("clase") || name.includes("taller"))
+      return "Taller/Clases";
+    return "Evaluación Fitness";
+  };
+
+  // Función auxiliar para colores de categorías
+  const getCategoryColor = (category) => {
+    const colors = {
+      Membresía: "#3498db",
+      Entrenamiento: "#2ecc71",
+      Nutrición: "#e74c3c",
+      Equipamiento: "#f39c12",
+      "Taller/Clases": "#27ae60",
+      "Evaluación Fitness": "#9b59b6",
+    };
+    return colors[category] || "#3498db";
+  };
+
+  // Función para formatear eventos del calendario
+  const formatCalendarEvents = (events) => {
+    const today = new Date();
+    const todayEvents = events.filter((event) => {
+      const eventDate = new Date(event.event_date);
+      return eventDate.toDateString() === today.toDateString();
+    });
+
+    return todayEvents.slice(0, 4);
+  };
+
+  // Función para formatear notas
+  const formatNotes = (notes) => {
+    return notes.slice(0, 3).map((note) => ({
+      ...note,
+      buttons: getCategoryButtons(note.category),
+    }));
+  };
+
+  // Función auxiliar para botones según categoría
+  const getCategoryButtons = (category) => {
+    const buttonMap = {
+      reporte: [
+        { text: "Reporte", color: "#c58f10" },
+        { text: "Soporte", color: "#ec2525" },
+      ],
+      recordatorio: [
+        { text: "Recordatorio", color: "#07aaa2" },
+        { text: "Productos", color: "#499a0b" },
+      ],
+      curso: [
+        { text: "Curso", color: "#c02279" },
+        { text: "Instalación", color: "#1b72af" },
+      ],
+    };
+    return (
+      buttonMap[category] || [
+        { text: "General", color: "#666" },
+        { text: "Info", color: "#999" },
+      ]
+    );
+  };
+
+  // Función optimizada para cargar todos los datos
+  const loadDashboardData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Hacer todas las peticiones en paralelo
+      const [
+        productsRes,
+        clientsRes,
+        colaboratorsRes,
+        membershipsRes,
+        calendarRes,
+        notesRes,
+        salesRes,
+      ] = await Promise.all([
+        apiRequest("/api/products/all"),
+        apiRequest("/api/clients/all"),
+        apiRequest("/api/colaborators/all"),
+        apiRequest("/api/memberships/all"),
+        apiRequest("/api/calendar/all"),
+        apiRequest("/api/notes/all"),
+        apiRequest("/api/products_sales/all"),
+      ]);
+
+      // Verificar errores críticos
+      const criticalErrors = [
+        productsRes,
+        clientsRes,
+        colaboratorsRes,
+        salesRes,
+      ]
+        .filter((res) => !res.success)
+        .map((res) => res.error);
+
+      if (criticalErrors.length > 0) {
+        console.warn("Algunos endpoints fallaron:", criticalErrors);
+        // No bloquear la carga si solo fallan endpoints no críticos
+      }
+
+      // Procesar inventario
+      if (productsRes.success && productsRes.data?.products) {
+        const inventory = productsRes.data.products
+          .slice(0, 10)
+          .map((product, index) => ({
+            id: index + 1,
+            productos: product.name_product,
+            stock: product.stock?.quantity || 0,
+            precioTotal: `$${(
+              (product.price?.amount || 0) * (product.stock?.quantity || 0)
+            ).toFixed(2)}`,
+          }));
+        setInventoryData(inventory);
+      }
+
+      // Procesar usuarios
+      if (
+        clientsRes.success &&
+        clientsRes.data &&
+        Array.isArray(clientsRes.data)
+      ) {
+        setUsersCount(clientsRes.data.length);
+        const ages = calculateAgeDistribution(clientsRes.data);
+        setAgeDistribution(ages);
+
+        // Contar membresías activas
+        const activeMemberships = clientsRes.data.filter(
+          (client) => client.status === "Activo"
+        ).length;
+        setMembershipsCount(activeMemberships);
+      }
+
+      // Procesar colaboradores
+      if (
+        colaboratorsRes.success &&
+        colaboratorsRes.data &&
+        Array.isArray(colaboratorsRes.data)
+      ) {
+        setColaboratorsCount(colaboratorsRes.data.length);
+      }
+
+      // Procesar ventas
+      if (salesRes.success && salesRes.data?.sales) {
+        const { chartData, total } = processSalesData(salesRes.data.sales);
+        setSalesData(chartData);
+        setTotalSales(total);
+      }
+
+      // Procesar calendario
+      if (calendarRes.success && calendarRes.data?.events) {
+        const formattedEvents = formatCalendarEvents(calendarRes.data.events);
+        setCalendarEvents(formattedEvents);
+      }
+
+      // Procesar notas
+      if (notesRes.success && notesRes.data?.notes) {
+        const formattedNotes = formatNotes(notesRes.data.notes);
+        setNotesData(formattedNotes);
+      }
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+      setError(error.message || "Error desconocido al cargar datos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
   // Menú del perfil
   const renderProfileMenu = (
-    <Menu anchorEl={profileAnchorEl} open={profileMenuOpen} onClose={handleProfileMenuClose}>
+    <Menu
+      anchorEl={profileAnchorEl}
+      open={profileMenuOpen}
+      onClose={handleProfileMenuClose}
+    >
       <MenuItem onClick={handleProfileClick}>Mi Perfil</MenuItem>
       <MenuItem onClick={handleLogoutClick}>Cerrar sesión</MenuItem>
     </Menu>
@@ -120,58 +541,22 @@ export default function Home() {
         },
       }}
     >
-      <MenuItem
-        sx={{
-          justifyContent: "center",
-          textAlign: "center",
-          "&:hover": {
-            backgroundColor: "#272829",
-            color: "#f8820b",
-          },
-        }}
-        onClick={handleFilterClose}
-      >
-        Hoy
-      </MenuItem>
-      <MenuItem
-        sx={{
-          justifyContent: "center",
-          textAlign: "center",
-          "&:hover": {
-            backgroundColor: "#272829",
-            color: "#f8820b",
-          },
-        }}
-        onClick={handleFilterClose}
-      >
-        Esta Semana
-      </MenuItem>
-      <MenuItem
-        sx={{
-          justifyContent: "center",
-          textAlign: "center",
-          "&:hover": {
-            backgroundColor: "#272829",
-            color: "#f8820b",
-          },
-        }}
-        onClick={handleFilterClose}
-      >
-        Este Mes
-      </MenuItem>
-      <MenuItem
-        sx={{
-          justifyContent: "center",
-          textAlign: "center",
-          "&:hover": {
-            backgroundColor: "#272829",
-            color: "#f8820b",
-          },
-        }}
-        onClick={handleFilterClose}
-      >
-        Este Año
-      </MenuItem>
+      {["Hoy", "Esta Semana", "Este Mes", "Este Año"].map((option) => (
+        <MenuItem
+          key={option}
+          sx={{
+            justifyContent: "center",
+            textAlign: "center",
+            "&:hover": {
+              backgroundColor: "#272829",
+              color: "#f8820b",
+            },
+          }}
+          onClick={handleFilterClose}
+        >
+          {option}
+        </MenuItem>
+      ))}
     </Menu>
   );
 
@@ -221,43 +606,49 @@ export default function Home() {
   };
 
   const usernameInitials = admin ? getInitials(admin.username) : "";
-  const displayName = admin ? getFirstNameAndLastName(admin.name, admin.last_name) : "Usuario";
+  const displayName = admin
+    ? getFirstNameAndLastName(admin.name, admin.last_name)
+    : "Usuario";
   const roleName = admin?.role?.role_name || "Rol desconocido";
 
-  // Para el inventario
-  const data = [
-    { id: 1, productos: "Pesas rusas", stock: 10, precioTotal: "$500.00" },
-    { id: 2, productos: "Mancuernas", stock: 13, precioTotal: "$700.50" },
-    { id: 3, productos: "Barras 3/4", stock: 5, precioTotal: "$250.00" },
-    { id: 4, productos: "Disco de peso", stock: 10, precioTotal: "$950.70" },
-    { id: 5, productos: "Colchonetas", stock: 4, precioTotal: "$500.00" },
-    { id: 6, productos: "Bandas", stock: 5, precioTotal: "$250.00" },
-    { id: 7, productos: "Cuerdas", stock: 10, precioTotal: "$450.00" },
-    { id: 8, productos: "Pesas", stock: 4, precioTotal: "$350.00" },
-    { id: 9, productos: "Pelotas de yoga", stock: 6, precioTotal: "$600.00" },
-    { id: 10, productos: "Suplementos/p", stock: 5, precioTotal: "$425.00" },
-  ];
+  // Mostrar loading si está cargando
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <CircularProgress size={60} sx={{ color: "#f8820b" }} />
+        <Typography variant="h6" sx={{ ml: 2, color: "#ffffff" }}>
+          Cargando dashboard...
+        </Typography>
+      </Box>
+    );
+  }
 
-  // Para las edades
-  const edades = [
-    { id: 0, value: 26.9, label: "14 - 17 años", color: "#FF6384" }, // Rojo
-    { id: 1, value: 7.7, label: "18 - 25 años", color: "#36A2EB" }, // Azul
-    { id: 2, value: 11.5, label: "26 - 35 años", color: "#FFCE56" }, // Amarillo
-    { id: 3, value: 26.9, label: "36 - 45 años", color: "#4BC0C0" }, // Turquesa
-    { id: 4, value: 15.4, label: "46 - 55 años", color: "#9966FF" }, // Morado
-    { id: 5, value: 7.7, label: "56 - 65 años", color: "#FF9F40" }, // Naranja
-    { id: 6, value: 3.8, label: "Más de 65 años", color: "#C9CBCF" }, // Gris
-  ];
-
-  // Para la grafica de ventas
-  const chartData = [
-    { id: 0, value: 50, label: "Membresía", color: "#3498db" },
-    { id: 1, value: 30, label: "Entrenamiento", color: "#2ecc71" },
-    { id: 2, value: 20, label: "Nutrición", color: "#e74c3c" },
-    { id: 3, value: 33, label: "Equipamento", color: "#f39c12" },
-    { id: 4, value: 13, label: "Taller/Clases", color: "#27ae60" },
-    { id: 5, value: 5, label: "Evaluación Fitness", color: "#9b59b6" },
-  ];
+  // Mostrar error si hay problemas
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al cargar los datos: {error}
+        </Alert>
+        <Typography variant="body2" color="textSecondary">
+          Por favor, verifica tu conexión a internet y que el servidor backend
+          esté funcionando correctamente.
+        </Typography>
+        <Button
+          variant="contained"
+          onClick={loadDashboardData}
+          sx={{ mt: 2, backgroundColor: "#f8820b" }}
+        >
+          Reintentar
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <div>
@@ -270,19 +661,42 @@ export default function Home() {
       >
         {/* Título y descripción */}
         <Grid item>
-          <Typography variant="h4" sx={{ margin: 0, fontSize: "30px", fontWeight: "bold" }}>
+          <Typography
+            variant="h4"
+            sx={{ margin: 0, fontSize: "30px", fontWeight: "bold" }}
+          >
             Hola, {displayName}
           </Typography>
-          <Typography variant="body2" sx={{ margin: 0, fontSize: "16px", color: "#ccc", marginTop: "10px" }}>
+          <Typography
+            variant="body2"
+            sx={{
+              margin: 0,
+              fontSize: "16px",
+              color: "#ccc",
+              marginTop: "10px",
+            }}
+          >
             Bienvenido a sistema administrativo de Time Fit
           </Typography>
         </Grid>
 
         {/* Perfil del usuario */}
         <Grid item sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box sx={{ textAlign: "right", marginLeft:"15px" }}>
-            <Typography sx={{ margin: 0, fontSize: "20px", color: "#F8820B", fontWeight: "bold" }}>{displayName}</Typography>
-            <Typography variant="body2" sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}>
+          <Box sx={{ textAlign: "right", marginLeft: "15px" }}>
+            <Typography
+              sx={{
+                margin: 0,
+                fontSize: "20px",
+                color: "#F8820B",
+                fontWeight: "bold",
+              }}
+            >
+              {displayName}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ margin: 0, fontSize: "15px", color: "#ccc" }}
+            >
               {roleName}
             </Typography>
           </Box>
@@ -294,7 +708,20 @@ export default function Home() {
             sx={{ color: "#fff" }}
           >
             {usernameInitials ? (
-              <Avatar sx={{ width: 50, height: 50, bgcolor: roleName === "Colaborador" ? getMappedColor(admin?.color) : "#ff4300", color: "#fff", fontWeight: "bold"  }}>{usernameInitials}</Avatar>
+              <Avatar
+                sx={{
+                  width: 50,
+                  height: 50,
+                  bgcolor:
+                    roleName === "Colaborador"
+                      ? getMappedColor(admin?.color)
+                      : "#ff4300",
+                  color: "#fff",
+                  fontWeight: "bold",
+                }}
+              >
+                {usernameInitials}
+              </Avatar>
             ) : (
               <AccountCircle sx={{ fontSize: "60px" }} />
             )}
@@ -302,25 +729,50 @@ export default function Home() {
         </Grid>
       </Grid>
 
-      {/* Contenedor 1: Todos los wingets de home */}
+      {/* Contenedor 1: Todos los widgets de home */}
       <Grid container marginTop={2} display="flex" flexDirection="row">
         {/* Sub-Contenedor 1: Lado izquierdo, columna Inventario y Notas */}
-        <Grid container size={12} spacing={2} display="flex" flexDirection="column" justifyContent="center">
-          <Grid container size={12} spacing={2} display="flex" flexDirection="row">
+        <Grid
+          container
+          size={12}
+          spacing={2}
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+        >
+          <Grid
+            container
+            size={12}
+            spacing={2}
+            display="flex"
+            flexDirection="row"
+          >
             <Grid size={{ lg: 3 }} sx={{ height: "23rem" }}>
-              {" "}
-              {/* Winget inventario */}
-              <Card style={{ background: "#45474B", borderRadius: 30 }} sx={{ height: "100%" }}>
+              {/* Widget inventario */}
+              <Card
+                style={{ background: "#45474B", borderRadius: 30 }}
+                sx={{ height: "100%" }}
+              >
                 <CardContent sx={{ padding: 3 }}>
                   <Box display="flex" alignItems="center">
-                    <AssignmentIcon sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }} />
-                    <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
+                    <AssignmentIcon
+                      sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }}
+                    />
+                    <Typography
+                      sx={{ fontWeight: "bold" }}
+                      variant="body1"
+                      color="#FFFFFF"
+                    >
                       Inventario
                     </Typography>
                   </Box>
 
                   <TableContainer>
-                    <Table size="small" sx={{ width: "100%" }} aria-label="tabla de inventario">
+                    <Table
+                      size="small"
+                      sx={{ width: "100%" }}
+                      aria-label="tabla de inventario"
+                    >
                       <TableHead>
                         <TableRow>
                           <TableCell
@@ -371,7 +823,7 @@ export default function Home() {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {data.map((row) => (
+                        {inventoryData.map((row) => (
                           <TableRow key={row.id}>
                             <TableCell
                               sx={{
@@ -425,17 +877,39 @@ export default function Home() {
             </Grid>
 
             {/* Contenedor de la columna Usuarios, Colaboradores y Membresias vendidas */}
-            <Grid container size={{ md: 9 }} spacing={2} display="flex" flexDirection="column">
+            <Grid
+              container
+              size={{ md: 9 }}
+              spacing={2}
+              display="flex"
+              flexDirection="column"
+            >
               {/* Sub-contenedor-2, #2: de la columna usuarios, edades y ventas obtenidas */}
               <Grid display="flex" gap={2}>
                 <Grid size={{ lg: 5 }} sx={{ height: "8.5rem" }}>
-                  {" "}
-                  {/* Winget Cantidad de Usuarios */}
-                  <Card style={{ background: "#45474B", borderRadius: 30, padding: 0 }} sx={{ height: "100%" }}>
+                  {/* Widget Cantidad de Usuarios */}
+                  <Card
+                    style={{
+                      background: "#45474B",
+                      borderRadius: 30,
+                      padding: 0,
+                    }}
+                    sx={{ height: "100%" }}
+                  >
                     <CardContent>
                       <Box display="flex" alignItems="center">
-                        <GroupsIcon sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }} />
-                        <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
+                        <GroupsIcon
+                          sx={{
+                            fontSize: 40,
+                            color: "#FFFFFF",
+                            marginRight: 1,
+                          }}
+                        />
+                        <Typography
+                          sx={{ fontWeight: "bold" }}
+                          variant="body1"
+                          color="#FFFFFF"
+                        >
                           Cantidad Usuarios
                         </Typography>
                       </Box>
@@ -445,30 +919,44 @@ export default function Home() {
                         color="initial"
                         sx={{ color: "#ffffff", fontWeight: 800 }}
                       >
-                        <p>45</p>
+                        {usersCount}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
 
                 <Grid size={{ lg: 5 }} sx={{ height: "8.5rem" }}>
-                  {" "}
-                  {/* Winget Colaboradores */}
-                  <Card style={{ background: "#45474B", borderRadius: 30 }} sx={{ height: "100%" }}>
+                  {/* Widget Colaboradores */}
+                  <Card
+                    style={{ background: "#45474B", borderRadius: 30 }}
+                    sx={{ height: "100%" }}
+                  >
                     <CardContent>
                       <Box display="flex" alignItems="center">
-                        <PersonIcon sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }} />
-                        <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
+                        <PersonIcon
+                          sx={{
+                            fontSize: 40,
+                            color: "#FFFFFF",
+                            marginRight: 1,
+                          }}
+                        />
+                        <Typography
+                          sx={{ fontWeight: "bold" }}
+                          variant="body1"
+                          color="#FFFFFF"
+                        >
                           Cantidad Colaboradores
                         </Typography>
 
                         <div style={{ marginLeft: "auto" }}>
                           <IconButton
-aria-label="más opciones"
-        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
-        aria-haspopup="true"
-        aria-expanded={filterMenuOpen ? "true" : undefined}
-        onClick={handleFilterClick} 
+                            aria-label="más opciones"
+                            aria-controls={
+                              filterMenuOpen ? "menu-opciones" : undefined
+                            }
+                            aria-haspopup="true"
+                            aria-expanded={filterMenuOpen ? "true" : undefined}
+                            onClick={handleFilterClick}
                             sx={{
                               backgroundColor: "#FF8C00",
                               borderRadius: "15px",
@@ -481,7 +969,9 @@ aria-label="más opciones"
                               },
                             }}
                           >
-                            <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
+                            <KeyboardArrowDownIcon
+                              sx={{ color: "black", fontSize: "20px" }}
+                            />
                           </IconButton>
                         </div>
                       </Box>
@@ -491,30 +981,44 @@ aria-label="más opciones"
                         color="initial"
                         sx={{ color: "#ffffff", fontWeight: 800 }}
                       >
-                        <p>15</p>
+                        {colaboratorsCount}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
 
                 <Grid size={{ xs: 5 }} sx={{ height: "8.5rem" }}>
-                  {" "}
-                  {/* Winget Membs vendidas */}
-                  <Card style={{ background: "#45474B", borderRadius: 30 }} sx={{ height: "100%" }}>
+                  {/* Widget Membs vendidas */}
+                  <Card
+                    style={{ background: "#45474B", borderRadius: 30 }}
+                    sx={{ height: "100%" }}
+                  >
                     <CardContent>
                       <Box display="flex" alignItems="center">
-                        <BadgeIcon sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }} />
-                        <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
+                        <BadgeIcon
+                          sx={{
+                            fontSize: 40,
+                            color: "#FFFFFF",
+                            marginRight: 1,
+                          }}
+                        />
+                        <Typography
+                          sx={{ fontWeight: "bold" }}
+                          variant="body1"
+                          color="#FFFFFF"
+                        >
                           Membresias Vendidas
                         </Typography>
 
                         <div style={{ marginLeft: "auto" }}>
                           <IconButton
-        aria-label="más opciones"
-        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
-        aria-haspopup="true"
-        aria-expanded={filterMenuOpen ? "true" : undefined}
-        onClick={handleFilterClick}
+                            aria-label="más opciones"
+                            aria-controls={
+                              filterMenuOpen ? "menu-opciones" : undefined
+                            }
+                            aria-haspopup="true"
+                            aria-expanded={filterMenuOpen ? "true" : undefined}
+                            onClick={handleFilterClick}
                             sx={{
                               backgroundColor: "#FF8C00",
                               borderRadius: "15px",
@@ -527,7 +1031,9 @@ aria-label="más opciones"
                               },
                             }}
                           >
-                            <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
+                            <KeyboardArrowDownIcon
+                              sx={{ color: "black", fontSize: "20px" }}
+                            />
                           </IconButton>
                         </div>
                       </Box>
@@ -537,7 +1043,7 @@ aria-label="más opciones"
                         color="initial"
                         sx={{ color: "#ffffff", fontWeight: 800 }}
                       >
-                        <p>4,000</p>
+                        {membershipsCount.toLocaleString()}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -546,23 +1052,37 @@ aria-label="más opciones"
 
               <Grid container spacing={2}>
                 <Grid size={{ md: 6.7 }} sx={{ height: "13.5rem" }}>
-                  {" "}
-                  {/* Winget Edades de los usuarios*/}
-                  <Card style={{ background: "#45474B", borderRadius: 30 }} sx={{ height: "100%" }}>
+                  {/* Widget Edades de los usuarios*/}
+                  <Card
+                    style={{ background: "#45474B", borderRadius: 30 }}
+                    sx={{ height: "100%" }}
+                  >
                     <CardContent>
                       <Box display="flex" alignItems="center">
-                        <PieChartIcon sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }} />
-                        <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
+                        <PieChartIcon
+                          sx={{
+                            fontSize: 40,
+                            color: "#FFFFFF",
+                            marginRight: 1,
+                          }}
+                        />
+                        <Typography
+                          sx={{ fontWeight: "bold" }}
+                          variant="body1"
+                          color="#FFFFFF"
+                        >
                           Edades de los usuarios
                         </Typography>
 
                         <div style={{ marginLeft: "auto" }}>
                           <IconButton
-        aria-label="más opciones"
-        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
-        aria-haspopup="true"
-        aria-expanded={filterMenuOpen ? "true" : undefined}
-        onClick={handleFilterClick}
+                            aria-label="más opciones"
+                            aria-controls={
+                              filterMenuOpen ? "menu-opciones" : undefined
+                            }
+                            aria-haspopup="true"
+                            aria-expanded={filterMenuOpen ? "true" : undefined}
+                            onClick={handleFilterClick}
                             sx={{
                               backgroundColor: "#FF8C00",
                               borderRadius: "15px",
@@ -575,75 +1095,127 @@ aria-label="más opciones"
                               },
                             }}
                           >
-                            <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
+                            <KeyboardArrowDownIcon
+                              sx={{ color: "black", fontSize: "20px" }}
+                            />
                           </IconButton>
                         </div>
                       </Box>
 
-                      <Box sx={{ display: "flex", justifyContent: "center", height: "80%", alignItems: "center" }}>
-                        <PieChart
-                          series={[
-                            {
-                              data: edades,
-                              innerRadius: 20, // Radio interno para un gráfico de dona
-                              outerRadius: 60, // Radio externo
-                              paddingAngle: 3, // Espacio entre las secciones
-                              cornerRadius: 3, // Bordes redondeados
-                              highlightScope: { faded: "global", highlighted: "item" },
-                              faded: { innerRadius: 20, additionalRadius: -20, color: "gray" },
-                              cx: 80, // Centrar el gráfico en el eje X
-                              cy: 70, // Centrar el gráfico en el eje Y
-                            },
-                          ]}
-                          width={300} // Ancho del gráfico
-                          height={160} // Alto del gráfico}
-                          slotProps={{
-                            legend: {
-                              position: { vertical: "middle", horizontal: "right" }, // Posición de la leyenda
-
-                              labelStyle: {
-                                fontSize: 10, // Tamaño de la fuente de las etiquetas
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          height: "80%",
+                          alignItems: "center",
+                        }}
+                      >
+                        {ageDistribution.length > 0 ? (
+                          <PieChart
+                            series={[
+                              {
+                                data: ageDistribution.map((item) => ({
+                                  ...item,
+                                  label: `${item.label} (${item.value}%)`, // Muestra el % en la leyenda
+                                })),
+                                innerRadius: 20,
+                                outerRadius: 60,
+                                paddingAngle: 3,
+                                cornerRadius: 3,
+                                highlightScope: {
+                                  faded: "global",
+                                  highlighted: "item",
+                                },
+                                faded: {
+                                  innerRadius: 20,
+                                  additionalRadius: -20,
+                                  color: "gray",
+                                },
+                                cx: 80,
+                                cy: 70,
+                                valueFormatter: () => '',
                               },
-                              itemGap: 0, // Espacio entre los elementos de la leyenda
-                            },
-                          }}
-                          sx={{
-                            "& .MuiChartsLegend-mark": {
-                              width: "10px", // Tamaño más pequeño
-                              height: "10px",
-                            },
-                            "& .MuiChartsLegend-root": {
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              marginLeft: "10px", // Ajusta el margen para que no quede pegado al gráfico
-                              marginTop: "10px",
-                            },
-                          }}
-                        />
+                            ]}
+                            width={300}
+                            height={160}
+                            slotProps={{
+                              legend: {
+                                position: {
+                                  vertical: "middle",
+                                  horizontal: "right",
+                                },
+                                labelStyle: {
+                                  fontSize: 10,
+                                  fill: "#FFFFFF",
+                                },
+                                itemGap: 0,
+                              },
+                            }}
+                            sx={{
+                              "& .MuiChartsLegend-mark": {
+                                width: "10px",
+                                height: "10px",
+                              },
+                              "& .MuiChartsLegend-root": {
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginLeft: "10px",
+                                marginTop: "10px",
+                              },
+                            }}
+                          />
+                        ) : (
+                          <Typography
+                            color="white"
+                            sx={{ fontSize: "14px", fontWeight: "bold" }}
+                          >
+                            No hay datos de edades disponibles
+                          </Typography>
+                        )}
                       </Box>
                     </CardContent>
                   </Card>
                 </Grid>
 
                 <Grid size={{ md: 5.3 }} height={2} zIndex={1}>
-                  {" "}
-                  {/* Winget Calendario */}
-                  <Card style={{ background: "#45474B", height: "30.5rem", borderRadius: 30 }}>
-                    <CardContent sx={{ overflow: "auto", maxHeight: "28rem", padding: 2 }} className="scroll-content">
+                  {/* Widget Calendario */}
+                  <Card
+                    style={{
+                      background: "#45474B",
+                      height: "30.5rem",
+                      borderRadius: 30,
+                    }}
+                  >
+                    <CardContent
+                      sx={{ overflow: "auto", maxHeight: "28rem", padding: 2 }}
+                      className="scroll-content"
+                    >
                       <Box display="flex" alignItems="center">
-                        <CalendarTodayIcon sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }} />
-                        <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
+                        <CalendarTodayIcon
+                          sx={{
+                            fontSize: 40,
+                            color: "#FFFFFF",
+                            marginRight: 1,
+                          }}
+                        />
+                        <Typography
+                          sx={{ fontWeight: "bold" }}
+                          variant="body1"
+                          color="#FFFFFF"
+                        >
                           Calendario
                         </Typography>
 
                         <div style={{ marginLeft: "auto" }}>
                           <IconButton
-        aria-label="más opciones"
-        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
-        aria-haspopup="true"
-        aria-expanded={filterMenuOpen ? "true" : undefined}
-        onClick={handleFilterClick}
+                            aria-label="más opciones"
+                            aria-controls={
+                              filterMenuOpen ? "menu-opciones" : undefined
+                            }
+                            aria-haspopup="true"
+                            aria-expanded={filterMenuOpen ? "true" : undefined}
+                            onClick={handleFilterClick}
                             sx={{
                               backgroundColor: "#FF8C00",
                               borderRadius: "15px",
@@ -656,7 +1228,9 @@ aria-label="más opciones"
                               },
                             }}
                           >
-                            <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
+                            <KeyboardArrowDownIcon
+                              sx={{ color: "black", fontSize: "20px" }}
+                            />
                           </IconButton>
                         </div>
                       </Box>
@@ -669,53 +1243,51 @@ aria-label="más opciones"
                             margin: "auto",
                             marginTop: 0,
                             background: "transparent",
-                            boxShadow: "none", // Elimina la sombra del Paper
+                            boxShadow: "none",
                             paddingBottom: 0,
                           }}
                         >
                           <DateCalendar
                             sx={{
                               "& .MuiPickersCalendarHeader-root": {
-                                justifyContent: "center", // Centra el encabezado del calendario
+                                justifyContent: "center",
                               },
                               "& .MuiPickersCalendarHeader-label": {
-                                fontWeight: "bold", // Hace que el mes y el año sean negritas
-                                color: "#f8820b", // Color del mes y el año
+                                fontWeight: "bold",
+                                color: "#f8820b",
                               },
                               "& .MuiPickersDay-root": {
-                                color: "#fff", // Color de los días
-                                fontWeight: "bold", // Hace que los días sean negritas
+                                color: "#fff",
+                                fontWeight: "bold",
                                 "&:hover": {
-                                  backgroundColor: "#e64a19", // Fondo naranja oscuro
+                                  backgroundColor: "#e64a19",
                                 },
                                 "&.Mui-focusVisible, &:focus": {
-                                  // Sobrescribe los estilos de enfoque
-                                  backgroundColor: "#f8820b", // Fondo naranja
-                                  color: "#000", // Texto negro
+                                  backgroundColor: "#f8820b",
+                                  color: "#000",
                                 },
                               },
                               "& .Mui-selected": {
-                                backgroundColor: "#f8820b", // Fondo naranja para el día seleccionado
-                                color: "#000", // Texto negro para el día seleccionado
+                                backgroundColor: "#f8820b",
+                                color: "#000",
                                 "&:hover": {
-                                  backgroundColor: "#e64a19", // Fondo naranja oscuro al pasar el mouse
+                                  backgroundColor: "#e64a19",
                                 },
                                 "&.Mui-focusVisible, &:focus": {
-                                  // Sobrescribe los estilos de enfoque
-                                  backgroundColor: "#f8820b", // Fondo naranja
-                                  color: "#000", // Texto negro
+                                  backgroundColor: "#f8820b",
+                                  color: "#000",
                                 },
                               },
                               "& .MuiPickersArrowSwitcher-button": {
-                                color: "#f8820b", // Color de las flechas de navegación
+                                color: "#f8820b",
                               },
                               "& .MuiSvgIcon-root": {
-                                color: "#f8820b", // Color de las flechas de navegación
+                                color: "#f8820b",
                                 border: "2px solid #f8820b",
                                 borderRadius: "50%",
                               },
                               "& .MuiDayCalendar-weekDayLabel": {
-                                color: "#fff", // Color de los días de la semana
+                                color: "#fff",
                                 fontWeight: "bold",
                               },
                             }}
@@ -724,106 +1296,110 @@ aria-label="más opciones"
                       </LocalizationProvider>
                       {/* Actividades Programadas */}
                       <Box sx={{ marginTop: 5, padding: 2, paddingBottom: 0 }}>
-                        <Typography color="#FFFFFF" sx={{ fontWeight: "bold", marginBottom: 0.5, fontSize: "13px" }}>
+                        <Typography
+                          color="#FFFFFF"
+                          sx={{
+                            fontWeight: "bold",
+                            marginBottom: 0.5,
+                            fontSize: "13px",
+                          }}
+                        >
                           Actividades Programadas
                         </Typography>
-                        <Typography color="#f8820b" sx={{ fontWeight: "bold", marginBottom: 1, fontSize: "13px" }}>
-                          Sabado, 22 de marzo de 2025
+                        <Typography
+                          color="#f8820b"
+                          sx={{
+                            fontWeight: "bold",
+                            marginBottom: 1,
+                            fontSize: "13px",
+                          }}
+                        >
+                          {new Date().toLocaleDateString("es-ES", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
                         </Typography>
 
-                        <Grid container display="flex" direction="row" sx={{ marginTop: 1 }}>
-                          <Grid container direction="row" alignItems="center" size={{ xs: 12 }}>
-                            <Grid size={{ xs: 3 }}>
-                              <Typography sx={{ fontWeight: 800, fontSize: "30px" }} color="#FFFFFF">
-                                09:00
-                              </Typography>
-                            </Grid>
-                            <Grid size={{ xs: 2 }}>
-                              <Typography
-                                color="#f8820b"
-                                sx={{ fontSize: "50px", fontWeight: 800, textAlign: "center" }}
+                        <Grid
+                          container
+                          display="flex"
+                          direction="row"
+                          sx={{ marginTop: 1 }}
+                        >
+                          {calendarEvents.length > 0 ? (
+                            calendarEvents.map((event, index) => (
+                              <Grid
+                                container
+                                direction="row"
+                                alignItems="center"
+                                size={{ xs: 12 }}
+                                key={index}
                               >
-                                |
-                              </Typography>
+                                <Grid size={{ xs: 3 }}>
+                                  <Typography
+                                    sx={{ fontWeight: 800, fontSize: "30px" }}
+                                    color="#FFFFFF"
+                                  >
+                                    {event.start_time}
+                                  </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 2 }}>
+                                  <Typography
+                                    color="#f8820b"
+                                    sx={{
+                                      fontSize: "50px",
+                                      fontWeight: 800,
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    |
+                                  </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 7 }}>
+                                  <Typography
+                                    color="white"
+                                    sx={{
+                                      fontSize: "12px",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    {event.title}
+                                  </Typography>
+                                  <Typography
+                                    color="#f8820b"
+                                    sx={{
+                                      fontSize: "13px",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    {event.category}
+                                  </Typography>
+                                </Grid>
+                              </Grid>
+                            ))
+                          ) : (
+                            <Grid
+                              container
+                              direction="row"
+                              alignItems="center"
+                              size={{ xs: 12 }}
+                            >
+                              <Grid size={{ xs: 12 }}>
+                                <Typography
+                                  color="white"
+                                  sx={{
+                                    fontSize: "14px",
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  No hay eventos programados para hoy
+                                </Typography>
+                              </Grid>
                             </Grid>
-                            <Grid size={{ xs: 7 }}>
-                              <Typography color="white" sx={{ fontSize: "12px", fontWeight: "bold" }}>
-                                Reunion con equipo de ventas
-                              </Typography>
-                              <Typography color="#f8820b" sx={{ fontSize: "13px", fontWeight: "bold" }}>
-                                Ventas
-                              </Typography>
-                            </Grid>
-                          </Grid>
-                          <Grid container direction="row" alignItems="center" size={{ xs: 12 }}>
-                            <Grid size={{ xs: 3 }}>
-                              <Typography sx={{ fontWeight: 800, fontSize: "30px" }} color="#FFFFFF">
-                                11:00
-                              </Typography>
-                            </Grid>
-                            <Grid size={{ xs: 2 }}>
-                              <Typography
-                                color="#f8820b"
-                                sx={{ fontSize: "50px", fontWeight: 800, textAlign: "center" }}
-                              >
-                                |
-                              </Typography>
-                            </Grid>
-                            <Grid size={{ xs: 7 }}>
-                              <Typography color="white" sx={{ fontSize: "12px", fontWeight: "bold" }}>
-                                Revisión de retroalimentación
-                              </Typography>
-                              <Typography color="#f8820b" sx={{ fontSize: "13px", fontWeight: "bold" }}>
-                                Feedback
-                              </Typography>
-                            </Grid>
-                          </Grid>
-                          <Grid container direction="row" alignItems="center" size={{ xs: 12 }}>
-                            <Grid size={{ xs: 3 }}>
-                              <Typography sx={{ fontWeight: 800, fontSize: "30px" }} color="#FFFFFF">
-                                14:00
-                              </Typography>
-                            </Grid>
-                            <Grid size={{ xs: 2 }}>
-                              <Typography
-                                color="#f8820b"
-                                sx={{ fontSize: "50px", fontWeight: 800, textAlign: "center" }}
-                              >
-                                |
-                              </Typography>
-                            </Grid>
-                            <Grid size={{ xs: 7 }}>
-                              <Typography color="white" sx={{ fontSize: "12px", fontWeight: "bold" }}>
-                                Revisión de reportes mensuales
-                              </Typography>
-                              <Typography color="#f8820b" sx={{ fontSize: "13px", fontWeight: "bold" }}>
-                                Reportes
-                              </Typography>
-                            </Grid>
-                          </Grid>
-                          <Grid container direction="row" alignItems="center" size={{ xs: 12 }}>
-                            <Grid size={{ xs: 3 }}>
-                              <Typography sx={{ fontWeight: 800, fontSize: "30px" }} color="#FFFFFF">
-                                17:30
-                              </Typography>
-                            </Grid>
-                            <Grid size={{ xs: 2 }}>
-                              <Typography
-                                color="#f8820b"
-                                sx={{ fontSize: "50px", fontWeight: 800, textAlign: "center" }}
-                              >
-                                |
-                              </Typography>
-                            </Grid>
-                            <Grid size={{ xs: 7 }}>
-                              <Typography color="white" sx={{ fontSize: "12px", fontWeight: "bold" }}>
-                                Evaluación de desempeño de Equipo.
-                              </Typography>
-                              <Typography color="#f8820b" sx={{ fontSize: "13px", fontWeight: "bold" }}>
-                                Evaluación
-                              </Typography>
-                            </Grid>
-                          </Grid>
+                          )}
                         </Grid>
                       </Box>
                     </CardContent>
@@ -837,23 +1413,36 @@ aria-label="más opciones"
           <Grid container size={8} display="flex" flexDirection="row">
             <Grid display="flex" gap={2}>
               <Grid size={{ md: "grow" }} sx={{ height: "16rem" }}>
-                {" "}
-                {/* Winget Notas */}
-                <Card style={{ background: "#45474B", borderRadius: 30 }} sx={{ height: "100%", width: "100%" }}>
-                  <CardContent sx={{ padding: 3, overflow: "auto", maxHeight: "100%" }} className="scroll-content">
+                {/* Widget Notas */}
+                <Card
+                  style={{ background: "#45474B", borderRadius: 30 }}
+                  sx={{ height: "100%", width: "100%" }}
+                >
+                  <CardContent
+                    sx={{ padding: 3, overflow: "auto", maxHeight: "100%" }}
+                    className="scroll-content"
+                  >
                     <Box display="flex" alignItems="center">
-                      <NotesIcon sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }} />
-                      <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
+                      <NotesIcon
+                        sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }}
+                      />
+                      <Typography
+                        sx={{ fontWeight: "bold" }}
+                        variant="body1"
+                        color="#FFFFFF"
+                      >
                         Notas
                       </Typography>
 
                       <div style={{ marginLeft: "auto" }}>
                         <IconButton
-        aria-label="más opciones"
-        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
-        aria-haspopup="true"
-        aria-expanded={filterMenuOpen ? "true" : undefined}
-        onClick={handleFilterClick}
+                          aria-label="más opciones"
+                          aria-controls={
+                            filterMenuOpen ? "menu-opciones" : undefined
+                          }
+                          aria-haspopup="true"
+                          aria-expanded={filterMenuOpen ? "true" : undefined}
+                          onClick={handleFilterClick}
                           sx={{
                             backgroundColor: "#FF8C00",
                             borderRadius: "15px",
@@ -866,167 +1455,156 @@ aria-label="más opciones"
                             },
                           }}
                         >
-                          <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
+                          <KeyboardArrowDownIcon
+                            sx={{ color: "black", fontSize: "20px" }}
+                          />
                         </IconButton>
                       </div>
                     </Box>
-                    <Grid container display="flex" direction="row" sx={{ marginTop: 1 }}>
-                      <Grid container direction="row" alignItems="center" size={{ xs: 12 }}>
-                        <Grid size={{ xs: 1 }}>
-                          <Checkbox
-                            {...label}
-                            sx={{
-                              borderRadius: "50%",
-                              color: "#f8820b",
-                              "&.Mui-checked": {
-                                color: "#f8820b",
-                              },
-                            }}
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                          <Typography color="#f8820b" sx={{ fontSize: "14px", fontWeight: "bold", ml: 1 }}>
-                            Actualización del sistema
-                          </Typography>
-                          <Typography color="white" sx={{ fontSize: "13px", fontWeight: "bold", ml: 1 }}>
-                            Nueva versión instalada
-                          </Typography>
-                        </Grid>
-                        <Grid size={{ xs: 5 }}>
-                          <Box display="flex" alignItems="center">
-                            <CalendarMonthIcon sx={{ marginRight: 1, color: "#fff", ml: "auto" }}></CalendarMonthIcon>
-                            <Typography color="white" sx={{ fontWeight: "bold" }}>
-                              01/04/2025
+                    <Grid
+                      container
+                      display="flex"
+                      direction="row"
+                      sx={{ marginTop: 1 }}
+                    >
+                      {notesData.length > 0 ? (
+                        notesData.map((note, index) => (
+                          <React.Fragment key={note._id || index}>
+                            <Grid
+                              container
+                              direction="row"
+                              alignItems="center"
+                              size={{ xs: 12 }}
+                            >
+                              <Grid size={{ xs: 1 }}>
+                                <Checkbox
+                                  {...label}
+                                  sx={{
+                                    borderRadius: "50%",
+                                    color: "#f8820b",
+                                    "&.Mui-checked": {
+                                      color: "#f8820b",
+                                    },
+                                  }}
+                                />
+                              </Grid>
+                              <Grid size={{ xs: 6 }}>
+                                <Typography
+                                  color="#f8820b"
+                                  sx={{
+                                    fontSize: "14px",
+                                    fontWeight: "bold",
+                                    ml: 1,
+                                  }}
+                                >
+                                  {note.title}
+                                </Typography>
+                                <Typography
+                                  color="white"
+                                  sx={{
+                                    fontSize: "13px",
+                                    fontWeight: "bold",
+                                    ml: 1,
+                                  }}
+                                >
+                                  {note.content.substring(0, 50)}...
+                                </Typography>
+                              </Grid>
+                              <Grid size={{ xs: 5 }}>
+                                <Box display="flex" alignItems="center">
+                                  <CalendarMonthIcon
+                                    sx={{
+                                      marginRight: 1,
+                                      color: "#fff",
+                                      ml: "auto",
+                                    }}
+                                  ></CalendarMonthIcon>
+                                  <Typography
+                                    color="white"
+                                    sx={{ fontWeight: "bold" }}
+                                  >
+                                    {new Date(
+                                      note.createdAt
+                                    ).toLocaleDateString("es-MX")}
+                                  </Typography>
+                                </Box>
+                              </Grid>
+                            </Grid>
+                            <Box sx={{ ml: 5, mt: 1, mb: 2 }}>
+                              {note.buttons.map((button, btnIndex) => (
+                                <Button
+                                  key={btnIndex}
+                                  variant="contained"
+                                  sx={{
+                                    borderRadius: 5,
+                                    mr: 2,
+                                    backgroundColor: button.color,
+                                    textTransform: "capitalize",
+                                  }}
+                                >
+                                  {button.text}
+                                </Button>
+                              ))}
+                            </Box>
+                          </React.Fragment>
+                        ))
+                      ) : (
+                        <Grid
+                          container
+                          direction="row"
+                          alignItems="center"
+                          size={{ xs: 12 }}
+                        >
+                          <Grid size={{ xs: 12 }}>
+                            <Typography
+                              color="white"
+                              sx={{
+                                fontSize: "14px",
+                                fontWeight: "bold",
+                                textAlign: "center",
+                              }}
+                            >
+                              No hay notas disponibles
                             </Typography>
-                          </Box>
+                          </Grid>
                         </Grid>
-                      </Grid>
-                      <Box sx={{ ml: 5, mt: 1, mb: 2 }}>
-                        <Button
-                          variant="contained"
-                          sx={{ borderRadius: 5, mr: 2, backgroundColor: "#c58f10", textTransform: "capitalize" }}
-                        >
-                          Reporte
-                        </Button>
-                        <Button
-                          variant="contained"
-                          sx={{ borderRadius: 5, backgroundColor: "#ec2525", textTransform: "capitalize" }}
-                        >
-                          Soporte
-                        </Button>
-                      </Box>
-                      <Grid container direction="row" alignItems="center" size={{ xs: 12 }}>
-                        <Grid size={{ xs: 1 }}>
-                          <Checkbox
-                            {...label}
-                            sx={{
-                              borderRadius: "50%",
-                              color: "#f8820b",
-                              "&.Mui-checked": {
-                                color: "#f8820b",
-                              },
-                            }}
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                          <Typography color="#f8820b" sx={{ fontSize: "14px", fontWeight: "bold", ml: 1 }}>
-                            Recordatorio del inventario
-                          </Typography>
-                          <Typography color="white" sx={{ fontSize: "13px", fontWeight: "bold", ml: 1 }}>
-                            Revisar el stock
-                          </Typography>
-                        </Grid>
-                        <Grid size={{ xs: 5 }}>
-                          <Box display="flex" alignItems="center">
-                            <CalendarMonthIcon sx={{ marginRight: 1, color: "#fff", ml: "auto" }}></CalendarMonthIcon>
-                            <Typography color="white" sx={{ fontWeight: "bold" }}>
-                              20/04/2025
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      </Grid>
-                      <Box sx={{ ml: 5, mt: 1, mb: 2 }}>
-                        <Button
-                          variant="contained"
-                          sx={{ borderRadius: 5, mr: 2, backgroundColor: "#07aaa2", textTransform: "capitalize" }}
-                        >
-                          Recordatorio
-                        </Button>
-                        <Button
-                          variant="contained"
-                          sx={{ borderRadius: 5, backgroundColor: "#499a0b", textTransform: "capitalize" }}
-                        >
-                          Productos
-                        </Button>
-                      </Box>
-
-                      <Grid container direction="row" alignItems="center" size={{ xs: 12 }}>
-                        <Grid size={{ xs: 1 }}>
-                          <Checkbox
-                            {...label}
-                            sx={{
-                              borderRadius: "50%",
-                              color: "#f8820b",
-                              "&.Mui-checked": {
-                                color: "#f8820b",
-                              },
-                            }}
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                          <Typography color="#f8820b" sx={{ fontSize: "14px", fontWeight: "bold", ml: 1 }}>
-                            Capacitación personal
-                          </Typography>
-                          <Typography color="white" sx={{ fontSize: "13px", fontWeight: "bold", ml: 1 }}>
-                            Curso de productos nuevos
-                          </Typography>
-                        </Grid>
-                        <Grid size={{ xs: 5 }}>
-                          <Box display="flex" alignItems="center">
-                            <CalendarMonthIcon sx={{ marginRight: 1, color: "#fff", ml: "auto" }}></CalendarMonthIcon>
-                            <Typography color="white" sx={{ fontWeight: "bold" }}>
-                              12/03/2025
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      </Grid>
-                      <Box sx={{ ml: 5, mt: 1 }}>
-                        <Button
-                          variant="contained"
-                          sx={{ borderRadius: 5, mr: 2, backgroundColor: "#c02279", textTransform: "capitalize" }}
-                        >
-                          Curso
-                        </Button>
-                        <Button
-                          variant="contained"
-                          sx={{ borderRadius: 5, backgroundColor: "#1b72af", textTransform: "capitalize" }}
-                        >
-                          Instalación
-                        </Button>
-                      </Box>
+                      )}
                     </Grid>
                   </CardContent>
                 </Card>
               </Grid>
 
               <Grid size={{ md: "grow" }} sx={{ height: "16rem" }}>
-                {" "}
-                {/* Winget Ventas obtenidas */}
-                <Card style={{ background: "#45474B", borderRadius: 30 }} sx={{ height: "100%" }}>
-                  <CardContent sx={{ overflow: "auto", maxHeight: "100%", padding: 3 }} className="scroll-content">
+                {/* Widget Ventas obtenidas */}
+                <Card
+                  style={{ background: "#45474B", borderRadius: 30 }}
+                  sx={{ height: "100%" }}
+                >
+                  <CardContent
+                    sx={{ overflow: "auto", maxHeight: "100%", padding: 3 }}
+                    className="scroll-content"
+                  >
                     <Box display="flex" alignItems="center">
-                      <BarChartIcon sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }} />
-                      <Typography sx={{ fontWeight: "bold" }} variant="body1" color="#FFFFFF">
+                      <BarChartIcon
+                        sx={{ fontSize: 40, color: "#FFFFFF", marginRight: 1 }}
+                      />
+                      <Typography
+                        sx={{ fontWeight: "bold" }}
+                        variant="body1"
+                        color="#FFFFFF"
+                      >
                         Ventas Obtenidas
                       </Typography>
 
                       <div style={{ marginLeft: "auto" }}>
                         <IconButton
-        aria-label="más opciones"
-        aria-controls={filterMenuOpen ? "menu-opciones" : undefined}
-        aria-haspopup="true"
-        aria-expanded={filterMenuOpen ? "true" : undefined}
-        onClick={handleFilterClick}
+                          aria-label="más opciones"
+                          aria-controls={
+                            filterMenuOpen ? "menu-opciones" : undefined
+                          }
+                          aria-haspopup="true"
+                          aria-expanded={filterMenuOpen ? "true" : undefined}
+                          onClick={handleFilterClick}
                           sx={{
                             backgroundColor: "#FF8C00",
                             borderRadius: "15px",
@@ -1039,7 +1617,9 @@ aria-label="más opciones"
                             },
                           }}
                         >
-                          <KeyboardArrowDownIcon sx={{ color: "black", fontSize: "20px" }} />
+                          <KeyboardArrowDownIcon
+                            sx={{ color: "black", fontSize: "20px" }}
+                          />
                         </IconButton>
                       </div>
                     </Box>
@@ -1053,34 +1633,61 @@ aria-label="más opciones"
                         my: 1,
                       }}
                     >
-                      Diciembre
+                      {new Date().toLocaleDateString("es-ES", {
+                        month: "long",
+                      })}
                     </Typography>
 
-                    <BarChart
-                      width={350} // Ancho del gráfico
-                      height={200} // Alto del gráfico
-                      data={chartData} // Datos a mostrar
-                      margin={{
-                        top: 5,
-                        right: 0,
-                        left: 0,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" /> {/* Líneas de la cuadrícula */}
-                      <XAxis dataKey="label" /> {/* Eje X: Nombres de las categorías */}
-                      <YAxis /> {/* Eje Y: Valores numéricos */}
-                      <Tooltip /> {/* Muestra información al pasar el mouse */}
-                      <Bar dataKey="value">
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
+                    {salesData.length > 0 ? (
+                      <BarChart
+                        width={350}
+                        height={200}
+                        data={salesData}
+                        margin={{
+                          top: 5,
+                          right: 0,
+                          left: 0,
+                          bottom: 5,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="label" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="value">
+                          {salesData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          height: 200,
+                        }}
+                      >
+                        <Typography
+                          color="white"
+                          sx={{ fontSize: "14px", fontWeight: "bold" }}
+                        >
+                          No hay datos de ventas disponibles
+                        </Typography>
+                      </Box>
+                    )}
 
                     <Box sx={{ mt: 2, textAlign: "center" }}>
-                      <Typography variant="h4" color="#FFFFFF" sx={{ fontWeight: "bold" }}>
-                        $ 25,000.08
+                      <Typography
+                        variant="h4"
+                        color="#FFFFFF"
+                        sx={{ fontWeight: "bold" }}
+                      >
+                        ${" "}
+                        {totalSales.toLocaleString("es-MX", {
+                          minimumFractionDigits: 2,
+                        })}
                       </Typography>
                       <Typography variant="body2" color="#FFFFFF">
                         En este mes.
@@ -1092,13 +1699,9 @@ aria-label="más opciones"
             </Grid>
           </Grid>
         </Grid>
-
-        {/* /*
-            ! SIGUE USANDO EL GRID ANIDADO, UNA COLUMNA DENTRO DE OTRA Y TODO DENTRO DE UN CONTENEDOR PRINCIPAL
-          */}
       </Grid>
-          {renderProfileMenu}
-    {renderFilterMenu}
+      {renderProfileMenu}
+      {renderFilterMenu}
     </div>
   );
 }
