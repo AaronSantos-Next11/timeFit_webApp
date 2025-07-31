@@ -61,17 +61,56 @@ export default function Calendar() {
     handleMenuClose();
   };
 
-  const createLocalDate = (dateString) => {
-    const [year, month, day] = dateString.split("-").map(Number);
-    return new Date(year, month - 1, day); // month - 1 porque los meses en JS van de 0-11
-  };
 
-  const formatDateForInput = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+// Función corregida para manejar fechas del backend - MANTIENE LA FECHA EXACTA
+const createLocalDate = (dateInput) => {
+  if (dateInput instanceof Date) return dateInput;
+  
+  // Si viene del backend con formato MongoDB: { "$date": "2025-08-01T00:00:00.000Z" }
+  if (dateInput && typeof dateInput === 'object' && dateInput.$date) {
+    const utcDate = new Date(dateInput.$date);
+    // Extraer solo la fecha sin conversión de zona horaria
+    const year = utcDate.getUTCFullYear();
+    const month = utcDate.getUTCMonth();
+    const day = utcDate.getUTCDate();
+    return new Date(year, month, day);
+  }
+  
+  // Si es un string de fecha ISO
+  if (typeof dateInput === 'string') {
+    // Si es formato "YYYY-MM-DD", crear fecha local
+    if (dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateInput.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+    // Si es formato ISO completo, extraer solo la fecha sin zona horaria
+    if (dateInput.includes('T')) {
+      const utcDate = new Date(dateInput);
+      const year = utcDate.getUTCFullYear();
+      const month = utcDate.getUTCMonth();
+      const day = utcDate.getUTCDate();
+      return new Date(year, month, day);
+    }
+    return new Date(dateInput);
+  }
+  
+  return new Date(); // Fallback
+};
+
+const formatDateForInput = (date) => {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+// Función mejorada para normalizar fechas
+const normalizeDate = (date) => {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0); // Resetear horas para comparaciones exactas
+  return normalized;
+};
 
   // Función para navegar al logout
   const handleLogoutClick = () => {
@@ -144,49 +183,56 @@ export default function Calendar() {
     setNotification((prev) => ({ ...prev, open: false }));
   };
 
-  // Función para cargar eventos del usuario
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      const token = getToken();
-      if (!token) {
-        showNotification("No se encontró token de autenticación", "error");
-        return;
-      }
+// Función fetchEvents actualizada
+const fetchEvents = async () => {
+  try {
+    setLoading(true);
+    const token = getToken();
+    if (!token) {
+      showNotification("No se encontró token de autenticación", "error");
+      return;
+    }
 
-      const response = await fetch(`${API}/api/calendar/all`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+    const response = await fetch(`${API}/api/calendar/all`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al cargar eventos");
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Error al cargar eventos");
+    }
 
-      const data = await response.json();
+    const data = await response.json();
+    console.log('Datos del backend:', data); // Para debugging
 
-      // Convertir los eventos del backend al formato del frontend
-      const formattedEvents = data.events.map((event) => ({
+    // Convertir los eventos del backend al formato del frontend
+    const formattedEvents = data.events.map((event) => {
+      const eventDate = createLocalDate(event.event_date);
+      console.log('Fecha original:', event.event_date, 'Fecha procesada:', eventDate); // Para debugging
+      
+      return {
         id: event._id,
         title: event.title,
-        date: new Date(event.event_date),
+        date: normalizeDate(eventDate),
         time: event.start_time,
         endTime: event.end_time,
         category: event.category,
-      }));
+      };
+    });
 
-      setEvents(formattedEvents);
-    } catch (error) {
-      console.error("Error al cargar eventos:", error);
-      showNotification(error.message || "Error al cargar eventos", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setEvents(formattedEvents);
+    console.log('Eventos formateados:', formattedEvents);
+  } catch (error) {
+    console.error("Error al cargar eventos:", error);
+    showNotification(error.message || "Error al cargar eventos", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Función para crear evento
   const createEvent = async (eventData) => {
@@ -245,7 +291,7 @@ export default function Calendar() {
 
       const requestBody = {
         title: eventData.title,
-        event_date: eventData.date.toISOString().split("T")[0],
+        event_date: formatDateForInput(eventData.date),
         start_time: eventData.time,
         end_time: eventData.endTime,
         category: eventData.category,
@@ -346,13 +392,17 @@ export default function Calendar() {
     return `${days[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
   };
 
-  const isSameDay = (date1, date2) => {
-    return (
-      date1.getDate() === date2.getDate() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getFullYear() === date2.getFullYear()
-    );
-  };
+// Función isSameDay mejorada
+const isSameDay = (date1, date2) => {
+  if (!date1 || !date2) return false;
+  const d1 = normalizeDate(date1);
+  const d2 = normalizeDate(date2);
+  return (
+    d1.getDate() === d2.getDate() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getFullYear() === d2.getFullYear()
+  );
+};
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -411,9 +461,10 @@ export default function Calendar() {
     return week;
   };
 
-  const getEventsForDate = (date) => {
-    return events.filter((event) => isSameDay(event.date, date));
-  };
+// Actualizar getEventsForDate:
+const getEventsForDate = (date) => {
+  return events.filter((event) => isSameDay(event.date, date));
+};
 
   const getEventsForSelectedDate = () => {
     return events.filter((event) => isSameDay(event.date, selectedDate));
@@ -476,8 +527,9 @@ export default function Calendar() {
   };
 
   const handleDateClick = (date) => {
-    setSelectedDate(date);
-    setNewEvent((prev) => ({ ...prev, date: date }));
+  const normalizedDate = normalizeDate(date);
+  setSelectedDate(normalizedDate);
+  setNewEvent((prev) => ({ ...prev, date: normalizedDate }));
   };
 
   const toggleSidebar = () => {
