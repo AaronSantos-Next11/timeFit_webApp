@@ -61,6 +61,18 @@ export default function Calendar() {
     handleMenuClose();
   };
 
+  const createLocalDate = (dateString) => {
+    const [year, month, day] = dateString.split("-").map(Number);
+    return new Date(year, month - 1, day); // month - 1 porque los meses en JS van de 0-11
+  };
+
+  const formatDateForInput = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // Función para navegar al logout
   const handleLogoutClick = () => {
     navigate("/logout-confirm", { state: { from: location.pathname } });
@@ -188,7 +200,7 @@ export default function Calendar() {
 
       const requestBody = {
         title: eventData.title,
-        event_date: eventData.date.toISOString().split("T")[0],
+        event_date: formatDateForInput(eventData.date),
         start_time: eventData.time,
         end_time: eventData.endTime,
         category: eventData.category,
@@ -927,9 +939,9 @@ export default function Calendar() {
                   <input
                     type="date"
                     name="date"
-                    value={newEvent.date.toISOString().split("T")[0]}
+                    value={formatDateForInput(newEvent.date)}
                     onChange={(e) => {
-                      const date = new Date(e.target.value);
+                      const date = createLocalDate(e.target.value); // Usar la función utilitaria
                       setNewEvent((prev) => ({ ...prev, date }));
                     }}
                     required
